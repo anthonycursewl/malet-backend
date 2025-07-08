@@ -23,10 +23,10 @@ export class AccountRepositoryAdapter implements AccountRepository {
         return Account.fromPrimitives(primitives)
     }
 
-    async getAllAccounts(id: string): Promise<Account[]> {
+    async getAllAccounts(userId: string): Promise<Account[]> {
         const accounts = await this.prisma.accounts.findMany({
             where: {
-                user_id: id
+                user_id: userId
             }
         })
 

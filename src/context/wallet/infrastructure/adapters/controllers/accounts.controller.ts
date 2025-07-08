@@ -1,10 +1,8 @@
-import { Body, Controller, Get, Inject, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Inject, Param, Post, UseGuards } from "@nestjs/common";
 import { CREATE_ACCOUNT_USECASE, CreateAccountUseCase } from "src/context/wallet/domain/ports/in/create-account.usecase";
 import { CreateAccountDto } from "../dtos/create-account.dto";
 import { GET_ALL_ACCOUNTS_USECASE, GetAllAccountsUseCase } from "src/context/wallet/domain/ports/in/get-all-acounts.usecase";
 import { JwtAuthGuard } from "src/auth/jwt-auth.guard";
-import { CurrentUser } from "src/auth/decorators/current-user.decorator";
-import { UserPrimitives } from "src/context/users/domain/entities/user.entity";
 
 @Controller('accounts')
 @UseGuards(JwtAuthGuard)
@@ -21,9 +19,10 @@ export class AccountsController {
         return this.createAccountUseCase.execute(createAccountDto)
     }
 
-    @Get('get/all')
-    async getAllAccounts(@CurrentUser() user: UserPrimitives) {
-        return this.getAllAccountsUseCase.execute(user.id)
+    @Get('get/all/:user_id')
+    async getAllAccounts(@Param('user_id') userId: string) {
+        console.log(userId)
+        return await this.getAllAccountsUseCase.execute(userId)
     }
 
 }
