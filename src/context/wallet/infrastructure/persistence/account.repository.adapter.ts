@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
-import { Account, AccountPrimitives } from "../../domain/entities/account.entity";
+import { Account } from "../../domain/entities/account.entity";
 import { AccountRepository } from "../../domain/ports/out/account.repository";
 
 @Injectable()
@@ -23,7 +23,7 @@ export class AccountRepositoryAdapter implements AccountRepository {
         return Account.fromPrimitives(primitives)
     }
 
-    async getAllAccounts(userId: string): Promise<Account[]> {
+    async getAllAccounts(userId: string): Promise<Account[] | []> {
         const accounts = await this.prisma.accounts.findMany({
             where: {
                 user_id: userId
@@ -37,6 +37,9 @@ export class AccountRepositoryAdapter implements AccountRepository {
             }
         })
 
-        return primitives.map((primitives) => Account.fromPrimitives(primitives))
-    }
+        const fetchedAccounts = primitives.map((primitives) => Account.fromPrimitives(primitives))
+        if (!fetchedAccounts) return []
+
+        return fetchedAccounts
+    }   
 }
