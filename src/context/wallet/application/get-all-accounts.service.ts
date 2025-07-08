@@ -10,7 +10,7 @@ export class GetAllAccountsService implements GetAllAccountsUseCase {
         private readonly accountRepository: AccountRepository
     ) {}
 
-    async execute(id: string): Promise<Account[]> {
-        return this.accountRepository.getAllAccounts(id)
+    async execute(userId: string): Promise<Account[]> {
+        return this.accountRepository.getAllAccounts(userId)
     }
 }
