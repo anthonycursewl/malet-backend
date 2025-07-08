@@ -34,7 +34,7 @@ export class TransactionRepositoryAdapter implements TransactionRepository {
 
         const primitivesForDomain = {
             ...account,
-            amount: account.balance.toNumber(), 
+            amount: created.amount.toNumber(), 
             type: created.type,
             account_id: created.account_id,
             issued_at: created.issued_at
@@ -66,7 +66,7 @@ export class TransactionRepositoryAdapter implements TransactionRepository {
         const primitives = txs.map((tx) => {
             return {
                 ...tx,
-                amount: Number(tx.amount)
+                amount: tx.amount.toNumber()
             }
         })
 
