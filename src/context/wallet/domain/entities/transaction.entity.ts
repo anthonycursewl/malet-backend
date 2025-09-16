@@ -7,6 +7,17 @@ export interface TransactionPrimitives {
     issued_at: Date;
 }
 
+/**
+ * Genera un identificador único personalizado
+ * Compatible con entornos donde crypto.randomUUID() no está disponible
+ */
+function generateCustomId(): string {
+    const timestamp = Date.now().toString(36);
+    const randomPart = Math.random().toString(36).substring(2, 8);
+    const counter = (Math.floor(Math.random() * 1000)).toString(36);
+    return `${timestamp}-${randomPart}-${counter}`;
+}
+
 export class Transaction {
     private readonly id: string;
     private readonly name: string;
@@ -79,7 +90,7 @@ export class Transaction {
 
     static create(transaction: Omit<TransactionPrimitives, 'id' | 'issued_at'>): Transaction {
         return new Transaction(
-            'M-' + crypto.randomUUID().split('-')[4],
+            'M-' + generateCustomId(),
             transaction.name,
             transaction.amount,
             transaction.type,
