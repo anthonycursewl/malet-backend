@@ -8,9 +8,7 @@ export class DebugController {
   @Get('env')
   getEnv() {
     return {
-      JWT_SECRET: this.configService.get('JWT_SECRET'),
-      NODE_ENV: this.configService.get('NODE_ENV'),
-      // Add any other environment variables you want to check
+      JWT_SECRET: ":b"
     };
   }
 }
