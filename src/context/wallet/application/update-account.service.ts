@@ -16,7 +16,6 @@ export class UpdateAccountService implements UpdateAccountUseCase {
             throw new Error('Account not found')
         }
 
-        // Validar que la cuenta pertenezca al usuario autenticado
         if (account.toPrimitives().user_id !== userId) {
             throw new ForbiddenException('No tienes permiso para modificar esta cuenta')
         }

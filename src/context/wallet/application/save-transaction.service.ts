@@ -14,7 +14,6 @@ export class SaveTransactionService implements SaveTransactionUseCase {
     ) { }
 
     async execute(userId: string, tx: Omit<TransactionPrimitives, 'id' | 'issued_at'>): Promise<Transaction> {
-        // Validar que la cuenta pertenezca al usuario autenticado
         const account = await this.accountRepository.findById(tx.account_id);
 
         if (!account) {

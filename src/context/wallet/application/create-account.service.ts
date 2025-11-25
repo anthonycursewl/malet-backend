@@ -13,7 +13,7 @@ export class CreateAccountService implements CreateAccountUseCase {
     async execute(userId: string, account: Omit<AccountPrimitives, 'id' | 'created_at' | 'updated_at' | 'user_id'>): Promise<Account> {
         const accountWithUser = {
             ...account,
-            user_id: userId  // Forzar el userId del usuario autenticado
+            user_id: userId
         };
         const created = Account.create(accountWithUser)
         return this.accountRepository.create(created)
