@@ -8,7 +8,7 @@ export class CreateAccountService implements CreateAccountUseCase {
     constructor(
         @Inject(ACCOUNT_REPOSITORY_PORT)
         private readonly accountRepository: AccountRepository
-    ) {}
+    ) { }
 
     async execute(account: Omit<AccountPrimitives, 'id' | 'created_at' | 'updated_at'>): Promise<Account> {
         const created = Account.create(account)

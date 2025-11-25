@@ -2,12 +2,13 @@ import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
 import { Account } from "../../domain/entities/account.entity";
 import { AccountRepository } from "../../domain/ports/out/account.repository";
+import { UpdateAccount } from "../../domain/ports/in/update-account.usecase";
 
 @Injectable()
 export class AccountRepositoryAdapter implements AccountRepository {
     constructor(
         private readonly prisma: PrismaService
-    ) {}
+    ) { }
 
     async create(account: Account): Promise<Account> {
         const accountPrimitives = account.toPrimitives()
@@ -41,5 +42,38 @@ export class AccountRepositoryAdapter implements AccountRepository {
         if (!fetchedAccounts) return []
 
         return fetchedAccounts
-    }   
+    }
+
+    async update(accountId: string, updateAccountDto: UpdateAccount): Promise<Account> {
+        const account = await this.prisma.accounts.update({
+            where: {
+                id: accountId
+            },
+            data: updateAccountDto
+        })
+
+        const primitives = {
+            ...account,
+            balance: Number(account.balance)
+        }
+
+        return Account.fromPrimitives(primitives)
+    }
+
+    async findById(accountId: string): Promise<Account | null> {
+        const account = await this.prisma.accounts.findUnique({
+            where: {
+                id: accountId
+            }
+        })
+
+        if (!account) return null
+
+        const primitives = {
+            ...account,
+            balance: Number(account.balance)
+        }
+
+        return Account.fromPrimitives(primitives)
+    }
 }

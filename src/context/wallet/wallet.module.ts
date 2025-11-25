@@ -14,18 +14,20 @@ import { GET_ALL_ACCOUNTS_USECASE } from "./domain/ports/in/get-all-acounts.usec
 import { GetAllAccountsService } from "./application/get-all-accounts.service";
 import { GET_HISTORY_TRANSACTION_USECASE } from "./domain/ports/in/get-history-transaction.usecase";
 import { GetHistoryTransactionService } from "./application/get-history-transaction.service";
+import { UPDATE_ACCOUNT_USECASE } from "./domain/ports/in/update-account.usecase";
+import { UpdateAccountService } from "./application/update-account.service";
 
 @Module({
     imports: [PrismaModule],
     controllers: [
-        AccountsController, 
+        AccountsController,
         TransactionController
     ],
     providers: [
         {
             provide: CREATE_ACCOUNT_USECASE,
             useClass: CreateAccountService
-        }, 
+        },
         {
             provide: SAVE_TRANSACTION_USECASE,
             useClass: SaveTransactionService
@@ -45,8 +47,12 @@ import { GetHistoryTransactionService } from "./application/get-history-transact
         {
             provide: GET_HISTORY_TRANSACTION_USECASE,
             useClass: GetHistoryTransactionService
+        },
+        {
+            provide: UPDATE_ACCOUNT_USECASE,
+            useClass: UpdateAccountService
         }
     ],
     exports: []
 })
-export class WalletModule {}
+export class WalletModule { }
