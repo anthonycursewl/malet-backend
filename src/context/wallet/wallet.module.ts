@@ -16,6 +16,7 @@ import { GET_HISTORY_TRANSACTION_USECASE } from "./domain/ports/in/get-history-t
 import { GetHistoryTransactionService } from "./application/get-history-transaction.service";
 import { UPDATE_ACCOUNT_USECASE } from "./domain/ports/in/update-account.usecase";
 import { UpdateAccountService } from "./application/update-account.service";
+import { AccountOwnerGuard } from "src/auth/guards/account-owner.guard";
 
 @Module({
     imports: [PrismaModule],
@@ -51,7 +52,8 @@ import { UpdateAccountService } from "./application/update-account.service";
         {
             provide: UPDATE_ACCOUNT_USECASE,
             useClass: UpdateAccountService
-        }
+        },
+        AccountOwnerGuard
     ],
     exports: []
 })

@@ -10,8 +10,12 @@ export class CreateAccountService implements CreateAccountUseCase {
         private readonly accountRepository: AccountRepository
     ) { }
 
-    async execute(account: Omit<AccountPrimitives, 'id' | 'created_at' | 'updated_at'>): Promise<Account> {
-        const created = Account.create(account)
+    async execute(userId: string, account: Omit<AccountPrimitives, 'id' | 'created_at' | 'updated_at' | 'user_id'>): Promise<Account> {
+        const accountWithUser = {
+            ...account,
+            user_id: userId  // Forzar el userId del usuario autenticado
+        };
+        const created = Account.create(accountWithUser)
         return this.accountRepository.create(created)
     }
 }

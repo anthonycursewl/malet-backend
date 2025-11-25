@@ -9,5 +9,5 @@ export interface UpdateAccount extends Omit<AccountPrimitives, 'id' | 'created_a
 }
 
 export interface UpdateAccountUseCase {
-    execute(accountId: string, updateAccountDto: UpdateAccount): Promise<Account>
+    execute(userId: string, accountId: string, updateAccountDto: UpdateAccount): Promise<Account>
 }

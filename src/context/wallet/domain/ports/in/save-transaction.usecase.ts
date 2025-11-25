@@ -3,5 +3,5 @@ import { Transaction, TransactionPrimitives } from "../../entities/transaction.e
 export const SAVE_TRANSACTION_USECASE = 'SAVE_TRANSACTION_USECASE'
 
 export interface SaveTransactionUseCase {
-    execute(tx: Omit<TransactionPrimitives, 'id' | 'issued_at'>): Promise<Transaction>
+    execute(userId: string, tx: Omit<TransactionPrimitives, 'id' | 'issued_at'>): Promise<Transaction>
 }

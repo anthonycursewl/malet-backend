@@ -5,6 +5,7 @@ import { GET_ALL_ACCOUNTS_USECASE, GetAllAccountsUseCase } from "src/context/wal
 import { JwtAuthGuard } from "src/auth/jwt-auth.guard";
 import { UpdateAccountDto } from "src/context/wallet/application/dtos/update-account.dto";
 import { UPDATE_ACCOUNT_USECASE, UpdateAccountUseCase } from "src/context/wallet/domain/ports/in/update-account.usecase";
+import { CurrentUser } from "src/auth/decorators/current-user.decorator";
 
 @Controller('accounts')
 @UseGuards(JwtAuthGuard)
@@ -19,19 +20,27 @@ export class AccountsController {
     ) { }
 
     @Post('create')
-    async createAccount(@Body() createAccountDto: CreateAccountDto) {
-        return this.createAccountUseCase.execute(createAccountDto)
+    async createAccount(
+        @CurrentUser() user: { userId: string; email: string },
+        @Body() createAccountDto: CreateAccountDto
+    ) {
+        return this.createAccountUseCase.execute(user.userId, createAccountDto)
     }
 
     @Put('update/:account_id')
-    async updateAccount(@Param('account_id') accountId: string, @Body() updateAccountDto: UpdateAccountDto) {
-        return this.updateAccountUseCase.execute(accountId, updateAccountDto)
+    async updateAccount(
+        @CurrentUser() user: { userId: string; email: string },
+        @Param('account_id') accountId: string,
+        @Body() updateAccountDto: UpdateAccountDto
+    ) {
+        return this.updateAccountUseCase.execute(user.userId, accountId, updateAccountDto)
     }
 
-    @Get('get/all/:user_id')
-    async getAllAccounts(@Param('user_id') userId: string) {
-        console.log(userId)
-        return await this.getAllAccountsUseCase.execute(userId)
+    @Get('get/all')
+    async getAllAccounts(
+        @CurrentUser() user: { userId: string; email: string }
+    ) {
+        return await this.getAllAccountsUseCase.execute(user.userId)
     }
 
 }
