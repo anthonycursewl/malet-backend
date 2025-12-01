@@ -1,3 +1,6 @@
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
+
 -- CreateTable
 CREATE TABLE "user" (
     "id" VARCHAR(255) NOT NULL,
@@ -6,6 +9,8 @@ CREATE TABLE "user" (
     "email" VARCHAR(255) NOT NULL,
     "created_at" TIMESTAMPTZ(6) NOT NULL,
     "password" TEXT NOT NULL,
+    "avatar_url" VARCHAR(500),
+    "banner_url" VARCHAR(500),
 
     CONSTRAINT "user_pkey" PRIMARY KEY ("id")
 );
@@ -14,12 +19,12 @@ CREATE TABLE "user" (
 CREATE TABLE "accounts" (
     "id" VARCHAR(255) NOT NULL,
     "name" VARCHAR(255) NOT NULL,
-    "balance" VARCHAR(255) NOT NULL,
     "currency" VARCHAR(255) NOT NULL,
     "icon" VARCHAR(255),
     "user_id" VARCHAR(255) NOT NULL,
     "created_at" TIMESTAMPTZ(6) NOT NULL,
     "updated_at" TIMESTAMPTZ(6) NOT NULL,
+    "balance" DECIMAL(10,2) NOT NULL,
 
     CONSTRAINT "accounts_pkey" PRIMARY KEY ("id")
 );
