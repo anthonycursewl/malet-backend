@@ -9,7 +9,7 @@ export class AuthUseCase {
         private readonly authService: AuthService,
         @Inject(USER_REPOSITORY_PORT)
         private readonly userRepository: UserRepository
-    ) {}
+    ) { }
 
     async validate(token: string): Promise<User> {
         const isValid = await this.authService.validate(token)
@@ -17,8 +17,7 @@ export class AuthUseCase {
             throw new UnauthorizedException('Invalid token.')
         }
         const user = await this.userRepository.findByEmail(isValid.email)
+        console.log(user)
         return user
     }
-
-    
 }

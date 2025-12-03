@@ -3,13 +3,15 @@ import { UserModule } from './context/users/user.module';
 import { WalletModule } from './context/wallet/wallet.module';
 import { CommonModule } from './common/common.module';
 import { DebugModule } from './debug/debug.module';
+import { FileStorageModule } from './shared/infrastructure/file-storage/file-storage.module';
 
 @Module({
   imports: [
     CommonModule,
-    UserModule, 
+    FileStorageModule,
+    UserModule,
     WalletModule,
     DebugModule
   ],
 })
-export class AppModule {}
+export class AppModule { }

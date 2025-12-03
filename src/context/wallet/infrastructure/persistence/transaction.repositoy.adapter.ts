@@ -2,13 +2,13 @@ import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma.service";
 import { TransactionRepository } from "../../domain/ports/out/transaction.repository";
 import { Transaction } from "../../domain/entities/transaction.entity";
-import { Decimal } from "@prisma/client/runtime/library";
+import { Decimal } from "@prisma/client/runtime/client";
 
 @Injectable()
 export class TransactionRepositoryAdapter implements TransactionRepository {
     constructor(
         private readonly prisma: PrismaService
-    ) {}
+    ) { }
 
     async save(tx: Transaction): Promise<Transaction> {
         const txPrimitives = tx.toPrimitives()
@@ -16,7 +16,7 @@ export class TransactionRepositoryAdapter implements TransactionRepository {
             data: {
                 ...txPrimitives,
                 amount: new Decimal(txPrimitives.amount)
-            } 
+            }
         })
 
         const account = await this.prisma.accounts.update({
@@ -25,8 +25,8 @@ export class TransactionRepositoryAdapter implements TransactionRepository {
             },
             data: {
                 balance: {
-                    ...(created.type === 'saving' ? 
-                        { increment: created.amount } : 
+                    ...(created.type === 'saving' ?
+                        { increment: created.amount } :
                         { decrement: created.amount }),
                 }
             }
@@ -34,7 +34,7 @@ export class TransactionRepositoryAdapter implements TransactionRepository {
 
         const primitivesForDomain = {
             ...account,
-            amount: created.amount.toNumber(), 
+            amount: created.amount.toNumber(),
             type: created.type,
             account_id: created.account_id,
             issued_at: created.issued_at
@@ -53,7 +53,7 @@ export class TransactionRepositoryAdapter implements TransactionRepository {
                 }
             })
         }
-        
+
         const txs = await this.prisma.transactions.findMany({
             where,
             skip,
