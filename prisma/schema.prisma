@@ -7,20 +7,40 @@ datasource db {
 }
 
 model user {
-    id                   String   @id @db.VarChar(255)
-    name                 String   @db.VarChar(255)
-    username             String   @db.VarChar(255)
-    email                String   @db.VarChar(255)
-    created_at           DateTime @db.Timestamptz(6)
+    id                   String    @id @db.VarChar(255)
+    name                 String    @db.VarChar(255)
+    username             String    @db.VarChar(255)
+    email                String    @unique @db.VarChar(255)
+    created_at           DateTime  @db.Timestamptz(6)
     password             String
-    avatar_url           String?  @db.VarChar(500)
-    banner_url           String?  @db.VarChar(500)
-    verified             Boolean  @default(false)
-    verification_type_id String?  @db.VarChar(255)
+    avatar_url           String?   @db.VarChar(500)
+    banner_url           String?   @db.VarChar(500)
+    verified             Boolean   @default(false)
+    verification_type_id String?   @db.VarChar(255)
+    email_verified       Boolean   @default(false)
+    email_verified_at    DateTime? @db.Timestamptz(6)
 
     // --- Relations ---
-    verification_type verification_type? @relation(fields: [verification_type_id], references: [id], onDelete: Cascade, map: "verification_type_id")
-    accounts          accounts[]
+    verification_type         verification_type?         @relation(fields: [verification_type_id], references: [id], onDelete: Cascade, map: "verification_type_id")
+    accounts                  accounts[]
+    email_verification_tokens email_verification_token[]
+
+    // --- Community Relations ---
+    owned_communities     community[]
+    community_memberships community_member[]
+
+    // --- Feed & Onboarding Relations ---
+    interests        user_interest[]
+    interactions     user_interaction[]
+    onboarding       user_onboarding?
+    community_scores user_community_score[]
+
+    // --- Messaging Relations ---
+    conversation_participants conversation_participant[]
+    sent_messages             message[]
+    message_read_receipts     message_read_receipt[]
+    message_reactions         message_reaction[]
+    public_keys               user_public_key[]
 }
 
 model accounts {
@@ -51,4 +71,344 @@ model verification_type {
     type     String @db.VarChar(255)
     icon_url String @db.VarChar(500)
     users    user[]
+}
+
+model email_verification_token {
+    id         String   @id @db.VarChar(255)
+    user_id    String   @db.VarChar(255)
+    token      String   @db.VarChar(6)
+    expires_at DateTime @db.Timestamptz(6)
+    created_at DateTime @db.Timestamptz(6)
+
+    user user @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    @@unique([user_id, token])
+    @@index([token])
+    @@index([expires_at])
+}
+
+// ============================================
+// COMMUNITIES MODELS
+// ============================================
+
+model community {
+    id           String   @id @db.VarChar(255)
+    name         String   @db.VarChar(255)
+    description  String?  @db.Text
+    slug         String   @unique @db.VarChar(255)
+    type         String   @default("public") @db.VarChar(50)
+    avatar_url   String?  @db.VarChar(500)
+    banner_url   String?  @db.VarChar(500)
+    member_count Int      @default(0)
+    is_active    Boolean  @default(true)
+    owner_id     String   @db.VarChar(255)
+    created_at   DateTime @db.Timestamptz(6)
+    updated_at   DateTime @db.Timestamptz(6)
+
+    // Relations
+    owner      user                            @relation(fields: [owner_id], references: [id], onDelete: Cascade, map: "community_owner_id")
+    members    community_member[]
+    categories community_category_assignment[]
+
+    // --- Feed Relations ---
+    interests    community_interest[]
+    interactions user_interaction[]
+    user_scores  user_community_score[]
+
+    // --- Chat Relation ---
+    conversation conversation?
+
+    @@index([owner_id])
+    @@index([type])
+    @@index([is_active])
+    @@index([created_at])
+    @@index([member_count])
+}
+
+model community_member {
+    id           String   @id @db.VarChar(255)
+    community_id String   @db.VarChar(255)
+    user_id      String   @db.VarChar(255)
+    role         String   @default("member") @db.VarChar(50)
+    status       String   @default("active") @db.VarChar(50)
+    joined_at    DateTime @db.Timestamptz(6)
+    updated_at   DateTime @db.Timestamptz(6)
+
+    // Relations
+    community community @relation(fields: [community_id], references: [id], onDelete: Cascade, map: "member_community_id")
+    user      user      @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "member_user_id")
+
+    @@unique([community_id, user_id])
+    @@index([user_id])
+    @@index([role])
+    @@index([status])
+}
+
+model community_category {
+    id          String  @id @db.VarChar(255)
+    name        String  @db.VarChar(100)
+    slug        String  @unique @db.VarChar(100)
+    description String? @db.VarChar(500)
+    icon        String? @db.VarChar(100)
+
+    // Relations
+    communities community_category_assignment[]
+}
+
+model community_category_assignment {
+    community_id String @db.VarChar(255)
+    category_id  String @db.VarChar(255)
+
+    // Relations
+    community community          @relation(fields: [community_id], references: [id], onDelete: Cascade)
+    category  community_category @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+    @@id([community_id, category_id])
+}
+
+// ============================================
+// ONBOARDING & INTERESTS MODELS
+// ============================================
+
+/// Categorías de interés para onboarding y recomendaciones
+model interest_category {
+    id          String   @id @db.VarChar(255)
+    name        String   @db.VarChar(100)
+    slug        String   @unique @db.VarChar(100)
+    description String?  @db.VarChar(500)
+    icon        String?  @db.VarChar(50)
+    color       String?  @db.VarChar(20)
+    order       Int      @default(0)
+    is_active   Boolean  @default(true)
+    created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+    // Relations
+    user_interests      user_interest[]
+    community_interests community_interest[]
+
+    @@index([is_active])
+    @@index([order])
+}
+
+/// Intereses seleccionados por el usuario
+model user_interest {
+    id          String   @id @db.VarChar(255)
+    user_id     String   @db.VarChar(255)
+    category_id String   @db.VarChar(255)
+    weight      Float    @default(1.0) // Peso ajustable por interacciones
+    source      String   @default("onboarding") @db.VarChar(50)
+    created_at  DateTime @db.Timestamptz(6)
+    updated_at  DateTime @db.Timestamptz(6)
+
+    // Relations
+    user     user              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+    category interest_category @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+    @@unique([user_id, category_id])
+    @@index([user_id])
+    @@index([category_id])
+}
+
+/// Relación entre comunidades y categorías de interés
+model community_interest {
+    community_id String @db.VarChar(255)
+    category_id  String @db.VarChar(255)
+    relevance    Float  @default(1.0)
+
+    // Relations
+    community community         @relation(fields: [community_id], references: [id], onDelete: Cascade)
+    category  interest_category @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+    @@id([community_id, category_id])
+    @@index([category_id])
+}
+
+/// Estado del onboarding del usuario
+model user_onboarding {
+    id               String    @id @db.VarChar(255)
+    user_id          String    @unique @db.VarChar(255)
+    completed        Boolean   @default(false)
+    step_interests   Boolean   @default(false)
+    step_communities Boolean   @default(false)
+    step_profile     Boolean   @default(false)
+    skipped          Boolean   @default(false)
+    completed_at     DateTime? @db.Timestamptz(6)
+    created_at       DateTime  @db.Timestamptz(6)
+    updated_at       DateTime  @db.Timestamptz(6)
+
+    // Relations
+    user user @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// FEED & RECOMMENDATIONS MODELS
+// ============================================
+
+/// Historial de interacciones del usuario con comunidades
+model user_interaction {
+    id           String   @id @db.VarChar(255)
+    user_id      String   @db.VarChar(255)
+    community_id String   @db.VarChar(255)
+    interaction  String   @db.VarChar(50) // view, join, leave, like, share, dismiss
+    metadata     String?  @db.Text // JSON con datos adicionales
+    created_at   DateTime @db.Timestamptz(6)
+
+    // Relations
+    user      user      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+    community community @relation(fields: [community_id], references: [id], onDelete: Cascade)
+
+    @@index([user_id])
+    @@index([community_id])
+    @@index([interaction])
+    @@index([created_at])
+}
+
+/// Cache de scores de comunidades por usuario
+model user_community_score {
+    user_id          String   @db.VarChar(255)
+    community_id     String   @db.VarChar(255)
+    score            Float // Score calculado (0-100)
+    interest_score   Float    @default(0)
+    popularity_score Float    @default(0)
+    freshness_score  Float    @default(0)
+    engagement_score Float    @default(0)
+    reasons          String?  @db.Text // JSON con razones del score
+    calculated_at    DateTime @db.Timestamptz(6)
+
+    // Relations
+    user      user      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+    community community @relation(fields: [community_id], references: [id], onDelete: Cascade)
+
+    @@id([user_id, community_id])
+    @@index([score])
+    @@index([calculated_at])
+}
+
+// ============================================
+// MESSAGING MODELS
+// ============================================
+
+/// Conversación (puede ser privada o de comunidad)
+model conversation {
+    id              String    @id @db.VarChar(255)
+    type            String    @db.VarChar(20) // 'private' | 'community'
+    community_id    String?   @unique @db.VarChar(255) // Solo para type='community'
+    name            String?   @db.VarChar(255) // Nombre del chat de comunidad
+    avatar_url      String?   @db.VarChar(500)
+    created_at      DateTime  @db.Timestamptz(6)
+    updated_at      DateTime  @db.Timestamptz(6)
+    last_message_at DateTime? @db.Timestamptz(6)
+
+    // Relations
+    community    community?                 @relation(fields: [community_id], references: [id], onDelete: Cascade)
+    participants conversation_participant[]
+    messages     message[]
+
+    @@index([type])
+    @@index([last_message_at])
+}
+
+/// Participantes de una conversación
+model conversation_participant {
+    id              String    @id @db.VarChar(255)
+    conversation_id String    @db.VarChar(255)
+    user_id         String    @db.VarChar(255)
+    role            String    @default("member") @db.VarChar(20) // 'admin' | 'member'
+    joined_at       DateTime  @db.Timestamptz(6)
+    last_read_at    DateTime? @db.Timestamptz(6)
+    muted           Boolean   @default(false)
+    is_active       Boolean   @default(true) // false si salió de la conversación
+
+    // Relations
+    conversation conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+    user         user         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    @@unique([conversation_id, user_id])
+    @@index([user_id])
+    @@index([last_read_at])
+    @@index([is_active])
+}
+
+/// Mensajes encriptados E2E
+model message {
+    id              String @id @db.VarChar(255)
+    conversation_id String @db.VarChar(255)
+    sender_id       String @db.VarChar(255)
+
+    // Contenido encriptado E2E
+    encrypted_content String @db.Text // Contenido encriptado (AES-256-GCM)
+    encrypted_keys    String @db.Text // JSON: { recipientId: encryptedKey }
+    content_iv        String @db.VarChar(32) // IV usado para encriptar
+    content_tag       String @db.VarChar(32) // Auth tag de GCM
+
+    // Metadata (no encriptada)
+    type        String  @default("text") @db.VarChar(20) // 'text' | 'image' | 'file' | 'system'
+    reply_to_id String? @db.VarChar(255)
+
+    // Estado
+    created_at DateTime  @db.Timestamptz(6)
+    updated_at DateTime  @db.Timestamptz(6)
+    edited_at  DateTime? @db.Timestamptz(6)
+    deleted_at DateTime? @db.Timestamptz(6)
+
+    // Relations
+    conversation  conversation           @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+    sender        user                   @relation(fields: [sender_id], references: [id], onDelete: Cascade)
+    reply_to      message?               @relation("MessageReplies", fields: [reply_to_id], references: [id])
+    replies       message[]              @relation("MessageReplies")
+    read_receipts message_read_receipt[]
+    reactions     message_reaction[]
+
+    @@index([conversation_id, created_at])
+    @@index([sender_id])
+    @@index([type])
+    @@index([deleted_at])
+}
+
+/// Confirmaciones de lectura
+model message_read_receipt {
+    message_id String   @db.VarChar(255)
+    user_id    String   @db.VarChar(255)
+    read_at    DateTime @db.Timestamptz(6)
+
+    // Relations
+    message message @relation(fields: [message_id], references: [id], onDelete: Cascade)
+    user    user    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    @@id([message_id, user_id])
+}
+
+/// Reacciones a mensajes
+model message_reaction {
+    id         String   @id @db.VarChar(255)
+    message_id String   @db.VarChar(255)
+    user_id    String   @db.VarChar(255)
+    emoji      String   @db.VarChar(20)
+    created_at DateTime @db.Timestamptz(6)
+
+    // Relations
+    message message @relation(fields: [message_id], references: [id], onDelete: Cascade)
+    user    user    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    @@unique([message_id, user_id, emoji])
+    @@index([message_id])
+}
+
+/// Claves públicas de usuarios para E2E
+model user_public_key {
+    id              String    @id @db.VarChar(255)
+    user_id         String    @db.VarChar(255)
+    device_id       String    @db.VarChar(255) // Identificador del dispositivo
+    public_key      String    @db.Text // Clave pública RSA-OAEP (PEM format)
+    key_fingerprint String    @db.VarChar(64) // SHA-256 del public key
+    is_active       Boolean   @default(true)
+    created_at      DateTime  @db.Timestamptz(6)
+    revoked_at      DateTime? @db.Timestamptz(6)
+
+    // Relations
+    user user @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    @@unique([user_id, device_id])
+    @@index([user_id, is_active])
+    @@index([key_fingerprint])
 }
