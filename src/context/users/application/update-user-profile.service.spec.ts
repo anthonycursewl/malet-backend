@@ -18,7 +18,9 @@ describe('UpdateUserProfileService', () => {
         password: 'hashed-password',
         created_at: new Date(),
         avatar_url: 'https://old-avatar.com/avatar.jpg',
-        banner_url: 'https://old-banner.com/banner.jpg'
+        banner_url: 'https://old-banner.com/banner.jpg',
+        verified: false,
+        verification_type_id: null
     });
 
     beforeEach(async () => {

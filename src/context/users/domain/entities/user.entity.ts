@@ -20,6 +20,8 @@ export interface UserPrimitives {
     verified: boolean;
     verification_type_id?: string | null;
     verification_type?: VerificationTypePrimitive | null;
+    email_verified?: boolean;
+    email_verified_at?: Date | null;
 }
 
 export class User {
@@ -34,6 +36,8 @@ export class User {
     private readonly verified: boolean;
     private readonly verification_type_id?: string | null;
     private readonly verification_type?: VerificationTypePrimitive | null;
+    private readonly email_verified: boolean;
+    private readonly email_verified_at?: Date | null;
 
     constructor(params: {
         id: string;
@@ -47,6 +51,8 @@ export class User {
         verified: boolean;
         verification_type_id?: string | null;
         verification_type?: VerificationTypePrimitive | null;
+        email_verified?: boolean;
+        email_verified_at?: Date | null;
     }) {
         this.id = params.id;
         this.name = params.name;
@@ -59,9 +65,11 @@ export class User {
         this.verified = params.verified;
         this.verification_type_id = params.verification_type_id;
         this.verification_type = params.verification_type;
+        this.email_verified = params.email_verified ?? false;
+        this.email_verified_at = params.email_verified_at;
     }
 
-    static async create(user: Omit<UserPrimitives, 'id' | 'created_at' | 'verified' | 'verification_type_id' | 'verification_type'>): Promise<User> {
+    static async create(user: Omit<UserPrimitives, 'id' | 'created_at' | 'verified' | 'verification_type_id' | 'verification_type' | 'email_verified' | 'email_verified_at'>): Promise<User> {
         const hashedPassword = await this.hashPassword(user.password);
 
         return new User({
@@ -75,7 +83,9 @@ export class User {
             banner_url: user.banner_url,
             verified: false,
             verification_type_id: null,
-            verification_type: null
+            verification_type: null,
+            email_verified: false,
+            email_verified_at: null
         })
     }
 
@@ -91,7 +101,9 @@ export class User {
             banner_url: this.banner_url,
             verified: this.verified,
             verification_type_id: this.verification_type_id,
-            verification_type: this.verification_type
+            verification_type: this.verification_type,
+            email_verified: this.email_verified,
+            email_verified_at: this.email_verified_at
         };
     }
 
@@ -143,6 +155,20 @@ export class User {
         return this.verification_type;
     }
 
+    /**
+     * Verifica si el email del usuario ha sido verificado
+     */
+    isEmailVerified(): boolean {
+        return this.email_verified;
+    }
+
+    /**
+     * Obtiene la fecha de verificación del email
+     */
+    getEmailVerifiedAt(): Date | null | undefined {
+        return this.email_verified_at;
+    }
+
     async comparePassword(plainPassword: string): Promise<boolean> {
         if (!plainPassword || !this.password) {
             throw new Error('Both plainPassword and hashedPassword are required for comparison');
@@ -169,3 +195,4 @@ export class User {
 
  * 
 */
+

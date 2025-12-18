@@ -2,13 +2,20 @@ import { Module } from "@nestjs/common";
 import { CREATE_USER_USECASE } from "./domain/ports/in/create-user.usecase";
 import { LOGIN_USER_USECASE } from "./domain/ports/in/login-user.usecase";
 import { UPDATE_USER_PROFILE_USECASE } from "./domain/ports/in/update-user-profile.usecase";
+import { VERIFY_EMAIL_USECASE } from "./domain/ports/in/verify-email.usecase";
+import { RESEND_VERIFICATION_USECASE } from "./domain/ports/in/resend-verification.usecase";
 import { CreateUserService } from "./application/create-user.service";
 import { LoginUserService } from "./application/login-user.service";
 import { UpdateUserProfileService } from "./application/update-user-profile.service";
+import { VerifyEmailService } from "./application/verify-email.service";
+import { ResendVerificationService } from "./application/resend-verification.service";
 import { USER_REPOSITORY_PORT } from "./domain/ports/out/user.repository";
+import { TOKEN_REPOSITORY_PORT } from "./domain/ports/out/token.repository";
 import { UserRepositoryAdapter } from "./infrastructure/persistence/user.repository.adapter";
+import { TokenRepositoryAdapter } from "./infrastructure/persistence/token.repository.adapter";
 import { UsersController } from "./infrastructure/adapters/controllers/users.controller";
 import { UserProfileController } from "./infrastructure/adapters/controllers/user-profile.controller";
+import { EmailVerificationController } from "./infrastructure/adapters/controllers/email-verification.controller";
 import { PrismaModule } from "src/prisma.module";
 import { AuthModule } from "src/auth/auth.module";
 import { AuthController } from "./infrastructure/adapters/controllers/auth.controller";
@@ -20,6 +27,7 @@ import { GetUserByUsernameService } from "./application/get-user-by-username.ser
 @Module({
     imports: [PrismaModule, AuthModule, FileStorageModule],
     providers: [
+        // Casos de uso de usuarios
         {
             provide: CREATE_USER_USECASE,
             useClass: CreateUserService
@@ -33,15 +41,39 @@ import { GetUserByUsernameService } from "./application/get-user-by-username.ser
             useClass: UpdateUserProfileService
         },
         {
+            provide: GET_USER_BY_USERNAME_USECASE,
+            useClass: GetUserByUsernameService
+        },
+
+        // Casos de uso de verificación de email
+        {
+            provide: VERIFY_EMAIL_USECASE,
+            useClass: VerifyEmailService
+        },
+        {
+            provide: RESEND_VERIFICATION_USECASE,
+            useClass: ResendVerificationService
+        },
+
+        // Repositorios
+        {
             provide: USER_REPOSITORY_PORT,
             useClass: UserRepositoryAdapter
         },
         {
-            provide: GET_USER_BY_USERNAME_USECASE,
-            useClass: GetUserByUsernameService
+            provide: TOKEN_REPOSITORY_PORT,
+            useClass: TokenRepositoryAdapter
         },
+
+        // Auth
         AuthUseCase
     ],
-    controllers: [UsersController, AuthController, UserProfileController]
+    controllers: [
+        UsersController,
+        AuthController,
+        UserProfileController,
+        EmailVerificationController
+    ],
+    exports: [USER_REPOSITORY_PORT]
 })
 export class UserModule { }

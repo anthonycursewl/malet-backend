@@ -55,6 +55,6 @@ import { AccountOwnerGuard } from "src/auth/guards/account-owner.guard";
         },
         AccountOwnerGuard
     ],
-    exports: []
+    exports: [ACCOUNT_REPOSITORY_PORT]
 })
 export class WalletModule { }

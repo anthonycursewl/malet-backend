@@ -2,7 +2,6 @@ import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/co
 import { User } from "../../domain/entities/user.entity";
 import { UpdateUserProfileParams, UserRepository } from "../../domain/ports/out/user.repository";
 import { PrismaService } from "src/prisma.service";
-import { triggerAsyncId } from "async_hooks";
 
 @Injectable()
 export class UserRepositoryAdapter implements UserRepository {
@@ -48,7 +47,7 @@ export class UserRepositoryAdapter implements UserRepository {
         return ufp
     }
 
-    async findByEmail(email: string): Promise<User> {
+    async findByEmail(email: string): Promise<User | null> {
         const user = await this.prisma.user.findFirst({
             where: {
                 email
@@ -62,6 +61,8 @@ export class UserRepositoryAdapter implements UserRepository {
                 created_at: true,
                 email: true,
                 verified: true,
+                email_verified: true,
+                email_verified_at: true,
                 verification_type: {
                     select: {
                         id: true,
@@ -73,13 +74,13 @@ export class UserRepositoryAdapter implements UserRepository {
         })
 
         if (!user) {
-            throw new NotFoundException('Usuario no encontrado.')
+            return null;
         }
 
         return User.fromPrimitives({ ...user, password: '' })
     }
 
-    async findById(id: string): Promise<User> {
+    async findById(id: string): Promise<User | null> {
         const user = await this.prisma.user.findUnique({
             where: {
                 id
@@ -87,7 +88,7 @@ export class UserRepositoryAdapter implements UserRepository {
         })
 
         if (!user) {
-            throw new NotFoundException('Usuario no encontrado')
+            return null;
         }
 
         return User.fromPrimitives(user)
@@ -114,6 +115,8 @@ export class UserRepositoryAdapter implements UserRepository {
                 created_at: true,
                 email: true,
                 verified: true,
+                email_verified: true,
+                email_verified_at: true,
                 verification_type: {
                     select: {
                         id: true,
@@ -128,7 +131,7 @@ export class UserRepositoryAdapter implements UserRepository {
         return User.fromPrimitives({ ...updatedUser, password: '' });
     }
 
-    async findByUsername(username: string, onlyUsername: boolean = false): Promise<User | string> {
+    async findByUsername(username: string, onlyUsername: boolean = false): Promise<User | string | null> {
         const select = onlyUsername ? {
             username: true
         } : {
@@ -140,6 +143,8 @@ export class UserRepositoryAdapter implements UserRepository {
             created_at: true,
             email: true,
             verified: true,
+            email_verified: true,
+            email_verified_at: true,
             verification_type_id: true
         }
 
@@ -151,7 +156,7 @@ export class UserRepositoryAdapter implements UserRepository {
         })
 
         if (!user) {
-            return ''
+            return null;
         }
 
         if (onlyUsername) {
@@ -159,5 +164,18 @@ export class UserRepositoryAdapter implements UserRepository {
         }
 
         return User.fromPrimitives({ ...user, password: '' })
+    }
+
+    /**
+     * Marca el email de un usuario como verificado
+     */
+    async verifyEmail(userId: string): Promise<void> {
+        await this.prisma.user.update({
+            where: { id: userId },
+            data: {
+                email_verified: true,
+                email_verified_at: new Date()
+            }
+        });
     }
 }
