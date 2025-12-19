@@ -50,7 +50,6 @@ import { ThrottlerBehindProxyGuard } from './shared/common/guards/throttler-behi
     GarzonModule,
   ],
   providers: [
-    // Aplica el rate limiting globalmente a todos los endpoints
     {
       provide: APP_GUARD,
       useClass: ThrottlerBehindProxyGuard,
