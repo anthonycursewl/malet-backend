@@ -1,4 +1,6 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { UserModule } from './context/users/user.module';
 import { WalletModule } from './context/wallet/wallet.module';
 import { CommunityModule } from './context/communities/community.module';
@@ -11,9 +13,29 @@ import { FileStorageModule } from './shared/infrastructure/file-storage/file-sto
 import { AuthorizationModule } from './shared/infrastructure/authorization/authorization.module';
 import { EmailModule } from './shared/infrastructure/email/email.module';
 import { GarzonModule } from './context/garzon/garzon.module';
+import { BotBlockerMiddleware } from './shared/common/middleware/bot-blocker.middleware';
+import { ThrottlerBehindProxyGuard } from './shared/common/guards/throttler-behind-proxy.guard';
 
 @Module({
   imports: [
+
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 1000,
+        limit: 20,
+      },
+      {
+        name: 'medium',
+        ttl: 10000,
+        limit: 50,
+      },
+      {
+        name: 'long',
+        ttl: 60000,
+        limit: 120,
+      },
+    ]),
     CommonModule,
     FileStorageModule,
     EmailModule,
@@ -25,10 +47,23 @@ import { GarzonModule } from './context/garzon/garzon.module';
     FeedModule,
     MessagingModule,
     DebugModule,
-    GarzonModule
+    GarzonModule,
+  ],
+  providers: [
+    // Aplica el rate limiting globalmente a todos los endpoints
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerBehindProxyGuard,
+    },
   ],
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(BotBlockerMiddleware)
+      .forRoutes('*');
+  }
+}
 
 
 
