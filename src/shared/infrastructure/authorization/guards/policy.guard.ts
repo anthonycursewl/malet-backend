@@ -3,23 +3,16 @@ import {
     CanActivate,
     ExecutionContext,
     ForbiddenException,
-    NotFoundException
+    NotFoundException,
+    Optional
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ModuleRef } from '@nestjs/core';
 import { POLICY_KEY, PolicyMetadata } from '../decorators/check-policy.decorator';
 import { PolicyHandlerService } from '../handlers/policy-handler.service';
 import { PolicyAction } from 'src/shared/domain/policies/policy.interface';
 import { ResourceResolver } from '../resolvers/resource-resolver.interface';
-
-/**
- * Mapa de resolvers por tipo de recurso.
- * Mapea el nombre del recurso al token de inyección del resolver.
- */
-const RESOLVER_TOKENS: Record<string, string> = {
-    'account': 'AccountResourceResolver',
-    'user': 'UserResourceResolver',
-};
+import { AccountResourceResolver } from '../resolvers/account.resolver';
+import { UserResourceResolver } from '../resolvers/user.resolver';
 
 /**
  * Guard que verifica las políticas de autorización declaradas con @CheckPolicy.
@@ -43,11 +36,23 @@ const RESOLVER_TOKENS: Record<string, string> = {
  */
 @Injectable()
 export class PolicyGuard implements CanActivate {
+    private readonly resolvers: Map<string, ResourceResolver<any>>;
+
     constructor(
         private reflector: Reflector,
         private policyHandler: PolicyHandlerService,
-        private moduleRef: ModuleRef
-    ) { }
+        @Optional() private accountResolver: AccountResourceResolver,
+        @Optional() private userResolver: UserResourceResolver,
+    ) {
+        // Construir mapa de resolvers
+        this.resolvers = new Map();
+        if (this.accountResolver) {
+            this.resolvers.set('account', this.accountResolver);
+        }
+        if (this.userResolver) {
+            this.resolvers.set('user', this.userResolver);
+        }
+    }
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const policyMetadata = this.reflector.get<PolicyMetadata>(
@@ -87,20 +92,11 @@ export class PolicyGuard implements CanActivate {
         }
 
         // Obtener el resolver apropiado
-        const resolverToken = RESOLVER_TOKENS[resourceType];
-        if (!resolverToken) {
+        const resolver = this.resolvers.get(resourceType);
+
+        if (!resolver) {
             throw new ForbiddenException(
                 `No hay resolver configurado para el tipo de recurso: ${resourceType}`
-            );
-        }
-
-        // Resolver el recurso
-        let resolver: ResourceResolver<any>;
-        try {
-            resolver = this.moduleRef.get(resolverToken, { strict: false });
-        } catch (error) {
-            throw new ForbiddenException(
-                `Error al obtener el resolver para: ${resourceType}`
             );
         }
 

@@ -13,6 +13,7 @@ import { FileStorageModule } from './shared/infrastructure/file-storage/file-sto
 import { AuthorizationModule } from './shared/infrastructure/authorization/authorization.module';
 import { EmailModule } from './shared/infrastructure/email/email.module';
 import { GarzonModule } from './context/garzon/garzon.module';
+import { AIChatModule } from './context/ai-chat/ai-chat.module';
 import { BotBlockerMiddleware } from './shared/common/middleware/bot-blocker.middleware';
 import { ThrottlerBehindProxyGuard } from './shared/common/guards/throttler-behind-proxy.guard';
 
@@ -48,6 +49,7 @@ import { ThrottlerBehindProxyGuard } from './shared/common/guards/throttler-behi
     MessagingModule,
     DebugModule,
     GarzonModule,
+    AIChatModule,
   ],
   providers: [
     {

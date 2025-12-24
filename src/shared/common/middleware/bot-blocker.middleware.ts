@@ -20,7 +20,6 @@ export class BotBlockerMiddleware implements NestMiddleware {
             userAgent: req.get('user-agent') || '',
             ip: this.extractRealIp(req),
             headers: req.headers as Record<string, string | string[] | undefined>,
-            queryParamsCount: Object.keys(req.query).length,
         };
 
         const result = this.threatDetector.detect(ctx);
