@@ -4,20 +4,20 @@
  */
 
 export interface BlockedPageParams {
-    statusCode: number;
-    reason: string;
-    ip: string;
-    path: string;
-    requestId: string;
-    timestamp: string;
-    method?: string;
+  statusCode: number;
+  reason: string;
+  ip: string;
+  path: string;
+  requestId: string;
+  timestamp: string;
+  method?: string;
 }
 
 export function generateBlockedPageHtml(params: BlockedPageParams): string {
-    const { statusCode, reason, ip, path, requestId, timestamp, method } = params;
-    const truncatedPath = path.length > 40 ? `${path.substring(0, 40)}...` : path;
+  const { statusCode, reason, ip, path, requestId, timestamp, method } = params;
+  const truncatedPath = path.length > 40 ? `${path.substring(0, 40)}...` : path;
 
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">

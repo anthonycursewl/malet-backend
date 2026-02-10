@@ -41,6 +41,9 @@ model user {
     message_read_receipts     message_read_receipt[]
     message_reactions         message_reaction[]
     public_keys               user_public_key[]
+
+    // --- Integration Relations ---
+    linked_accounts linked_account[]
 }
 
 model accounts {
@@ -411,4 +414,68 @@ model user_public_key {
     @@unique([user_id, device_id])
     @@index([user_id, is_active])
     @@index([key_fingerprint])
+}
+
+// ============================================
+// INTEGRATIONS MODELS
+// ============================================
+
+/// Cuentas vinculadas con proveedores externos (Wheek, Google, etc.)
+model linked_account {
+    id               String    @id @db.VarChar(255)
+    user_id          String    @db.VarChar(255)
+    provider         String    @db.VarChar(50) // 'wheek', 'google', etc.
+    provider_user_id String    @db.VarChar(255)
+    access_token     String    @db.Text // Encriptado con AES-256
+    refresh_token    String?   @db.Text // Encriptado con AES-256
+    token_expires_at DateTime? @db.Timestamptz(6)
+    scopes           String[]  @db.VarChar(100)
+    metadata         Json? // Datos adicionales del proveedor
+    is_active        Boolean   @default(true)
+    last_sync_at     DateTime? @db.Timestamptz(6)
+    created_at       DateTime  @db.Timestamptz(6)
+    updated_at       DateTime  @db.Timestamptz(6)
+
+    // Relations
+    user user @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    @@unique([user_id, provider])
+    @@index([provider])
+    @@index([provider_user_id])
+    @@index([is_active])
+    @@index([token_expires_at])
+}
+
+/// Estados OAuth temporales para validar callbacks
+model oauth_state {
+    id            String   @id @db.VarChar(255)
+    user_id       String   @db.VarChar(255)
+    provider      String   @db.VarChar(50)
+    state_token   String   @unique @db.VarChar(255)
+    code_verifier String?  @db.VarChar(255) // Para PKCE
+    redirect_url  String?  @db.VarChar(500)
+    scopes        String[] @db.VarChar(100)
+    expires_at    DateTime @db.Timestamptz(6)
+    created_at    DateTime @db.Timestamptz(6)
+
+    @@index([state_token])
+    @@index([expires_at])
+    @@index([user_id, provider])
+}
+
+/// Configuración de proveedores de integración
+model integration_provider_config {
+    id                    String   @id @db.VarChar(255)
+    provider              String   @unique @db.VarChar(50)
+    display_name          String   @db.VarChar(100)
+    description           String?  @db.VarChar(500)
+    icon_url              String?  @db.VarChar(500)
+    is_enabled            Boolean  @default(true)
+    supports_provisioning Boolean  @default(false)
+    default_scopes        String[] @db.VarChar(100)
+    config                Json? // Configuración adicional
+    created_at            DateTime @db.Timestamptz(6)
+    updated_at            DateTime @db.Timestamptz(6)
+
+    @@index([is_enabled])
 }

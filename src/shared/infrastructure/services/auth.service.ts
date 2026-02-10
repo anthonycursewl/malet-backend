@@ -7,18 +7,20 @@ export class AuthService {
   constructor(private readonly jwtService: JwtService) {}
 
   async generateToken(user: User): Promise<{ access_token: string }> {
-    const payload = { 
-      sub: user.getId(), 
+    const payload = {
+      sub: user.getId(),
       email: user.getEmail(),
-      name: user.getName()
+      name: user.getName(),
     };
-    
+
     return {
       access_token: this.jwtService.sign(payload),
     };
   }
 
-  async validate(token: string): Promise<{ sub: string, email: string, name: string }> {
+  async validate(
+    token: string,
+  ): Promise<{ sub: string; email: string; name: string }> {
     const payload = await this.jwtService.verifyAsync(token);
     return payload;
   }

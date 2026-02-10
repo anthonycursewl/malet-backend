@@ -38,71 +38,61 @@ import { CommunitiesController } from './infrastructure/adapters/controllers/com
 import { CommunityMembersController } from './infrastructure/adapters/controllers/community-members.controller';
 
 @Module({
-    imports: [
-        PrismaModule,
-        AuthModule,
-        FileStorageModule
-    ],
-    providers: [
-        // ============ USE CASES ============
+  imports: [PrismaModule, AuthModule, FileStorageModule],
+  providers: [
+    // ============ USE CASES ============
 
-        // Community CRUD
-        {
-            provide: CREATE_COMMUNITY_USECASE,
-            useClass: CreateCommunityService
-        },
-        {
-            provide: GET_COMMUNITY_USECASE,
-            useClass: GetCommunityService
-        },
-        {
-            provide: SEARCH_COMMUNITIES_USECASE,
-            useClass: SearchCommunitiesService
-        },
-        {
-            provide: UPDATE_COMMUNITY_USECASE,
-            useClass: UpdateCommunityService
-        },
-        {
-            provide: DELETE_COMMUNITY_USECASE,
-            useClass: DeleteCommunityService
-        },
-        {
-            provide: GET_USER_COMMUNITIES_USECASE,
-            useClass: GetUserCommunitiesService
-        },
+    // Community CRUD
+    {
+      provide: CREATE_COMMUNITY_USECASE,
+      useClass: CreateCommunityService,
+    },
+    {
+      provide: GET_COMMUNITY_USECASE,
+      useClass: GetCommunityService,
+    },
+    {
+      provide: SEARCH_COMMUNITIES_USECASE,
+      useClass: SearchCommunitiesService,
+    },
+    {
+      provide: UPDATE_COMMUNITY_USECASE,
+      useClass: UpdateCommunityService,
+    },
+    {
+      provide: DELETE_COMMUNITY_USECASE,
+      useClass: DeleteCommunityService,
+    },
+    {
+      provide: GET_USER_COMMUNITIES_USECASE,
+      useClass: GetUserCommunitiesService,
+    },
 
-        // Member Management
-        {
-            provide: JOIN_COMMUNITY_USECASE,
-            useClass: JoinCommunityService
-        },
-        {
-            provide: LEAVE_COMMUNITY_USECASE,
-            useClass: LeaveCommunityService
-        },
-        {
-            provide: MANAGE_MEMBERS_USECASE,
-            useClass: ManageMembersService
-        },
+    // Member Management
+    {
+      provide: JOIN_COMMUNITY_USECASE,
+      useClass: JoinCommunityService,
+    },
+    {
+      provide: LEAVE_COMMUNITY_USECASE,
+      useClass: LeaveCommunityService,
+    },
+    {
+      provide: MANAGE_MEMBERS_USECASE,
+      useClass: ManageMembersService,
+    },
 
-        // ============ REPOSITORIES ============
-        {
-            provide: COMMUNITY_REPOSITORY_PORT,
-            useClass: CommunityRepositoryAdapter
-        },
-        {
-            provide: COMMUNITY_MEMBER_REPOSITORY_PORT,
-            useClass: CommunityMemberRepositoryAdapter
-        }
-    ],
-    controllers: [
-        CommunitiesController,
-        CommunityMembersController
-    ],
-    exports: [
-        COMMUNITY_REPOSITORY_PORT,
-        COMMUNITY_MEMBER_REPOSITORY_PORT
-    ]
+    // ============ REPOSITORIES ============
+    {
+      provide: COMMUNITY_REPOSITORY_PORT,
+      useClass: CommunityRepositoryAdapter,
+    },
+    {
+      provide: COMMUNITY_MEMBER_REPOSITORY_PORT,
+      useClass: CommunityMemberRepositoryAdapter,
+    },
+  ],
+  controllers: [CommunitiesController, CommunityMembersController],
+  exports: [COMMUNITY_REPOSITORY_PORT, COMMUNITY_MEMBER_REPOSITORY_PORT],
 })
-export class CommunityModule { }
+export class CommunityModule {}

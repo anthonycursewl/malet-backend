@@ -24,42 +24,40 @@ import { CommunityScoreRepositoryAdapter } from './infrastructure/persistence/co
 import { FeedController } from './infrastructure/adapters/controllers/feed.controller';
 
 @Module({
-    imports: [
-        PrismaModule,
-        AuthModule,
-        OnboardingModule // Importar para acceder a repositorios de intereses
-    ],
-    providers: [
-        // ============ ENGINE (Singleton) ============
-        RecommendationEngineService,
+  imports: [
+    PrismaModule,
+    AuthModule,
+    OnboardingModule, // Importar para acceder a repositorios de intereses
+  ],
+  providers: [
+    // ============ ENGINE (Singleton) ============
+    RecommendationEngineService,
 
-        // ============ USE CASES ============
-        {
-            provide: GET_FEED_USECASE,
-            useClass: GetFeedService
-        },
-        {
-            provide: TRACK_INTERACTION_USECASE,
-            useClass: TrackInteractionService
-        },
+    // ============ USE CASES ============
+    {
+      provide: GET_FEED_USECASE,
+      useClass: GetFeedService,
+    },
+    {
+      provide: TRACK_INTERACTION_USECASE,
+      useClass: TrackInteractionService,
+    },
 
-        // ============ REPOSITORIES ============
-        {
-            provide: USER_INTERACTION_REPOSITORY_PORT,
-            useClass: UserInteractionRepositoryAdapter
-        },
-        {
-            provide: COMMUNITY_SCORE_REPOSITORY_PORT,
-            useClass: CommunityScoreRepositoryAdapter
-        }
-    ],
-    controllers: [
-        FeedController
-    ],
-    exports: [
-        RecommendationEngineService,
-        USER_INTERACTION_REPOSITORY_PORT,
-        COMMUNITY_SCORE_REPOSITORY_PORT
-    ]
+    // ============ REPOSITORIES ============
+    {
+      provide: USER_INTERACTION_REPOSITORY_PORT,
+      useClass: UserInteractionRepositoryAdapter,
+    },
+    {
+      provide: COMMUNITY_SCORE_REPOSITORY_PORT,
+      useClass: CommunityScoreRepositoryAdapter,
+    },
+  ],
+  controllers: [FeedController],
+  exports: [
+    RecommendationEngineService,
+    USER_INTERACTION_REPOSITORY_PORT,
+    COMMUNITY_SCORE_REPOSITORY_PORT,
+  ],
 })
-export class FeedModule { }
+export class FeedModule {}

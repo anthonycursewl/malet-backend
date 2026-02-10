@@ -8,7 +8,7 @@ export class DebugController {
   @Get('env')
   getEnv() {
     return {
-      JWT_SECRET: ":b"
+      JWT_SECRET: ':b',
     };
   }
 }

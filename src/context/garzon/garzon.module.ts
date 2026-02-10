@@ -30,10 +30,10 @@ import { WalletGarzonController } from './infrastructure/adapters/controllers/wa
 
 /**
  * Garzon Context Module
- * 
- * This module handles authentication, dashboard data, and wallet information 
+ *
+ * This module handles authentication, dashboard data, and wallet information
  * against the legacy Garzon system and SuperGarzon API.
- * 
+ *
  * It follows hexagonal architecture with:
  * - Input ports: AuthGarzonUseCase, DashboardGarzonUseCase, WalletGarzonUseCase (interfaces)
  * - Output ports: AuthGarzonRepository, DashboardGarzonRepository, WalletGarzonRepository (abstract classes)
@@ -41,62 +41,62 @@ import { WalletGarzonController } from './infrastructure/adapters/controllers/wa
  * - Infrastructure adapters: LaravelAuthAdapter, LaravelDashboardAdapter, SuperGarzonWalletAdapter
  */
 @Module({
-    imports: [HttpModule],
-    controllers: [AuthGarzonController, DashboardGarzonController, WalletGarzonController],
-    providers: [
-        // Infrastructure adapter for the auth repository port
-        {
-            provide: AUTH_GARZON_REPOSITORY,
-            useClass: LaravelAuthAdapter,
-        },
-        // Infrastructure adapter for the dashboard repository port
-        {
-            provide: DASHBOARD_GARZON_REPOSITORY,
-            useClass: LaravelDashboardAdapter,
-        },
-        // Infrastructure adapter for the wallet repository port
-        {
-            provide: WALLET_GARZON_REPOSITORY,
-            useClass: SuperGarzonWalletAdapter,
-        },
-        // Application service implementing the auth use case port
-        {
-            provide: AUTH_GARZON_USE_CASE,
-            useClass: LoginGarzonUseCase,
-        },
-        // Application service implementing the dashboard use case port
-        {
-            provide: DASHBOARD_GARZON_USE_CASE,
-            useClass: DashboardGarzonService,
-        },
-        // Application service implementing the wallet use case port
-        {
-            provide: WALLET_GARZON_USE_CASE,
-            useClass: WalletGarzonService,
-        },
-        // Additional services
-        AuthGarzonService,
-        LoginGarzonUseCase,
-        DashboardGarzonService,
-        DashboardCompleteService,
-        WalletGarzonService,
-    ],
-    exports: [
-        AUTH_GARZON_USE_CASE,
-        AUTH_GARZON_REPOSITORY,
-        DASHBOARD_GARZON_USE_CASE,
-        DASHBOARD_GARZON_REPOSITORY,
-        WALLET_GARZON_USE_CASE,
-        WALLET_GARZON_REPOSITORY,
-        LoginGarzonUseCase,
-        AuthGarzonService,
-        DashboardGarzonService,
-        DashboardCompleteService,
-        WalletGarzonService,
-    ],
+  imports: [HttpModule],
+  controllers: [
+    AuthGarzonController,
+    DashboardGarzonController,
+    WalletGarzonController,
+  ],
+  providers: [
+    // Infrastructure adapter for the auth repository port
+    {
+      provide: AUTH_GARZON_REPOSITORY,
+      useClass: LaravelAuthAdapter,
+    },
+    // Infrastructure adapter for the dashboard repository port
+    {
+      provide: DASHBOARD_GARZON_REPOSITORY,
+      useClass: LaravelDashboardAdapter,
+    },
+    // Infrastructure adapter for the wallet repository port
+    {
+      provide: WALLET_GARZON_REPOSITORY,
+      useClass: SuperGarzonWalletAdapter,
+    },
+    // Application service implementing the auth use case port
+    {
+      provide: AUTH_GARZON_USE_CASE,
+      useClass: LoginGarzonUseCase,
+    },
+    // Application service implementing the dashboard use case port
+    {
+      provide: DASHBOARD_GARZON_USE_CASE,
+      useClass: DashboardGarzonService,
+    },
+    // Application service implementing the wallet use case port
+    {
+      provide: WALLET_GARZON_USE_CASE,
+      useClass: WalletGarzonService,
+    },
+    // Additional services
+    AuthGarzonService,
+    LoginGarzonUseCase,
+    DashboardGarzonService,
+    DashboardCompleteService,
+    WalletGarzonService,
+  ],
+  exports: [
+    AUTH_GARZON_USE_CASE,
+    AUTH_GARZON_REPOSITORY,
+    DASHBOARD_GARZON_USE_CASE,
+    DASHBOARD_GARZON_REPOSITORY,
+    WALLET_GARZON_USE_CASE,
+    WALLET_GARZON_REPOSITORY,
+    LoginGarzonUseCase,
+    AuthGarzonService,
+    DashboardGarzonService,
+    DashboardCompleteService,
+    WalletGarzonService,
+  ],
 })
-export class GarzonModule { }
-
-
-
-
+export class GarzonModule {}

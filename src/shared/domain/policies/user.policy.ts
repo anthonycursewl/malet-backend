@@ -7,34 +7,34 @@ import { User } from 'src/context/users/domain/entities/user.entity';
  * realizar operaciones sobre los perfiles de usuario.
  */
 export class UserPolicy implements Policy<User> {
-    /**
-     * El registro es público, CREATE no requiere verificación de ownership
-     * Este método no debería usarse normalmente ya que registro es público
-     */
-    canCreate(user: AuthenticatedUser): boolean {
-        return false;
-    }
+  /**
+   * El registro es público, CREATE no requiere verificación de ownership
+   * Este método no debería usarse normalmente ya que registro es público
+   */
+  canCreate(_user: AuthenticatedUser): boolean {
+    return false;
+  }
 
-    /**
-     * Cualquier usuario autenticado puede ver perfiles públicos.
-     * Para datos sensibles, se verificaría el ownership.
-     */
-    canRead(user: AuthenticatedUser, targetUser: User): boolean {
-        // Perfiles son públicos para usuarios autenticados
-        return true;
-    }
+  /**
+   * Cualquier usuario autenticado puede ver perfiles públicos.
+   * Para datos sensibles, se verificaría el ownership.
+   */
+  canRead(_user: AuthenticatedUser, _targetUser: User): boolean {
+    // Perfiles son públicos para usuarios autenticados
+    return true;
+  }
 
-    /**
-     * Solo puedes actualizar tu propio perfil
-     */
-    canUpdate(user: AuthenticatedUser, targetUser: User): boolean {
-        return targetUser.getId() === user.userId;
-    }
+  /**
+   * Solo puedes actualizar tu propio perfil
+   */
+  canUpdate(user: AuthenticatedUser, targetUser: User): boolean {
+    return targetUser.getId() === user.userId;
+  }
 
-    /**
-     * Solo puedes eliminar tu propia cuenta
-     */
-    canDelete(user: AuthenticatedUser, targetUser: User): boolean {
-        return targetUser.getId() === user.userId;
-    }
+  /**
+   * Solo puedes eliminar tu propia cuenta
+   */
+  canDelete(user: AuthenticatedUser, targetUser: User): boolean {
+    return targetUser.getId() === user.userId;
+  }
 }

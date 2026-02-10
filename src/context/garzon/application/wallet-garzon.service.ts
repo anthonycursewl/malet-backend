@@ -1,14 +1,14 @@
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import {
-    ClientWalletResponse,
-    GetWalletParams,
-    GenerateWalletTokenParams,
-    WalletTokenResponse,
+  ClientWalletResponse,
+  GetWalletParams,
+  GenerateWalletTokenParams,
+  WalletTokenResponse,
 } from '../domain/entities/wallet.entity';
 import { WalletGarzonUseCase } from '../domain/ports/in/wallet-garzon.usecase';
 import {
-    WALLET_GARZON_REPOSITORY,
-    WalletGarzonRepository,
+  WALLET_GARZON_REPOSITORY,
+  WalletGarzonRepository,
 } from '../domain/ports/out/wallet-garzon.repository';
 
 /**
@@ -17,30 +17,34 @@ import {
  */
 @Injectable()
 export class WalletGarzonService implements WalletGarzonUseCase {
-    constructor(
-        @Inject(WALLET_GARZON_REPOSITORY)
-        private readonly walletRepository: WalletGarzonRepository,
-    ) { }
+  constructor(
+    @Inject(WALLET_GARZON_REPOSITORY)
+    private readonly walletRepository: WalletGarzonRepository,
+  ) {}
 
-    /**
-     * Obtiene las wallets de un cliente
-     * @param params.identifier - ID numérico ("2260") o número de identificación ("V30853507")
-     */
-    async getClientWallets(params: GetWalletParams): Promise<ClientWalletResponse> {
-        if (!params.identifier || params.identifier.trim() === '') {
-            throw new BadRequestException('El identificador del cliente es requerido');
-        }
-
-        return this.walletRepository.getClientWallets(params);
+  /**
+   * Obtiene las wallets de un cliente
+   * @param params.identifier - ID numérico ("2260") o número de identificación ("V30853507")
+   */
+  async getClientWallets(
+    params: GetWalletParams,
+  ): Promise<ClientWalletResponse> {
+    if (!params.identifier || params.identifier.trim() === '') {
+      throw new BadRequestException(
+        'El identificador del cliente es requerido',
+      );
     }
 
-    /**
-     * Genera token(s) para las wallets especificadas
-     * @param params.wallets - Array de wallets con id, moneda y client_id
-     */
-    async generateToken(params: GenerateWalletTokenParams): Promise<WalletTokenResponse> {
-        return this.walletRepository.generateToken(params);
-    }
+    return this.walletRepository.getClientWallets(params);
+  }
+
+  /**
+   * Genera token(s) para las wallets especificadas
+   * @param params.wallets - Array de wallets con id, moneda y client_id
+   */
+  async generateToken(
+    params: GenerateWalletTokenParams,
+  ): Promise<WalletTokenResponse> {
+    return this.walletRepository.generateToken(params);
+  }
 }
-
-

@@ -2,12 +2,12 @@
  * Tipos de comunidad disponibles
  */
 export enum CommunityType {
-    /** Cualquier usuario puede unirse directamente */
-    PUBLIC = 'public',
+  /** Cualquier usuario puede unirse directamente */
+  PUBLIC = 'public',
 
-    /** Requiere aprobación de un admin para unirse */
-    PRIVATE = 'private',
+  /** Requiere aprobación de un admin para unirse */
+  PRIVATE = 'private',
 
-    /** Requiere suscripción o pago para unirse */
-    PREMIUM = 'premium'
+  /** Requiere suscripción o pago para unirse */
+  PREMIUM = 'premium',
 }

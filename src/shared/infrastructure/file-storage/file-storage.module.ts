@@ -5,13 +5,13 @@ import { S3FileStorageAdapter } from './s3-file-storage.adapter';
 
 @Global()
 @Module({
-    imports: [ConfigModule],
-    providers: [
-        {
-            provide: FILE_STORAGE_PORT,
-            useClass: S3FileStorageAdapter
-        }
-    ],
-    exports: [FILE_STORAGE_PORT]
+  imports: [ConfigModule],
+  providers: [
+    {
+      provide: FILE_STORAGE_PORT,
+      useClass: S3FileStorageAdapter,
+    },
+  ],
+  exports: [FILE_STORAGE_PORT],
 })
-export class FileStorageModule { }
+export class FileStorageModule {}

@@ -7,31 +7,31 @@ import { Account } from 'src/context/wallet/domain/entities/account.entity';
  * realizar operaciones sobre las cuentas.
  */
 export class AccountPolicy implements Policy<Account> {
-    /**
-     * Cualquier usuario autenticado puede crear cuentas
-     */
-    canCreate(user: AuthenticatedUser): boolean {
-        return !!user.userId;
-    }
+  /**
+   * Cualquier usuario autenticado puede crear cuentas
+   */
+  canCreate(user: AuthenticatedUser): boolean {
+    return !!user.userId;
+  }
 
-    /**
-     * Solo el dueño puede ver la cuenta
-     */
-    canRead(user: AuthenticatedUser, account: Account): boolean {
-        return account.getUserId() === user.userId;
-    }
+  /**
+   * Solo el dueño puede ver la cuenta
+   */
+  canRead(user: AuthenticatedUser, account: Account): boolean {
+    return account.getUserId() === user.userId;
+  }
 
-    /**
-     * Solo el dueño puede actualizar la cuenta
-     */
-    canUpdate(user: AuthenticatedUser, account: Account): boolean {
-        return account.getUserId() === user.userId;
-    }
+  /**
+   * Solo el dueño puede actualizar la cuenta
+   */
+  canUpdate(user: AuthenticatedUser, account: Account): boolean {
+    return account.getUserId() === user.userId;
+  }
 
-    /**
-     * Solo el dueño puede eliminar la cuenta
-     */
-    canDelete(user: AuthenticatedUser, account: Account): boolean {
-        return account.getUserId() === user.userId;
-    }
+  /**
+   * Solo el dueño puede eliminar la cuenta
+   */
+  canDelete(user: AuthenticatedUser, account: Account): boolean {
+    return account.getUserId() === user.userId;
+  }
 }

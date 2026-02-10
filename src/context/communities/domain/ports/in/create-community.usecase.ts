@@ -7,16 +7,16 @@ export const CREATE_COMMUNITY_USECASE = 'CREATE_COMMUNITY_USECASE';
  * Parámetros para crear una comunidad
  */
 export interface CreateCommunityParams {
-    name: string;
-    description?: string;
-    type: CommunityType;
-    avatarFile?: Express.Multer.File;
-    bannerFile?: Express.Multer.File;
+  name: string;
+  description?: string;
+  type: CommunityType;
+  avatarFile?: Express.Multer.File;
+  bannerFile?: Express.Multer.File;
 }
 
 /**
  * Puerto de entrada para crear una comunidad
  */
 export interface CreateCommunityUseCase {
-    execute(userId: string, params: CreateCommunityParams): Promise<Community>;
+  execute(userId: string, params: CreateCommunityParams): Promise<Community>;
 }

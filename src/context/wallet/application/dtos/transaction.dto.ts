@@ -1,19 +1,19 @@
-import { IsNumber, IsString, IsNotEmpty } from "class-validator";
+import { IsNumber, IsString, IsNotEmpty } from 'class-validator';
 
 export class TransactionDto {
-    @IsString()
-    @IsNotEmpty()
-    name: string;
+  @IsString()
+  @IsNotEmpty()
+  name: string;
 
-    @IsNumber()
-    @IsNotEmpty()
-    amount: number;
+  @IsNumber()
+  @IsNotEmpty()
+  amount: number;
 
-    @IsString()
-    @IsNotEmpty()
-    type: string;
+  @IsString()
+  @IsNotEmpty()
+  type: string;
 
-    @IsString()
-    @IsNotEmpty()
-    account_id: string;
+  @IsString()
+  @IsNotEmpty()
+  account_id: string;
 }

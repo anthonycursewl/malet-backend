@@ -9,10 +9,15 @@ export class LoggingMiddleware implements NestMiddleware {
     const startTime = Date.now();
 
     // Registrar la petición entrante
-    console.log(`[${new Date().toISOString()}] ${method} ${originalUrl} - IP: ${ip} - User-Agent: ${userAgent}`);
-    
+    console.log(
+      `[${new Date().toISOString()}] ${method} ${originalUrl} - IP: ${ip} - User-Agent: ${userAgent}`,
+    );
+
     // Registrar el cuerpo de la petición (excepto para ciertos métodos)
-    if (['POST', 'PUT', 'PATCH'].includes(method) && Object.keys(req.body).length > 0) {
+    if (
+      ['POST', 'PUT', 'PATCH'].includes(method) &&
+      Object.keys(req.body).length > 0
+    ) {
       console.log('Request Body:', JSON.stringify(req.body, null, 2));
     }
 
@@ -34,8 +39,10 @@ export class LoggingMiddleware implements NestMiddleware {
       const { statusCode } = res;
       const contentLength = res.get('content-length') || 0;
       const responseTime = Date.now() - startTime;
-      
-      console.log(`[${new Date().toISOString()}] ${method} ${originalUrl} - Status: ${statusCode} - ${contentLength}b - ${responseTime}ms`);
+
+      console.log(
+        `[${new Date().toISOString()}] ${method} ${originalUrl} - Status: ${statusCode} - ${contentLength}b - ${responseTime}ms`,
+      );
     });
 
     next();

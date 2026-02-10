@@ -14,12 +14,12 @@ import { AuthorizationModule } from './shared/infrastructure/authorization/autho
 import { EmailModule } from './shared/infrastructure/email/email.module';
 import { GarzonModule } from './context/garzon/garzon.module';
 import { AIChatModule } from './context/ai-chat/ai-chat.module';
+import { IntegrationsModule } from './context/integrations/infrastructure/integrations.module';
 import { BotBlockerMiddleware } from './shared/common/middleware/bot-blocker.middleware';
 import { ThrottlerBehindProxyGuard } from './shared/common/guards/throttler-behind-proxy.guard';
 
 @Module({
   imports: [
-
     ThrottlerModule.forRoot([
       {
         name: 'short',
@@ -50,6 +50,7 @@ import { ThrottlerBehindProxyGuard } from './shared/common/guards/throttler-behi
     DebugModule,
     GarzonModule,
     AIChatModule,
+    IntegrationsModule,
   ],
   providers: [
     {
@@ -60,11 +61,6 @@ import { ThrottlerBehindProxyGuard } from './shared/common/guards/throttler-behi
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(BotBlockerMiddleware)
-      .forRoutes('*');
+    consumer.apply(BotBlockerMiddleware).forRoutes('*');
   }
 }
-
-
-

@@ -4,9 +4,9 @@
  */
 
 export interface EmailTemplateData {
-    subject: string;
-    html: string;
-    text: string;
+  subject: string;
+  html: string;
+  text: string;
 }
 
 /**
@@ -14,18 +14,18 @@ export interface EmailTemplateData {
  * Centraliza el diseño y facilita la modificación de estilos.
  */
 export class EmailTemplates {
-    // Colores del branding
-    private static readonly BRAND_COLOR = '#10B981';  // Verde esmeralda
-    private static readonly BRAND_COLOR_LIGHT = '#F0FDF4';
-    private static readonly TEXT_COLOR = '#1F2937';
-    private static readonly TEXT_SECONDARY = '#6B7280';
-    private static readonly APP_NAME = 'Malet';
+  // Colores del branding
+  private static readonly BRAND_COLOR = '#10B981'; // Verde esmeralda
+  private static readonly BRAND_COLOR_LIGHT = '#F0FDF4';
+  private static readonly TEXT_COLOR = '#1F2937';
+  private static readonly TEXT_SECONDARY = '#6B7280';
+  private static readonly APP_NAME = 'Malet';
 
-    /**
-     * Wrapper base para todos los emails
-     */
-    private static baseTemplate(content: string): string {
-        return `
+  /**
+   * Wrapper base para todos los emails
+   */
+  private static baseTemplate(content: string): string {
+    return `
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -139,13 +139,13 @@ export class EmailTemplates {
     </div>
 </body>
 </html>`;
-    }
+  }
 
-    /**
-     * Template para verificación de email
-     */
-    static verification(username: string, code: string): EmailTemplateData {
-        const html = this.baseTemplate(`
+  /**
+   * Template para verificación de email
+   */
+  static verification(username: string, code: string): EmailTemplateData {
+    const html = this.baseTemplate(`
             <h1>¡Hola ${username}! 👋</h1>
             <p>Gracias por registrarte en ${this.APP_NAME}. Para completar tu registro, usa el siguiente código de verificación:</p>
             
@@ -160,7 +160,7 @@ export class EmailTemplates {
             </div>
         `);
 
-        const text = `
+    const text = `
 ¡Hola ${username}!
 
 Gracias por registrarte en ${this.APP_NAME}. Tu código de verificación es:
@@ -174,18 +174,18 @@ Si no creaste una cuenta en ${this.APP_NAME}, puedes ignorar este mensaje.
 — El equipo de ${this.APP_NAME}
         `.trim();
 
-        return {
-            subject: `${code} - Verifica tu cuenta de ${this.APP_NAME}`,
-            html,
-            text
-        };
-    }
+    return {
+      subject: `${code} - Verifica tu cuenta de ${this.APP_NAME}`,
+      html,
+      text,
+    };
+  }
 
-    /**
-     * Template para bienvenida después de verificar
-     */
-    static welcome(username: string): EmailTemplateData {
-        const html = this.baseTemplate(`
+  /**
+   * Template para bienvenida después de verificar
+   */
+  static welcome(username: string): EmailTemplateData {
+    const html = this.baseTemplate(`
             <h1>¡Bienvenido a ${this.APP_NAME}, ${username}! 🎉</h1>
             <p>Tu cuenta ha sido verificada exitosamente. Ahora puedes disfrutar de todas las funcionalidades de ${this.APP_NAME}.</p>
             
@@ -202,7 +202,7 @@ Si no creaste una cuenta en ${this.APP_NAME}, puedes ignorar este mensaje.
             </p>
         `);
 
-        const text = `
+    const text = `
 ¡Bienvenido a ${this.APP_NAME}, ${username}! 🎉
 
 Tu cuenta ha sido verificada exitosamente. Ahora puedes disfrutar de todas las funcionalidades de ${this.APP_NAME}.
@@ -210,18 +210,18 @@ Tu cuenta ha sido verificada exitosamente. Ahora puedes disfrutar de todas las f
 — El equipo de ${this.APP_NAME}
         `.trim();
 
-        return {
-            subject: `¡Bienvenido a ${this.APP_NAME}! 🎉`,
-            html,
-            text
-        };
-    }
+    return {
+      subject: `¡Bienvenido a ${this.APP_NAME}! 🎉`,
+      html,
+      text,
+    };
+  }
 
-    /**
-     * Template para restablecimiento de contraseña
-     */
-    static passwordReset(username: string, code: string): EmailTemplateData {
-        const html = this.baseTemplate(`
+  /**
+   * Template para restablecimiento de contraseña
+   */
+  static passwordReset(username: string, code: string): EmailTemplateData {
+    const html = this.baseTemplate(`
             <h1>Restablecer contraseña</h1>
             <p>Hola ${username}, recibimos una solicitud para restablecer la contraseña de tu cuenta.</p>
             
@@ -237,7 +237,7 @@ Tu cuenta ha sido verificada exitosamente. Ahora puedes disfrutar de todas las f
             </div>
         `);
 
-        const text = `
+    const text = `
 Hola ${username},
 
 Recibimos una solicitud para restablecer la contraseña de tu cuenta. Tu código es:
@@ -251,10 +251,10 @@ Si no solicitaste restablecer tu contraseña, te recomendamos cambiar tu contras
 — El equipo de ${this.APP_NAME}
         `.trim();
 
-        return {
-            subject: `${code} - Restablecer contraseña de ${this.APP_NAME}`,
-            html,
-            text
-        };
-    }
+    return {
+      subject: `${code} - Restablecer contraseña de ${this.APP_NAME}`,
+      html,
+      text,
+    };
+  }
 }

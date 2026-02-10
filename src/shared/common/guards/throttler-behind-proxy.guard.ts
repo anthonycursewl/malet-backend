@@ -7,35 +7,36 @@ import { ThrottlerGuard, ThrottlerException } from '@nestjs/throttler';
  */
 @Injectable()
 export class ThrottlerBehindProxyGuard extends ThrottlerGuard {
-    private readonly logger = new Logger('RateLimiter');
+  private readonly logger = new Logger('RateLimiter');
 
-    protected async getTracker(req: Record<string, any>): Promise<string> {
-        const cfIp = req.headers['cf-connecting-ip'];
-        const realIp = req.headers['x-real-ip'];
-        const forwardedFor = req.headers['x-forwarded-for'];
+  protected async getTracker(req: Record<string, any>): Promise<string> {
+    const cfIp = req.headers['cf-connecting-ip'];
+    const realIp = req.headers['x-real-ip'];
+    const forwardedFor = req.headers['x-forwarded-for'];
 
-        let ip = cfIp
-            || realIp
-            || (forwardedFor ? forwardedFor.split(',')[0].trim() : null)
-            || req.ip
-            || 'unknown';
+    const ip =
+      cfIp ||
+      realIp ||
+      (forwardedFor ? forwardedFor.split(',')[0].trim() : null) ||
+      req.ip ||
+      'unknown';
 
-        return ip;
-    }
+    return ip;
+  }
 
-    protected async throwThrottlingException(
-        context: ExecutionContext,
-        throttlerLimitDetail: any,
-    ): Promise<void> {
-        const request = context.switchToHttp().getRequest();
-        const ip = await this.getTracker(request);
-        const path = request.originalUrl || request.url;
+  protected async throwThrottlingException(
+    context: ExecutionContext,
+    throttlerLimitDetail: any,
+  ): Promise<void> {
+    const request = context.switchToHttp().getRequest();
+    const ip = await this.getTracker(request);
+    const path = request.originalUrl || request.url;
 
-        this.logger.warn(
-            `🚫 Rate limit exceeded: IP=${ip}, Path=${path}, ` +
-            `Limit=${throttlerLimitDetail.limit}, TTL=${throttlerLimitDetail.ttl}ms`
-        );
+    this.logger.warn(
+      `🚫 Rate limit exceeded: IP=${ip}, Path=${path}, ` +
+        `Limit=${throttlerLimitDetail.limit}, TTL=${throttlerLimitDetail.ttl}ms`,
+    );
 
-        throw new ThrottlerException('Too Many Requests - Please slow down');
-    }
+    throw new ThrottlerException('Too Many Requests - Please slow down');
+  }
 }

@@ -1,20 +1,31 @@
-import { IsArray, IsString, IsOptional, IsNumber, IsBoolean, ValidateNested, IsIn, Min, Max, ArrayMinSize } from 'class-validator';
+import {
+  IsArray,
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsBoolean,
+  ValidateNested,
+  IsIn,
+  Min,
+  Max,
+  ArrayMinSize,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 /**
  * DTO for individual chat message
  */
 export class ChatMessageDto {
-    @IsIn(['user', 'assistant', 'system'])
-    role: 'user' | 'assistant' | 'system';
+  @IsIn(['user', 'assistant', 'system'])
+  role: 'user' | 'assistant' | 'system';
 
-    @IsString()
-    content: string;
+  @IsString()
+  content: string;
 }
 
 /**
  * DTO for AI Chat request
- * 
+ *
  * @example
  * {
  *   "messages": [
@@ -26,29 +37,29 @@ export class ChatMessageDto {
  * }
  */
 export class AIChatRequestDto {
-    @IsArray()
-    @ArrayMinSize(1, { message: 'At least one message is required' })
-    @ValidateNested({ each: true })
-    @Type(() => ChatMessageDto)
-    messages: ChatMessageDto[];
+  @IsArray()
+  @ArrayMinSize(1, { message: 'At least one message is required' })
+  @ValidateNested({ each: true })
+  @Type(() => ChatMessageDto)
+  messages: ChatMessageDto[];
 
-    @IsOptional()
-    @IsString()
-    model?: string;
+  @IsOptional()
+  @IsString()
+  model?: string;
 
-    @IsOptional()
-    @IsNumber()
-    @Min(1)
-    @Max(4096)
-    maxTokens?: number;
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(4096)
+  maxTokens?: number;
 
-    @IsOptional()
-    @IsNumber()
-    @Min(0)
-    @Max(2)
-    temperature?: number;
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(2)
+  temperature?: number;
 
-    @IsOptional()
-    @IsBoolean()
-    stream?: boolean;
+  @IsOptional()
+  @IsBoolean()
+  stream?: boolean;
 }

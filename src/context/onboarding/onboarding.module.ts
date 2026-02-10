@@ -28,50 +28,45 @@ import { UserOnboardingRepositoryAdapter } from './infrastructure/persistence/us
 import { OnboardingController } from './infrastructure/adapters/controllers/onboarding.controller';
 
 @Module({
-    imports: [
-        PrismaModule,
-        AuthModule
-    ],
-    providers: [
-        // ============ USE CASES ============
-        {
-            provide: GET_INTEREST_CATEGORIES_USECASE,
-            useClass: GetInterestCategoriesService
-        },
-        {
-            provide: SAVE_USER_INTERESTS_USECASE,
-            useClass: SaveUserInterestsService
-        },
-        {
-            provide: GET_ONBOARDING_STATUS_USECASE,
-            useClass: GetOnboardingStatusService
-        },
-        {
-            provide: COMPLETE_ONBOARDING_USECASE,
-            useClass: CompleteOnboardingService
-        },
+  imports: [PrismaModule, AuthModule],
+  providers: [
+    // ============ USE CASES ============
+    {
+      provide: GET_INTEREST_CATEGORIES_USECASE,
+      useClass: GetInterestCategoriesService,
+    },
+    {
+      provide: SAVE_USER_INTERESTS_USECASE,
+      useClass: SaveUserInterestsService,
+    },
+    {
+      provide: GET_ONBOARDING_STATUS_USECASE,
+      useClass: GetOnboardingStatusService,
+    },
+    {
+      provide: COMPLETE_ONBOARDING_USECASE,
+      useClass: CompleteOnboardingService,
+    },
 
-        // ============ REPOSITORIES ============
-        {
-            provide: INTEREST_CATEGORY_REPOSITORY_PORT,
-            useClass: InterestCategoryRepositoryAdapter
-        },
-        {
-            provide: USER_INTEREST_REPOSITORY_PORT,
-            useClass: UserInterestRepositoryAdapter
-        },
-        {
-            provide: USER_ONBOARDING_REPOSITORY_PORT,
-            useClass: UserOnboardingRepositoryAdapter
-        }
-    ],
-    controllers: [
-        OnboardingController
-    ],
-    exports: [
-        INTEREST_CATEGORY_REPOSITORY_PORT,
-        USER_INTEREST_REPOSITORY_PORT,
-        USER_ONBOARDING_REPOSITORY_PORT
-    ]
+    // ============ REPOSITORIES ============
+    {
+      provide: INTEREST_CATEGORY_REPOSITORY_PORT,
+      useClass: InterestCategoryRepositoryAdapter,
+    },
+    {
+      provide: USER_INTEREST_REPOSITORY_PORT,
+      useClass: UserInterestRepositoryAdapter,
+    },
+    {
+      provide: USER_ONBOARDING_REPOSITORY_PORT,
+      useClass: UserOnboardingRepositoryAdapter,
+    },
+  ],
+  controllers: [OnboardingController],
+  exports: [
+    INTEREST_CATEGORY_REPOSITORY_PORT,
+    USER_INTEREST_REPOSITORY_PORT,
+    USER_ONBOARDING_REPOSITORY_PORT,
+  ],
 })
-export class OnboardingModule { }
+export class OnboardingModule {}
