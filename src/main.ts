@@ -6,14 +6,13 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // Habilitar validación global de DTOs
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // Elimina propiedades no definidas en el DTO
-      forbidNonWhitelisted: true, // Lanza error si hay propiedades extra
-      transform: true, // Transforma los datos al tipo del DTO
+      whitelist: true, 
+      forbidNonWhitelisted: true, 
+      transform: true, 
       transformOptions: {
-        enableImplicitConversion: true, // Convierte tipos automáticamente
+        enableImplicitConversion: true, 
       },
     }),
   );
@@ -25,5 +24,6 @@ async function bootstrap() {
 
   app.set('trust proxy', 1);
   await app.listen(process.env.PORT || 4100);
+  console.log(`🚀 Server running on port ${process.env.PORT || 4100}`);
 }
 bootstrap();

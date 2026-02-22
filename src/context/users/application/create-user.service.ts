@@ -32,10 +32,10 @@ export class CreateUserService implements CreateUserUseCase {
     private readonly tokenRepository: TokenRepository,
     @Inject(EMAIL_SERVICE_PORT)
     private readonly emailService: EmailServicePort,
-  ) {}
+  ) { }
 
   async execute(
-    user: Omit<UserPrimitives, 'id' | 'created_at'>,
+    user: Omit<UserPrimitives, 'id' | 'created_at'> & { password: string },
   ): Promise<User> {
     // Crear el usuario
     const created = await User.create(user);

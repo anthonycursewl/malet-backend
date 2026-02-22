@@ -12,7 +12,7 @@ import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class UserRepositoryAdapter implements UserRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async save(user: User): Promise<User> {
     const { verification_type: _verification_type, ...createData } =
@@ -25,9 +25,12 @@ export class UserRepositoryAdapter implements UserRepository {
         name: user.getName(),
         username: user.getUsername(),
         password: user.getPassword(),
-        avatar_url: user.getAvatarUrl(),
+
+
         banner_url: user.getBannerUrl(),
+        google_id: user.getGoogleId(),
       },
+
       create: createData,
     });
     return User.fromPrimitives(userPrimitives);
@@ -51,7 +54,11 @@ export class UserRepositoryAdapter implements UserRepository {
     }
 
     // ufp = User From Primitives
-    const ufp = User.fromPrimitives(user);
+    const ufp = User.fromPrimitives({
+      ...user,
+      password: user.password || undefined,
+      google_id: user.google_id || undefined,
+    });
 
     const isPasswordValid = await ufp.comparePassword(password);
     if (!isPasswordValid) {
@@ -60,6 +67,7 @@ export class UserRepositoryAdapter implements UserRepository {
 
     return ufp;
   }
+
 
   async findByEmail(email: string): Promise<User | null> {
     const user = await this.prisma.user.findFirst({
@@ -77,6 +85,7 @@ export class UserRepositoryAdapter implements UserRepository {
         verified: true,
         email_verified: true,
         email_verified_at: true,
+        google_id: true,
         verification_type: {
           select: {
             id: true,
@@ -85,14 +94,20 @@ export class UserRepositoryAdapter implements UserRepository {
           },
         },
       },
+
     });
 
     if (!user) {
       return null;
     }
 
-    return User.fromPrimitives({ ...user, password: '' });
+    return User.fromPrimitives({
+      ...user,
+      password: '',
+      google_id: user.google_id || undefined,
+    });
   }
+
 
   async findById(id: string): Promise<User | null> {
     const user = await this.prisma.user.findUnique({
@@ -105,8 +120,13 @@ export class UserRepositoryAdapter implements UserRepository {
       return null;
     }
 
-    return User.fromPrimitives(user);
+    return User.fromPrimitives({
+      ...user,
+      password: user.password || undefined,
+      google_id: user.google_id || undefined,
+    });
   }
+
 
   async updateProfile(params: UpdateUserProfileParams): Promise<User> {
     const updateData: any = {};
@@ -133,6 +153,7 @@ export class UserRepositoryAdapter implements UserRepository {
         verified: true,
         email_verified: true,
         email_verified_at: true,
+        google_id: true,
         verification_type: {
           select: {
             id: true,
@@ -144,8 +165,9 @@ export class UserRepositoryAdapter implements UserRepository {
       data: updateData,
     });
 
-    return User.fromPrimitives({ ...updatedUser, password: '' });
+    return User.fromPrimitives({ ...updatedUser, password: '', google_id: updatedUser.google_id || undefined });
   }
+
 
   async findByUsername(
     username: string,
@@ -153,21 +175,24 @@ export class UserRepositoryAdapter implements UserRepository {
   ): Promise<User | string | null> {
     const select = onlyUsername
       ? {
-          username: true,
-        }
+        username: true,
+      }
       : {
-          id: true,
-          name: true,
-          username: true,
-          avatar_url: true,
-          banner_url: true,
-          created_at: true,
-          email: true,
-          verified: true,
-          email_verified: true,
-          email_verified_at: true,
-          verification_type_id: true,
-        };
+        id: true,
+        name: true,
+        username: true,
+        avatar_url: true,
+        banner_url: true,
+        created_at: true,
+        email: true,
+        verified: true,
+        email_verified: true,
+        email_verified_at: true,
+
+        verification_type_id: true,
+        google_id: true,
+      };
+
 
     const user = await this.prisma.user.findFirst({
       where: {

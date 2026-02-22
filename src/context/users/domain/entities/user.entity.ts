@@ -14,7 +14,9 @@ export interface UserPrimitives {
   username: string;
   email: string;
   created_at: Date;
-  password: string;
+  password?: string;
+  google_id?: string;
+
   avatar_url?: string;
   banner_url?: string;
   verified: boolean;
@@ -30,7 +32,9 @@ export class User {
   private readonly username: string;
   private readonly email: string;
   private readonly created_at: Date;
-  private readonly password: string;
+  private readonly password?: string;
+  private readonly google_id?: string;
+
   private readonly avatar_url?: string;
   private readonly banner_url?: string;
   private readonly verified: boolean;
@@ -45,7 +49,9 @@ export class User {
     username: string;
     email: string;
     created_at: Date;
-    password: string;
+    password?: string;
+    google_id?: string;
+
     avatar_url?: string;
     banner_url?: string;
     verified: boolean;
@@ -60,6 +66,8 @@ export class User {
     this.email = params.email;
     this.created_at = params.created_at;
     this.password = params.password;
+    this.google_id = params.google_id;
+
     this.avatar_url = params.avatar_url;
     this.banner_url = params.banner_url;
     this.verified = params.verified;
@@ -79,8 +87,9 @@ export class User {
       | 'verification_type'
       | 'email_verified'
       | 'email_verified_at'
-    >,
+    > & { password: string },
   ): Promise<User> {
+
     const hashedPassword = await this.hashPassword(user.password);
 
     return new User({
@@ -100,6 +109,27 @@ export class User {
     });
   }
 
+  static createFromGoogle(data: {
+    email: string;
+    name: string;
+    googleId: string;
+    avatarUrl?: string;
+  }): User {
+    return new User({
+      id: crypto.randomUUID().split('-')[4],
+      name: data.name,
+      username: data.email.split('@')[0], // Generate username from email
+      email: data.email,
+      created_at: new Date(),
+      google_id: data.googleId,
+      avatar_url: data.avatarUrl,
+      verified: true, // Google emails are verified
+      email_verified: true,
+      email_verified_at: new Date(),
+    });
+  }
+
+
   toPrimitives(): UserPrimitives {
     return {
       id: this.id,
@@ -108,6 +138,8 @@ export class User {
       email: this.email,
       created_at: this.created_at,
       password: this.password,
+      google_id: this.google_id,
+
       avatar_url: this.avatar_url,
       banner_url: this.banner_url,
       verified: this.verified,
@@ -142,9 +174,14 @@ export class User {
     return this.created_at;
   }
 
-  getPassword(): string {
+  getPassword(): string | undefined {
     return this.password;
   }
+
+  getGoogleId(): string | undefined {
+    return this.google_id;
+  }
+
 
   getAvatarUrl(): string | undefined {
     return this.avatar_url;

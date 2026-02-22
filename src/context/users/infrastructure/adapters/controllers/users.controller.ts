@@ -16,11 +16,11 @@ export class UsersController {
     private readonly createUserService: CreateUserUseCase,
     @Inject(LOGIN_USER_USECASE)
     private readonly loginUserService: LoginUserUseCase,
-  ) {}
+  ) { }
 
   @Post('save')
   async createUser(
-    @Body() user: Omit<UserPrimitives, 'id' | 'created_at'>,
+    @Body() user: Omit<UserPrimitives, 'id' | 'created_at'> & { password: string },
   ): Promise<User> {
     return this.createUserService.execute(user);
   }

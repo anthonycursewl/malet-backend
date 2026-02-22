@@ -1,85 +1,121 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Malet Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Backend Application for the **Malet** platform, built with [NestJS](https://nestjs.com/).
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 Overview
 
-## Description
+This repository contains the server-side logic for the Malet platform. It is a robust, scalable backend handling user identities, communities, financial wallets, real-time messaging, and intelligent feed recommendations. It also facilitates integrations with external systems like Garzon and AI providers (Google Gemini).
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+The architecture follows **Domain-Driven Design (DDD)** principles, organizing the codebase into distinct Bounded Contexts to ensure maintainability and scalability.
 
-## Project setup
+## 🛠️ Tech Stack
+
+*   **Runtime**: Node.js
+*   **Framework**: NestJS (TypeScript)
+*   **Database**: PostgreSQL
+*   **ORM**: Prisma
+*   **Caching & Pub/Sub**: Redis
+*   **Real-Time**: Socket.io (WebSockets)
+*   **File Storage**: AWS S3
+*   **Authentication**: JWT & Passport
+*   **Email**: Nodemailer (SMTP)
+
+## 📂 Project Structure
+
+The source code is structured around functional domains located in `src/context/`:
+
+*   **`users`**: User management, profiles, authentication, and email verification.
+*   **`communities`**: Logic for creating and managing communities and memberships.
+*   **`feed`**: Recommendation engine and content feed generation.
+*   **`messaging`**: Real-time chat system, including WebSocket gateways and conversation management.
+*   **`wallet`**: Management of accounts, balances, and transactions.
+*   **`integrations`**: Abstraction layer for external OAuth providers and user provisioning (e.g., Wheek).
+*   **`garzon`**: Adapters for integration with the external "Garzon" system.
+*   **`ai-chat`**: Interface for AI chat capabilities (currently using Gemini).
+*   **`onboarding`**: User onboarding flows and interest capture.
+
+## ⚙️ Prerequisites
+
+Before running the project, ensure you have the following installed:
+
+*   **Node.js** (v18 or higher)
+*   **npm** (or pnpm/yarn)
+*   **PostgreSQL** (running locally or accessible via URL)
+*   **Redis** (optional for dev, required for WebSocket scaling)
+
+## 🔧 Installation
+
+1.  **Clone the repository**:
+    ```bash
+    git clone <repository-url>
+    cd malet-backend
+    ```
+
+2.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
+
+## 🔐 Configuration
+
+1.  **Environment Variables**:
+    Copy the example configuration file to create your local `.env` file:
+    ```bash
+    cp .env.example .env
+    ```
+
+2.  **Update `.env`**:
+    Edit the `.env` file and provide values for the following key sections:
+    *   **Database**: `DATABASE_URL` for PostgreSQL connection.
+    *   **Redis**: `REDIS_HOST`, `REDIS_PORT`, etc.
+    *   **AWS S3**: Credentials for file storage (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, etc.).
+    *   **Security**: `JWT_SECRET` for token signing.
+    *   **Keys**: `GEMINI_API_KEY` for AI features, `TOKEN_ENCRYPTION_KEY` for secure storage.
+
+## 🗄️ Database Setup
+
+Use Prisma to initialize your database schema:
 
 ```bash
-$ npm install
+# Generate Prisma Client (run this after every schema change)
+npx prisma generate
+
+# Run database migrations
+npx prisma migrate dev
 ```
 
-## Compile and run the project
+## ▶️ Running the Application
 
 ```bash
-# development
-$ npm run start
+# Development mode
+npm run start
 
-# watch mode
-$ npm run start:dev
+# Watch mode (Auto-reload)
+npm run start:dev
 
-# production mode
-$ npm run start:prod
+# Production build & run
+npm run build
+npm run start:prod
 ```
 
-## Run tests
+## 🧪 Testing
 
 ```bash
-# unit tests
-$ npm run test
+# Run unit tests
+npm run test
 
-# e2e tests
-$ npm run test:e2e
+# Run tests in watch mode
+npm run test:watch
 
-# test coverage
-$ npm run test:cov
+# Run end-to-end tests
+npm run test:e2e
 ```
 
-## Resources
+## 📚 Documentation & Resources
 
-Check out a few resources that may come in handy when working with NestJS:
+*   **Security Audit**: Refer to `.security-audit-report.md` for security details.
+*   **Redis Setup**: See `docs/REDIS_PROXMOX_SETUP.md` (if available) for infrastructure details.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## 📄 License
 
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project is proprietary and UNLICENSED.

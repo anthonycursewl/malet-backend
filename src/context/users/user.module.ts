@@ -23,6 +23,11 @@ import { AuthUseCase } from './application/auth.service';
 import { FileStorageModule } from 'src/shared/infrastructure/file-storage/file-storage.module';
 import { GET_USER_BY_USERNAME_USECASE } from './domain/ports/in/get-user-by-username.usecase';
 import { GetUserByUsernameService } from './application/get-user-by-username.service';
+import { LOGIN_GOOGLE_USER_USECASE } from './domain/ports/in/login-google-user.usecase';
+import { LoginWithGoogleService } from './application/login-with-google.service';
+import { GOOGLE_AUTH_SERVICE } from './domain/ports/out/auth.service';
+import { GoogleAuthService } from './infrastructure/services/google-auth.provider';
+
 
 @Module({
   imports: [PrismaModule, AuthModule, FileStorageModule],
@@ -44,6 +49,15 @@ import { GetUserByUsernameService } from './application/get-user-by-username.ser
       provide: GET_USER_BY_USERNAME_USECASE,
       useClass: GetUserByUsernameService,
     },
+    {
+      provide: LOGIN_GOOGLE_USER_USECASE,
+      useClass: LoginWithGoogleService,
+    },
+    {
+      provide: GOOGLE_AUTH_SERVICE,
+      useClass: GoogleAuthService,
+    },
+
 
     // Casos de uso de verificación de email
     {
@@ -76,4 +90,4 @@ import { GetUserByUsernameService } from './application/get-user-by-username.ser
   ],
   exports: [USER_REPOSITORY_PORT],
 })
-export class UserModule {}
+export class UserModule { }
