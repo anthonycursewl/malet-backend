@@ -21,8 +21,8 @@ export class UpdateAccountDto {
   @IsNotEmpty({ message: 'Balance is required.' })
   balance: number;
 
-  @MaxLength(3, { message: 'Currency must be a string of length 3.' })
-  @MinLength(3, { message: 'Currency must be a string of length 3.' })
+  @MaxLength(4, { message: 'Currency must be a string of length 4.' })
+  @MinLength(4, { message: 'Currency must be a string of length 4.' })
   @IsString({ message: 'Currency must be a string.' })
   currency: string;
 

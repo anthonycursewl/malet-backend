@@ -1,4 +1,4 @@
-import { IsNumber, IsString, IsNotEmpty } from 'class-validator';
+import { IsNumber, IsString, IsNotEmpty, IsEnum } from 'class-validator';
 
 export class TransactionDto {
   @IsString()
@@ -11,6 +11,8 @@ export class TransactionDto {
 
   @IsString()
   @IsNotEmpty()
+  @IsEnum(['saving', 'expense', 'pending_payment'], { message: 'Type must be saving, expense or pending_payment' })
+
   type: string;
 
   @IsString()

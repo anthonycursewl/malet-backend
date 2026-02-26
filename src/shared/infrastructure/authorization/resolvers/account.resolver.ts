@@ -15,15 +15,19 @@ export class AccountResourceResolver implements ResourceResolver<Account> {
   constructor(
     @Inject(ACCOUNT_REPOSITORY_PORT)
     private readonly accountRepository: AccountRepository,
-  ) {}
+  ) { }
 
   /**
    * Resuelve una cuenta por su ID
    */
-  async resolve(resourceId: string): Promise<Account | null> {
+  async resolve(resourceId: string, options?: any): Promise<Account | null> {
     try {
-      return await this.accountRepository.findById(resourceId);
+      return await this.accountRepository.findById(
+        resourceId,
+        options?.includeDeleted,
+      );
     } catch {
+
       return null;
     }
   }

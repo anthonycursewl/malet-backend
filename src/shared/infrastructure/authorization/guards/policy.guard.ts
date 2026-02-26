@@ -74,7 +74,7 @@ export class PolicyGuard implements CanActivate {
       throw new ForbiddenException('Usuario no autenticado');
     }
 
-    const { action, resourceType, resourceIdParam } = policyMetadata;
+    const { action, resourceType, resourceIdParam, options } = policyMetadata;
 
     // Para CREATE, no necesitamos resolver un recurso existente
     if (action === PolicyAction.CREATE) {
@@ -110,7 +110,8 @@ export class PolicyGuard implements CanActivate {
       );
     }
 
-    const resource = await resolver.resolve(resourceId);
+    const resource = await resolver.resolve(resourceId, options);
+
 
     if (!resource) {
       throw new NotFoundException('Recurso no encontrado');

@@ -9,10 +9,12 @@ export interface ResourceResolver<T> {
   /**
    * Resuelve un recurso por su ID
    * @param resourceId - El ID del recurso a resolver
+   * @param options - Opciones adicionales para la resolución
    * @returns El recurso o null si no existe
    */
-  resolve(resourceId: string): Promise<T | null>;
+  resolve(resourceId: string, options?: any): Promise<T | null>;
 }
+
 
 /**
  * Token de inyección para el registro de resolvers

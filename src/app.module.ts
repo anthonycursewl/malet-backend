@@ -1,5 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
+
 import { ThrottlerModule } from '@nestjs/throttler';
 import { UserModule } from './context/users/user.module';
 import { WalletModule } from './context/wallet/wallet.module';
@@ -17,10 +19,12 @@ import { AIChatModule } from './context/ai-chat/ai-chat.module';
 import { IntegrationsModule } from './context/integrations/infrastructure/integrations.module';
 import { BotBlockerMiddleware } from './shared/common/middleware/bot-blocker.middleware';
 import { ThrottlerBehindProxyGuard } from './shared/common/guards/throttler-behind-proxy.guard';
-
+import { SharedAccountsModule } from './context/shared-accounts/shared-accounts.module';
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
+
       {
         name: 'short',
         ttl: 1000,
@@ -51,6 +55,7 @@ import { ThrottlerBehindProxyGuard } from './shared/common/guards/throttler-behi
     GarzonModule,
     AIChatModule,
     IntegrationsModule,
+    SharedAccountsModule,
   ],
   providers: [
     {

@@ -14,11 +14,22 @@ import { GET_ALL_ACCOUNTS_USECASE } from './domain/ports/in/get-all-acounts.usec
 import { GetAllAccountsService } from './application/get-all-accounts.service';
 import { GET_HISTORY_TRANSACTION_USECASE } from './domain/ports/in/get-history-transaction.usecase';
 import { GetHistoryTransactionService } from './application/get-history-transaction.service';
+import { COMPLETE_TRANSACTION_USECASE } from './domain/ports/in/complete-transaction.usecase';
+import { CompleteTransactionService } from './application/complete-transaction.service';
 import { UPDATE_ACCOUNT_USECASE } from './domain/ports/in/update-account.usecase';
+
 import { UpdateAccountService } from './application/update-account.service';
 import { AccountOwnerGuard } from 'src/auth/guards/account-owner.guard';
+import { DELETE_ACCOUNT_USECASE } from './domain/ports/in/delete-account.usecase';
+import { DeleteAccountService } from './application/delete-account.service';
+import { AccountCleanupTask } from './infrastructure/adapters/tasks/account-cleanup.task';
+import { GET_DELETED_ACCOUNTS_USECASE } from './domain/ports/in/get-deleted-accounts.usecase';
+import { GetDeletedAccountsService } from './application/get-deleted-accounts.service';
+import { RESTORE_ACCOUNT_USECASE } from './domain/ports/in/restore-account.usecase';
+import { RestoreAccountService } from './application/restore-account.service';
 
 @Module({
+
   imports: [PrismaModule],
   controllers: [AccountsController, TransactionController],
   providers: [
@@ -47,11 +58,32 @@ import { AccountOwnerGuard } from 'src/auth/guards/account-owner.guard';
       useClass: GetHistoryTransactionService,
     },
     {
+      provide: COMPLETE_TRANSACTION_USECASE,
+      useClass: CompleteTransactionService,
+    },
+    {
       provide: UPDATE_ACCOUNT_USECASE,
+
       useClass: UpdateAccountService,
     },
+    {
+      provide: DELETE_ACCOUNT_USECASE,
+      useClass: DeleteAccountService,
+    },
+    {
+      provide: GET_DELETED_ACCOUNTS_USECASE,
+      useClass: GetDeletedAccountsService,
+    },
+    {
+      provide: RESTORE_ACCOUNT_USECASE,
+      useClass: RestoreAccountService,
+    },
+    AccountCleanupTask,
+
     AccountOwnerGuard,
+
   ],
+
   exports: [ACCOUNT_REPOSITORY_PORT],
 })
-export class WalletModule {}
+export class WalletModule { }

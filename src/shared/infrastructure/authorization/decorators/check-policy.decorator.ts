@@ -13,7 +13,10 @@ export interface PolicyMetadata {
   resourceType: string;
   /** Nombre del parámetro de ruta que contiene el ID del recurso */
   resourceIdParam?: string;
+  /** Opciones adicionales para el resolver (ej: includeDeleted) */
+  options?: any;
 }
+
 
 /**
  * Decorador principal para verificar políticas de autorización.
@@ -32,12 +35,15 @@ export const CheckPolicy = (
   action: PolicyAction,
   resourceType: string,
   resourceIdParam: string = 'id',
+  options?: any,
 ) =>
   SetMetadata(POLICY_KEY, {
     action,
     resourceType,
     resourceIdParam,
+    options,
   } as PolicyMetadata);
+
 
 // ============================================
 // Decoradores de conveniencia para cada acción
@@ -47,15 +53,19 @@ export const CheckPolicy = (
  * Verifica que el usuario puede LEER el recurso
  * @example @CanRead('account', 'account_id')
  */
-export const CanRead = (resource: string, idParam: string = 'id') =>
-  CheckPolicy(PolicyAction.READ, resource, idParam);
+export const CanRead = (resource: string, idParam: string = 'id', options?: any) =>
+  CheckPolicy(PolicyAction.READ, resource, idParam, options);
 
 /**
  * Verifica que el usuario puede ACTUALIZAR el recurso
  * @example @CanUpdate('account', 'account_id')
  */
-export const CanUpdate = (resource: string, idParam: string = 'id') =>
-  CheckPolicy(PolicyAction.UPDATE, resource, idParam);
+export const CanUpdate = (
+  resource: string,
+  idParam: string = 'id',
+  options?: any,
+) => CheckPolicy(PolicyAction.UPDATE, resource, idParam, options);
+
 
 /**
  * Verifica que el usuario puede ELIMINAR el recurso
