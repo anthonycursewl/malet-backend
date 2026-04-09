@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer';
 import {
   IsNumber,
   IsString,
@@ -6,7 +7,9 @@ import {
   MinLength,
   IsOptional,
   IsUrl,
+  Validate,
 } from 'class-validator';
+import { IsCurrencyCode } from 'src/common/validators/currency.validator';
 
 export class UpdateAccountDto {
   @MaxLength(255, { message: 'Name must be a string of length 255.' })
@@ -21,9 +24,12 @@ export class UpdateAccountDto {
   @IsNotEmpty({ message: 'Balance is required.' })
   balance: number;
 
-  @MaxLength(4, { message: 'Currency must be a string of length 4.' })
-  @MinLength(4, { message: 'Currency must be a string of length 4.' })
+  @IsOptional()
   @IsString({ message: 'Currency must be a string.' })
+  @Validate(IsCurrencyCode, { message: 'Currency not supported' })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.toUpperCase() : value,
+  )
   currency: string;
 
   @IsOptional()

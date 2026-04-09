@@ -28,7 +28,10 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { Transaction } from 'src/context/wallet/domain/entities/transaction.entity';
-
+import {
+  TransactionTagRepository,
+  TRANSACTION_TAG_REPOSITORY_PORT,
+} from 'src/context/wallet/domain/ports/out/transaction-tag.repository';
 
 @Controller('transactions')
 @UseGuards(JwtAuthGuard)
@@ -40,15 +43,28 @@ export class TransactionController {
     private readonly getHistoryTransactionUseCase: GetHistoryTransactionUseCase,
     @Inject(COMPLETE_TRANSACTION_USECASE)
     private readonly completeTransactionUseCase: CompleteTransactionUseCase,
+    @Inject(TRANSACTION_TAG_REPOSITORY_PORT)
+    private readonly tagRepository: TransactionTagRepository,
   ) { }
-
 
   @Post('save')
   async save(
     @CurrentUser() user: { userId: string; email: string },
-    @Body() tx: TransactionDto,
+    @Body() tx: TransactionDto & { tag_ids?: string[] },
   ) {
-    return this.saveTransactionUseCase.execute(user.userId, tx);
+    const transaction = await this.saveTransactionUseCase.execute(
+      user.userId,
+      tx,
+    );
+
+    const tags = await this.tagRepository.findByTransactionId(
+      transaction.getId(),
+    );
+
+    return {
+      ...transaction.toPrimitives(),
+      tags: tags.map((t) => t.toPrimitives()),
+    };
   }
 
   @Get('history')
@@ -60,6 +76,7 @@ export class TransactionController {
       take?: string;
       account_id?: string;
       types?: string;
+      tags?: string;
       startDate?: string;
       endDate?: string;
     },
@@ -72,6 +89,11 @@ export class TransactionController {
       transactionTypes = query.types.split(',');
     }
 
+    let tags: string[] | undefined;
+    if (query.tags) {
+      tags = query.tags.split(',');
+    }
+
     const startDate = query.startDate ? new Date(query.startDate) : undefined;
     const endDate = query.endDate ? new Date(query.endDate) : undefined;
 
@@ -80,45 +102,33 @@ export class TransactionController {
       user_id: user.userId,
       cursor,
       transactionTypes,
+      tags,
       startDate,
       endDate,
     };
 
-    let transactions: Transaction[] = [];
-
-    if (query.account_id) {
-      transactions = await this.getHistoryTransactionUseCase.execute({
-        ...options,
-        id: query.account_id,
-        type: 'by_account_id',
-      });
-    } else {
-      transactions = await this.getHistoryTransactionUseCase.execute({
-        ...options,
-        id: user.userId,
-        type: 'by_user_id',
-      });
-    }
+    const transactions = await this.getHistoryTransactionUseCase.execute({
+      ...options,
+      id: query.account_id || user.userId,
+      type: query.account_id ? 'by_account_id' : 'by_user_id',
+    });
 
     const nextCursor =
       transactions.length === take
         ? transactions[transactions.length - 1].getId()
         : null;
 
-    const t = {
-      data: transactions.map((tx) => tx.toPrimitives()),
-      nextCursor,
-    };
-    console.log(t);
-    return t;
+    const data = transactions.map((tx) => tx.toPrimitives());
+
+    return { data, nextCursor };
   }
 
   @Put('complete/:id')
-  async complete(
-    @Param('id') id: string,
-    @Body() dto: CompleteTransactionDto,
-  ) {
-    const updatedTransaction = await this.completeTransactionUseCase.execute(id, dto.type);
+  async complete(@Param('id') id: string, @Body() dto: CompleteTransactionDto) {
+    const updatedTransaction = await this.completeTransactionUseCase.execute(
+      id,
+      dto.type,
+    );
     return updatedTransaction.toPrimitives();
   }
 }

@@ -8,7 +8,10 @@ import {
   Put,
   Query,
   UseGuards,
+  HttpStatus,
+  HttpException,
 } from '@nestjs/common';
+import { IsCurrencyCode } from 'src/common/validators/currency.validator';
 
 import {
   DELETE_ACCOUNT_USECASE,
@@ -20,7 +23,6 @@ import {
 } from 'src/context/wallet/domain/ports/in/get-deleted-accounts.usecase';
 
 import {
-
   CREATE_ACCOUNT_USECASE,
   CreateAccountUseCase,
 } from 'src/context/wallet/domain/ports/in/create-account.usecase';
@@ -65,9 +67,7 @@ export class AccountsController {
     private readonly getDeletedAccountsUseCase: GetDeletedAccountsUseCase,
     @Inject(RESTORE_ACCOUNT_USECASE)
     private readonly restoreAccountUseCase: RestoreAccountUseCase,
-  ) { }
-
-
+  ) {}
 
   /**
    * Crea una nueva cuenta para el usuario autenticado.
@@ -78,6 +78,10 @@ export class AccountsController {
     @CurrentUser() user: { userId: string; email: string },
     @Body() createAccountDto: CreateAccountDto,
   ) {
+    // Si no se envía currency, asignar valor por defecto (USD)
+    if (!createAccountDto.currency) {
+      createAccountDto.currency = 'USD';
+    }
     return this.createAccountUseCase.execute(user.userId, createAccountDto);
   }
 
@@ -92,10 +96,18 @@ export class AccountsController {
     @ResolvedResource() account: Account, // ← Cuenta ya verificada por el guard
     @Body() updateAccountDto: UpdateAccountDto,
   ) {
+    // Construir payload de dominio para el UpdateAccountUseCase
+    const domainPayload: any = {
+      name: updateAccountDto.name ?? account.getName(),
+      balance: updateAccountDto.balance ?? account.getBalance(),
+      currency: updateAccountDto.currency
+        ? updateAccountDto.currency.toUpperCase()
+        : account.getCurrency(),
+    };
     return this.updateAccountUseCase.execute(
       account.getUserId(),
       account.getId(),
-      updateAccountDto,
+      domainPayload,
     );
   }
 
@@ -105,9 +117,7 @@ export class AccountsController {
    */
   @Get(':account_id')
   @CanRead('account', 'account_id')
-  async getAccount(
-    @ResolvedResource() account: Account
-  ) {
+  async getAccount(@ResolvedResource() account: Account) {
     return account.toPrimitives();
   }
 
@@ -132,13 +142,13 @@ export class AccountsController {
     const nextCursor =
       accounts.length === take ? accounts[accounts.length - 1].getId() : null;
 
-    console.log(accounts)
+    console.log(accounts);
 
     const d = {
       data: accounts.map((a) => a.toPrimitives()),
       nextCursor,
     };
-    console.log(d)
+    console.log(d);
     return d;
   }
 
@@ -173,7 +183,6 @@ export class AccountsController {
    */
   @Post('restore/:account_id')
   @CanUpdate('account', 'account_id', { includeDeleted: true })
-
   async restoreAccount(@ResolvedResource() account: Account) {
     return this.restoreAccountUseCase.execute(
       account.getUserId(),
@@ -195,4 +204,3 @@ export class AccountsController {
     );
   }
 }
-

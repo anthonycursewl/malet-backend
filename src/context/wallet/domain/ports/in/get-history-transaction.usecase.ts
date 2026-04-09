@@ -9,6 +9,7 @@ export interface HistoryTransactionOptions {
   user_id: string;
   cursor?: string;
   transactionTypes?: string[];
+  tags?: string[];
   startDate?: Date;
   endDate?: Date;
 }

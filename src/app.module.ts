@@ -1,4 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { APP_FILTER } from '@nestjs/core';
+import { TagErrorLoggerFilter } from './common/filters/tag-error-logger.filter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
 
@@ -20,11 +22,11 @@ import { IntegrationsModule } from './context/integrations/infrastructure/integr
 import { BotBlockerMiddleware } from './shared/common/middleware/bot-blocker.middleware';
 import { ThrottlerBehindProxyGuard } from './shared/common/guards/throttler-behind-proxy.guard';
 import { SharedAccountsModule } from './context/shared-accounts/shared-accounts.module';
+import { WebAuthModule } from './context/web-auth/web-auth.module';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
-
       {
         name: 'short',
         ttl: 1000,
@@ -56,11 +58,16 @@ import { SharedAccountsModule } from './context/shared-accounts/shared-accounts.
     AIChatModule,
     IntegrationsModule,
     SharedAccountsModule,
+    WebAuthModule,
   ],
   providers: [
     {
       provide: APP_GUARD,
       useClass: ThrottlerBehindProxyGuard,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: TagErrorLoggerFilter,
     },
   ],
 })

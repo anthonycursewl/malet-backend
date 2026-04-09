@@ -10,11 +10,12 @@ export class TransactionRepositoryAdapter implements TransactionRepository {
   constructor(private readonly prisma: PrismaService) { }
 
   async save(tx: Transaction): Promise<Transaction> {
-    const txPrimitives = tx.toPrimitives();
+    const { tags, amount, ...txPrimitives } = tx.toPrimitives();
     const created = await this.prisma.transactions.create({
       data: {
         ...txPrimitives,
-        amount: new Decimal(txPrimitives.amount),
+        index_id: txPrimitives.index_id ? BigInt(txPrimitives.index_id) : undefined,
+        amount: new Decimal(amount),
       },
     });
 
@@ -32,19 +33,15 @@ export class TransactionRepositoryAdapter implements TransactionRepository {
         },
       });
     }
-
     const primitivesForDomain = {
-      id: created.id,
-      name: created.name,
+      ...created,
+      index_id: created.index_id ? created.index_id.toString() : undefined,
       amount: created.amount.toNumber(),
-      type: created.type,
-      account_id: created.account_id,
-      issued_at: created.issued_at,
+      tags: [],
     };
 
     return Transaction.fromPrimitives(primitivesForDomain);
   }
-
 
   async getHistoryTransaction(
     options: HistoryTransactionOptions,
@@ -56,6 +53,7 @@ export class TransactionRepositoryAdapter implements TransactionRepository {
       user_id,
       cursor,
       transactionTypes,
+      tags: tagIds,
       startDate,
       endDate,
     } = options;
@@ -76,6 +74,14 @@ export class TransactionRepositoryAdapter implements TransactionRepository {
       where.type = { in: transactionTypes };
     }
 
+    if (tagIds && tagIds.length > 0) {
+      where.tags = {
+        some: {
+          tag_id: { in: tagIds },
+        },
+      };
+    }
+
     if (startDate || endDate) {
       where.issued_at = {};
       if (startDate) where.issued_at.gte = startDate;
@@ -89,23 +95,31 @@ export class TransactionRepositoryAdapter implements TransactionRepository {
         skip: 1,
         cursor: { id: cursor },
       }),
+      include: {
+        tags: {
+          include: {
+            transaction_tag: true,
+          },
+        },
+      },
       orderBy: {
         issued_at: 'desc',
       },
     });
 
-
-
-    const primitives = txs.map((tx) => {
-      return {
+    return txs.map((tx) => {
+      const primitives = {
         ...tx,
+        index_id: tx.index_id ? tx.index_id.toString() : undefined,
         amount: tx.amount.toNumber(),
+        currency_code: tx.currency_code,
+        tags: tx.tags.map((t) => ({
+          ...t.transaction_tag,
+          palette: t.transaction_tag.palette as string[] || undefined,
+        })),
       };
+      return Transaction.fromPrimitives(primitives);
     });
-
-    return primitives.map((primitives) =>
-      Transaction.fromPrimitives(primitives),
-    );
   }
 
   async complete(id: string, newType: string): Promise<Transaction> {
@@ -131,13 +145,11 @@ export class TransactionRepositoryAdapter implements TransactionRepository {
     });
 
     return Transaction.fromPrimitives({
-      id: updated.id,
-      name: updated.name,
+      ...updated,
+      index_id: updated.index_id ? updated.index_id.toString() : undefined,
       amount: updated.amount.toNumber(),
-      type: updated.type,
-      account_id: updated.account_id,
-      issued_at: updated.issued_at,
+      currency_code: (updated as any).currency_code,
+      tags: [],
     });
   }
 }
-

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AccountsController } from './infrastructure/adapters/controllers/accounts.controller';
 import { TransactionController } from './infrastructure/adapters/controllers/transaction.controller';
+import { TransactionTagController } from './infrastructure/adapters/controllers/tag.controller';
 import { CreateAccountService } from './application/create-account.service';
 import { SaveTransactionService } from './application/save-transaction.service';
 import { CREATE_ACCOUNT_USECASE } from './domain/ports/in/create-account.usecase';
@@ -27,11 +28,18 @@ import { GET_DELETED_ACCOUNTS_USECASE } from './domain/ports/in/get-deleted-acco
 import { GetDeletedAccountsService } from './application/get-deleted-accounts.service';
 import { RESTORE_ACCOUNT_USECASE } from './domain/ports/in/restore-account.usecase';
 import { RestoreAccountService } from './application/restore-account.service';
+import { TransactionTagService } from './application/transaction-tag.service';
+import { TRANSACTION_TAG_REPOSITORY_PORT } from './domain/ports/out/transaction-tag.repository';
+import { TransactionTagRepositoryAdapter } from './infrastructure/persistence/transaction-tag.repository.adapter';
+import { SnowflakeService } from 'src/shared/infrastructure/services/snowflake-id.service';
 
 @Module({
-
   imports: [PrismaModule],
-  controllers: [AccountsController, TransactionController],
+  controllers: [
+    AccountsController,
+    TransactionController,
+    TransactionTagController,
+  ],
   providers: [
     {
       provide: CREATE_ACCOUNT_USECASE,
@@ -78,10 +86,16 @@ import { RestoreAccountService } from './application/restore-account.service';
       provide: RESTORE_ACCOUNT_USECASE,
       useClass: RestoreAccountService,
     },
+    {
+      provide: TRANSACTION_TAG_REPOSITORY_PORT,
+      useClass: TransactionTagRepositoryAdapter,
+    },
+    TransactionTagService,
+
     AccountCleanupTask,
 
     AccountOwnerGuard,
-
+    SnowflakeService,
   ],
 
   exports: [ACCOUNT_REPOSITORY_PORT],
