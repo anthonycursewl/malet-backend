@@ -12,10 +12,9 @@ export interface HistoryTransactionOptions {
   tags?: string[];
   startDate?: Date;
   endDate?: Date;
+  deleted?: boolean;
 }
 
 export interface GetHistoryTransactionUseCase {
   execute(options: HistoryTransactionOptions): Promise<Transaction[]>;
 }
-
-

@@ -23,6 +23,7 @@ import { BotBlockerMiddleware } from './shared/common/middleware/bot-blocker.mid
 import { ThrottlerBehindProxyGuard } from './shared/common/guards/throttler-behind-proxy.guard';
 import { SharedAccountsModule } from './context/shared-accounts/shared-accounts.module';
 import { WebAuthModule } from './context/web-auth/web-auth.module';
+import { AgentModule } from './context/agent/agent.module';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -56,6 +57,8 @@ import { WebAuthModule } from './context/web-auth/web-auth.module';
     DebugModule,
     GarzonModule,
     AIChatModule,
+    // Agent module provides the AI agent with memory and tool-calling
+    AgentModule,
     IntegrationsModule,
     SharedAccountsModule,
     WebAuthModule,

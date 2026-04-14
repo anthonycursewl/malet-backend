@@ -1,5 +1,8 @@
 import { SnowflakeService } from 'src/shared/infrastructure/services/snowflake-id.service';
-import { TransactionTag, TransactionTagPrimitives } from './transaction-tag.entity';
+import {
+  TransactionTag,
+  TransactionTagPrimitives,
+} from './transaction-tag.entity';
 
 export interface TransactionPrimitives {
   id: string;
@@ -11,6 +14,7 @@ export interface TransactionPrimitives {
   issued_at: Date;
   currency_code?: string;
   tags?: TransactionTagPrimitives[];
+  deleted_at?: Date | null;
 }
 
 /**
@@ -34,6 +38,7 @@ export class Transaction {
   private readonly issued_at: Date;
   private readonly currency_code?: string;
   private readonly tags: TransactionTag[];
+  private readonly deleted_at?: Date | null;
 
   constructor(
     id: string,
@@ -45,6 +50,7 @@ export class Transaction {
     issued_at: Date,
     currency_code?: string,
     tags?: TransactionTag[],
+    deleted_at?: Date | null,
   ) {
     this.id = id;
     this.index_id = index_id;
@@ -55,6 +61,7 @@ export class Transaction {
     this.issued_at = issued_at;
     this.currency_code = currency_code;
     this.tags = tags || [];
+    this.deleted_at = deleted_at;
   }
 
   getId() {
@@ -104,6 +111,7 @@ export class Transaction {
       issued_at: this.issued_at,
       currency_code: this.currency_code,
       tags: this.tags.map((tag) => tag.toPrimitives()),
+      deleted_at: this.deleted_at,
     };
   }
 
@@ -118,6 +126,7 @@ export class Transaction {
       primitives.issued_at,
       primitives.currency_code,
       primitives.tags?.map((tag) => TransactionTag.fromPrimitives(tag)),
+      primitives.deleted_at,
     );
   }
 
@@ -134,6 +143,11 @@ export class Transaction {
       new Date(),
       transaction.currency_code,
       transaction.tags?.map((tag) => TransactionTag.fromPrimitives(tag)),
+      undefined,
     );
+  }
+
+  getDeletedAt() {
+    return this.deleted_at;
   }
 }

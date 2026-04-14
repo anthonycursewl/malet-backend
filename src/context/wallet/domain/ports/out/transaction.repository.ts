@@ -10,6 +10,10 @@ export interface TransactionRepository {
     options: HistoryTransactionOptions,
   ): Promise<Transaction[]>;
   complete(id: string, newType: string): Promise<Transaction>;
+  findById(id: string): Promise<Transaction | null>;
+  findByIndexId(indexId: string): Promise<Transaction | null>;
+  delete(id: string): Promise<Transaction | null>;
+  restore(indexId: string, userId: string): Promise<Transaction | null>;
+  findDeletedOlderThan(date: Date): Promise<Transaction[]>;
+  deleteHard(indexId: string): Promise<void>;
 }
-
-

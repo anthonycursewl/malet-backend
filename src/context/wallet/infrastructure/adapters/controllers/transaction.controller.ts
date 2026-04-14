@@ -8,6 +8,7 @@ import {
   Query,
   Param,
   Put,
+  Delete,
 } from '@nestjs/common';
 import { TransactionDto } from 'src/context/wallet/application/dtos/transaction.dto';
 import { CompleteTransactionDto } from 'src/context/wallet/application/dtos/complete-transaction.dto';
@@ -24,6 +25,14 @@ import {
   COMPLETE_TRANSACTION_USECASE,
   CompleteTransactionUseCase,
 } from 'src/context/wallet/domain/ports/in/complete-transaction.usecase';
+import {
+  DELETE_TRANSACTION_USECASE,
+  DeleteTransactionUseCase,
+} from 'src/context/wallet/domain/ports/in/delete-transaction.usecase';
+import {
+  RESTORE_TRANSACTION_USECASE,
+  RestoreTransactionUseCase,
+} from 'src/context/wallet/domain/ports/in/restore-transaction.usecase';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
@@ -43,9 +52,13 @@ export class TransactionController {
     private readonly getHistoryTransactionUseCase: GetHistoryTransactionUseCase,
     @Inject(COMPLETE_TRANSACTION_USECASE)
     private readonly completeTransactionUseCase: CompleteTransactionUseCase,
+    @Inject(DELETE_TRANSACTION_USECASE)
+    private readonly deleteTransactionUseCase: DeleteTransactionUseCase,
+    @Inject(RESTORE_TRANSACTION_USECASE)
+    private readonly restoreTransactionUseCase: RestoreTransactionUseCase,
     @Inject(TRANSACTION_TAG_REPOSITORY_PORT)
     private readonly tagRepository: TransactionTagRepository,
-  ) { }
+  ) {}
 
   @Post('save')
   async save(
@@ -79,6 +92,7 @@ export class TransactionController {
       tags?: string;
       startDate?: string;
       endDate?: string;
+      deleted?: string;
     },
   ) {
     const take = query.take ? Number(query.take) : 10;
@@ -97,6 +111,11 @@ export class TransactionController {
     const startDate = query.startDate ? new Date(query.startDate) : undefined;
     const endDate = query.endDate ? new Date(query.endDate) : undefined;
 
+    const deleted =
+      typeof query.deleted !== 'undefined'
+        ? query.deleted === 'true'
+        : undefined;
+
     const options = {
       take,
       user_id: user.userId,
@@ -105,6 +124,7 @@ export class TransactionController {
       tags,
       startDate,
       endDate,
+      deleted,
     };
 
     const transactions = await this.getHistoryTransactionUseCase.execute({
@@ -115,7 +135,11 @@ export class TransactionController {
 
     const nextCursor =
       transactions.length === take
-        ? transactions[transactions.length - 1].getId()
+        ? // Preferir index_id (snowflake) como cursor si está disponible.
+          // Si no existe, usar el id interno como fallback.
+          transactions[transactions.length - 1].getIndexId()
+          ? transactions[transactions.length - 1].getIndexId()!.toString()
+          : transactions[transactions.length - 1].getId()
         : null;
 
     const data = transactions.map((tx) => tx.toPrimitives());
@@ -130,5 +154,32 @@ export class TransactionController {
       dto.type,
     );
     return updatedTransaction.toPrimitives();
+  }
+
+  @Delete('delete/:index_id')
+  async delete(
+    @CurrentUser() user: { userId: string; email: string },
+    @Param('index_id') index_id: string,
+  ) {
+    const deleted = await this.deleteTransactionUseCase.execute(
+      user.userId,
+      index_id,
+    );
+
+    // devolver la entidad soft-deleted para que el frontend la elimine de memoria
+    return deleted.toPrimitives();
+  }
+
+  @Post('restore/:index_id')
+  async restore(
+    @CurrentUser() user: { userId: string; email: string },
+    @Param('index_id') index_id: string,
+  ) {
+    const restored = await this.restoreTransactionUseCase.execute(
+      user.userId,
+      index_id,
+    );
+
+    return restored.toPrimitives();
   }
 }

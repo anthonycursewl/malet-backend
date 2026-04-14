@@ -17,6 +17,10 @@ import { GET_HISTORY_TRANSACTION_USECASE } from './domain/ports/in/get-history-t
 import { GetHistoryTransactionService } from './application/get-history-transaction.service';
 import { COMPLETE_TRANSACTION_USECASE } from './domain/ports/in/complete-transaction.usecase';
 import { CompleteTransactionService } from './application/complete-transaction.service';
+import { DELETE_TRANSACTION_USECASE } from './domain/ports/in/delete-transaction.usecase';
+import { DeleteTransactionService } from './application/delete-transaction.service';
+import { RESTORE_TRANSACTION_USECASE } from './domain/ports/in/restore-transaction.usecase';
+import { RestoreTransactionService } from './application/restore-transaction.service';
 import { UPDATE_ACCOUNT_USECASE } from './domain/ports/in/update-account.usecase';
 
 import { UpdateAccountService } from './application/update-account.service';
@@ -24,6 +28,7 @@ import { AccountOwnerGuard } from 'src/auth/guards/account-owner.guard';
 import { DELETE_ACCOUNT_USECASE } from './domain/ports/in/delete-account.usecase';
 import { DeleteAccountService } from './application/delete-account.service';
 import { AccountCleanupTask } from './infrastructure/adapters/tasks/account-cleanup.task';
+import { TransactionCleanupTask } from './infrastructure/adapters/tasks/transaction-cleanup.task';
 import { GET_DELETED_ACCOUNTS_USECASE } from './domain/ports/in/get-deleted-accounts.usecase';
 import { GetDeletedAccountsService } from './application/get-deleted-accounts.service';
 import { RESTORE_ACCOUNT_USECASE } from './domain/ports/in/restore-account.usecase';
@@ -70,6 +75,14 @@ import { SnowflakeService } from 'src/shared/infrastructure/services/snowflake-i
       useClass: CompleteTransactionService,
     },
     {
+      provide: DELETE_TRANSACTION_USECASE,
+      useClass: DeleteTransactionService,
+    },
+    {
+      provide: RESTORE_TRANSACTION_USECASE,
+      useClass: RestoreTransactionService,
+    },
+    {
       provide: UPDATE_ACCOUNT_USECASE,
 
       useClass: UpdateAccountService,
@@ -93,6 +106,7 @@ import { SnowflakeService } from 'src/shared/infrastructure/services/snowflake-i
     TransactionTagService,
 
     AccountCleanupTask,
+    TransactionCleanupTask,
 
     AccountOwnerGuard,
     SnowflakeService,
@@ -100,4 +114,4 @@ import { SnowflakeService } from 'src/shared/infrastructure/services/snowflake-i
 
   exports: [ACCOUNT_REPOSITORY_PORT],
 })
-export class WalletModule { }
+export class WalletModule {}
