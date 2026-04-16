@@ -10,6 +10,7 @@ import {
   Get,
   Param,
   Patch,
+  Logger,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import {
@@ -25,6 +26,8 @@ import { GET_USER_BY_USERNAME_USECASE } from 'src/context/users/domain/ports/in/
 @Controller('users/profile')
 @UseGuards(JwtAuthGuard)
 export class UserProfileController {
+  private readonly logger = new Logger(UserProfileController.name);
+
   constructor(
     @Inject(UPDATE_USER_PROFILE_USECASE)
     private readonly updateUserProfileService: UpdateUserProfileUseCase,
@@ -64,10 +67,6 @@ export class UserProfileController {
     files: { avatar?: Express.Multer.File[]; banner?: Express.Multer.File[] },
   ) {
     const userId = req.user.userId;
-
-    console.log(userId);
-    console.log(files);
-    console.log(body);
 
     const dto: UpdateUserProfileDto = {
       userId,

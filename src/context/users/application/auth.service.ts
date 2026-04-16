@@ -20,7 +20,6 @@ export class AuthUseCase {
       throw new UnauthorizedException('Invalid token.');
     }
     const user = await this.userRepository.findByEmail(isValid.email);
-    console.log(user);
     return user;
   }
 }

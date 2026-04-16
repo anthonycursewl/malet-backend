@@ -98,8 +98,10 @@ export class S3FileStorageAdapter implements FileStoragePort {
 
       await this.s3Client.send(command);
     } catch (error) {
-      console.error('Error deleting file from S3:', error);
-      // No lanzar error para no interrumpir el flujo si el archivo no existe
+      this.logger.error(
+        'Error deleting file from S3: ' +
+          (error instanceof Error ? error.message : String(error)),
+      );
     }
   }
 }

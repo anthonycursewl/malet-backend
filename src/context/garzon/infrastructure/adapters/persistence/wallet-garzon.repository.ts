@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
@@ -28,6 +29,7 @@ import { WalletGarzonRepository } from 'src/context/garzon/domain/ports/out/wall
 @Injectable()
 export class SuperGarzonWalletAdapter implements WalletGarzonRepository {
   private readonly apiBaseUrl = 'https://api.supergarzon.com/api';
+  private readonly logger = new Logger(SuperGarzonWalletAdapter.name);
 
   constructor(private readonly httpService: HttpService) {}
 
@@ -39,8 +41,8 @@ export class SuperGarzonWalletAdapter implements WalletGarzonRepository {
     params: GetWalletParams,
   ): Promise<ClientWalletResponse> {
     try {
-      console.log(
-        `[WalletAdapter] Fetching wallets for identifier: ${params.identifier}`,
+      this.logger.debug(
+        `Fetching wallets for identifier: ${params.identifier}`,
       );
 
       const url = `${this.apiBaseUrl}/clientwallet/${params.identifier}`;
@@ -70,16 +72,18 @@ export class SuperGarzonWalletAdapter implements WalletGarzonRepository {
 
       // Transformar la respuesta de la API a nuestro formato
       return this.transformResponse(apiResponse.data);
-    } catch (error: any) {
-      console.error(
-        '[WalletAdapter] Error fetching wallets:',
-        error?.message || error,
-      );
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`Error fetching wallets: ${errorMessage}`);
 
-      if (error?.response?.status === 404) {
-        throw new NotFoundException(
-          `Cliente ${params.identifier} no encontrado`,
-        );
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { status?: number } };
+        if (err.response?.status === 404) {
+          throw new NotFoundException(
+            `Cliente ${params.identifier} no encontrado`,
+          );
+        }
       }
 
       if (error instanceof NotFoundException) {
@@ -100,8 +104,8 @@ export class SuperGarzonWalletAdapter implements WalletGarzonRepository {
     params: GenerateWalletTokenParams,
   ): Promise<WalletTokenResponse> {
     try {
-      console.log(
-        `[WalletAdapter] Generating token for ${params.wallets.length} wallet(s)`,
+      this.logger.debug(
+        `Generating token for ${params.wallets.length} wallet(s)`,
       );
 
       const url = `${this.apiBaseUrl}/wallet/token`;
@@ -121,7 +125,9 @@ export class SuperGarzonWalletAdapter implements WalletGarzonRepository {
 
       const apiResponse = response.data;
 
-      console.log(`[WalletAdapter] Token generation response:`, apiResponse);
+      this.logger.debug(
+        `Token generation response: ${JSON.stringify(apiResponse)}`,
+      );
 
       return {
         success: apiResponse.code === 200,
@@ -133,11 +139,10 @@ export class SuperGarzonWalletAdapter implements WalletGarzonRepository {
         data: apiResponse.data,
         requestedWallets: params.wallets.length,
       };
-    } catch (error: any) {
-      console.error(
-        '[WalletAdapter] Error generating token:',
-        error?.message || error,
-      );
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`Error generating token: ${errorMessage}`);
 
       throw new InternalServerErrorException(
         'Error al generar token para las wallets',

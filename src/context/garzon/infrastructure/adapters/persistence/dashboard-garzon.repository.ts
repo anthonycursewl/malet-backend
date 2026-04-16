@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
 import { AuthSession } from 'src/context/garzon/domain/entities/auth.entity';
@@ -20,6 +20,7 @@ import { DashboardGarzonRepository } from 'src/context/garzon/domain/ports/out/d
 @Injectable()
 export class LaravelDashboardAdapter implements DashboardGarzonRepository {
   private readonly baseUrl = 'http://45.189.38.14:8881';
+  private readonly logger = new Logger(LaravelDashboardAdapter.name);
 
   constructor(private readonly httpService: HttpService) {}
 
@@ -48,7 +49,7 @@ export class LaravelDashboardAdapter implements DashboardGarzonRepository {
   ): Promise<T> {
     try {
       const url = `${this.baseUrl}${endpoint}?stid=${params.stid}`;
-      console.log(`[LaravelDashboardAdapter] Fetching: ${url}`);
+      this.logger.debug(`Fetching: ${url}`);
 
       const response = await lastValueFrom(
         this.httpService.get<T>(url, {
@@ -56,17 +57,17 @@ export class LaravelDashboardAdapter implements DashboardGarzonRepository {
         }),
       );
 
-      console.log(
-        `[LaravelDashboardAdapter] Response status: ${response.status}`,
-      );
+      this.logger.debug(`Response status: ${response.status}`);
       return response.data;
-    } catch (error: any) {
-      console.error(
-        `[LaravelDashboardAdapter] Error fetching ${endpoint}:`,
-        error?.message || error,
-      );
-      if (error?.response?.status === 401) {
-        throw new UnauthorizedException('La sesión ha expirado');
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`Error fetching ${endpoint}: ${errorMessage}`);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { status?: number } };
+        if (err.response?.status === 401) {
+          throw new UnauthorizedException('La sesión ha expirado');
+        }
       }
       throw new UnauthorizedException('Error obteniendo datos del dashboard');
     }
@@ -131,7 +132,7 @@ export class LaravelDashboardAdapter implements DashboardGarzonRepository {
     session: AuthSession,
     params: DashboardQueryParams,
   ): Promise<DashboardData> {
-    console.log('[LaravelDashboardAdapter] Fetching all dashboard data...');
+    this.logger.debug('Fetching all dashboard data...');
 
     // Ejecutar todas las peticiones en paralelo para mejor rendimiento
     const [

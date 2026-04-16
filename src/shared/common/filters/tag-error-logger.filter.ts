@@ -3,17 +3,20 @@ import {
   Catch,
   ArgumentsHost,
   HttpException,
+  Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
 @Catch()
 export class TagErrorLoggerFilter implements ExceptionFilter {
+  private logger = new Logger('TagErrorLogger');
+
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const req = ctx.getRequest<Request>();
     const res = ctx.getResponse<Response>();
     const path = req?.url || '';
-    // Log only tag-related paths for focused debugging
+
     if (path.startsWith('/tags') || path.startsWith('/transactions')) {
       const status =
         exception instanceof HttpException ? exception.getStatus() : 500;
@@ -21,20 +24,14 @@ export class TagErrorLoggerFilter implements ExceptionFilter {
         exception instanceof HttpException
           ? exception.getResponse()
           : exception;
-      const label = '\x1b[91m[TAG-ERROR-SYSTEM]\x1b[0m'; // red
-      const pink = '\x1b[35m'; // pink
-      const reset = '\x1b[0m';
       const msg =
         typeof message === 'string' ? message : JSON.stringify(message);
-      console.error(
-        `${label} ${pink}${req.method} ${path} - ${status}: ${msg}${reset}`,
+      this.logger.error(
+        `${req.method} ${path} - ${status}: ${msg}`,
+        exception instanceof Error ? exception.stack : undefined,
       );
-      if (exception instanceof Error && exception.stack) {
-        console.error(pink + exception.stack + reset);
-      }
     }
 
-    // Propagar el error al cliente con la respuesta por defecto
     const status =
       exception instanceof HttpException ? exception.getStatus() : 500;
     const message =

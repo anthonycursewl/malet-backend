@@ -2,6 +2,7 @@ import {
   Injectable,
   InternalServerErrorException,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
@@ -15,6 +16,7 @@ import { SimpleCookieJar } from '../../utils/SimpleCookieJar';
 @Injectable()
 export class LaravelAuthAdapter implements AuthGarzonRepository {
   private readonly baseUrl = 'http://45.189.38.14:8881';
+  private readonly logger = new Logger(LaravelAuthAdapter.name);
 
   constructor(private readonly httpService: HttpService) {}
 
@@ -22,7 +24,7 @@ export class LaravelAuthAdapter implements AuthGarzonRepository {
     const jar = new SimpleCookieJar();
 
     try {
-      console.log('[LaravelAdapter] 1. Obteniendo página de login...');
+      this.logger.debug('1. Obteniendo página de login...');
       const initResponse = await lastValueFrom(
         this.httpService.get(`${this.baseUrl}/login`, {
           headers: {
@@ -57,7 +59,7 @@ export class LaravelAuthAdapter implements AuthGarzonRepository {
 
       const xsrfHeaderToken = decodeURIComponent(rawXsrfCookie);
 
-      console.log('[LaravelAdapter] 2. Enviando credenciales...');
+      this.logger.debug('2. Enviando credenciales...');
 
       const payload = {
         username: credentials.username,
@@ -95,13 +97,16 @@ export class LaravelAuthAdapter implements AuthGarzonRepository {
         xsrfToken: decodeURIComponent(jar.get('XSRF-TOKEN') || ''),
         user: loginResponse.data,
       };
-    } catch (_error) {
-      console.error('Error en LaravelAuthAdapter:', _error);
+    } catch (error) {
+      this.logger.error(
+        'Error en LaravelAuthAdapter: ' +
+          (error instanceof Error ? error.message : String(error)),
+      );
       throw new UnauthorizedException('Error conectando con sistema interno');
     }
   }
 
-  async getData(session: AuthSession): Promise<any> {
+  async getData(session: AuthSession): Promise<unknown> {
     try {
       const response = await lastValueFrom(
         this.httpService.get(`${this.baseUrl}/tu-ruta-interna-datos`, {
@@ -114,7 +119,7 @@ export class LaravelAuthAdapter implements AuthGarzonRepository {
         }),
       );
       return response.data;
-    } catch (_error) {
+    } catch {
       throw new UnauthorizedException('La sesión ha expirado');
     }
   }

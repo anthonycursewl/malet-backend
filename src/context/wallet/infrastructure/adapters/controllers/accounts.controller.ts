@@ -142,14 +142,10 @@ export class AccountsController {
     const nextCursor =
       accounts.length === take ? accounts[accounts.length - 1].getId() : null;
 
-    console.log(accounts);
-
-    const d = {
+    return {
       data: accounts.map((a) => a.toPrimitives()),
       nextCursor,
     };
-    console.log(d);
-    return d;
   }
 
   /**

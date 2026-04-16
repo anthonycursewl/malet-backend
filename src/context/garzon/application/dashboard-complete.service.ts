@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { AuthCredentials } from '../domain/entities/auth.entity';
 import {
   DashboardCompleteRequest,
@@ -23,6 +23,8 @@ import {
  */
 @Injectable()
 export class DashboardCompleteService {
+  private readonly logger = new Logger(DashboardCompleteService.name);
+
   constructor(
     @Inject(AUTH_GARZON_REPOSITORY)
     private readonly authRepository: AuthGarzonRepository,
@@ -30,35 +32,26 @@ export class DashboardCompleteService {
     private readonly dashboardRepository: DashboardGarzonRepository,
   ) {}
 
-  /**
-   * Autentica y obtiene todos los datos del dashboard en una sola llamada.
-   *
-   * @param request - Credenciales del usuario y parámetros del dashboard
-   * @returns Sesión, usuario y datos del dashboard consolidados
-   */
   async getCompleteData(
     request: DashboardCompleteRequest,
   ): Promise<DashboardCompleteResponse> {
-    console.log('[DashboardCompleteService] Iniciando autenticación...');
+    this.logger.debug('Iniciando autenticación...');
 
-    // 1. Autenticar al usuario
     const credentials: AuthCredentials = {
       username: request.username,
       password: request.password,
     };
 
     const session = await this.authRepository.login(credentials);
-    console.log('[DashboardCompleteService] Autenticación exitosa');
+    this.logger.debug('Autenticación exitosa');
 
-    // 2. Obtener todos los datos del dashboard
-    console.log('[DashboardCompleteService] Obteniendo datos del dashboard...');
+    this.logger.debug('Obteniendo datos del dashboard...');
     const dashboard = await this.dashboardRepository.getAllDashboardData(
       session,
       { stid: request.stid },
     );
-    console.log('[DashboardCompleteService] Datos del dashboard obtenidos');
+    this.logger.debug('Datos del dashboard obtenidos');
 
-    // 3. Devolver respuesta consolidada
     return {
       session: {
         cookies: session.cookies,

@@ -8,7 +8,8 @@ export class DebugController {
   @Get('env')
   getEnv() {
     return {
-      JWT_SECRET: ':b',
+      NODE_ENV: process.env.NODE_ENV || 'development',
+      PORT: process.env.PORT || 4100,
     };
   }
 }

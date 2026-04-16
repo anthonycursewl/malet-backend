@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Logger } from '@nestjs/common';
 import { PrismaModule } from 'src/prisma.module';
 import { AuthModule } from 'src/auth/auth.module';
 
@@ -52,13 +52,14 @@ import { KeysController } from './infrastructure/adapters/controllers/keys.contr
 const PubSubProvider = {
   provide: PUBSUB_PORT,
   useFactory: () => {
+    const logger = new Logger('MessagingModule');
     if (process.env.REDIS_HOST) {
-      console.log(
-        `📡 Using Redis PubSub: ${process.env.REDIS_HOST}:${process.env.REDIS_PORT || 6379}`,
+      logger.log(
+        `Using Redis PubSub: ${process.env.REDIS_HOST}:${process.env.REDIS_PORT || 6379}`,
       );
       return new RedisPubSubAdapter();
     } else {
-      console.log('📡 Using InMemory PubSub (single server mode)');
+      logger.log('Using InMemory PubSub (single server mode)');
       return new InMemoryPubSubAdapter();
     }
   },

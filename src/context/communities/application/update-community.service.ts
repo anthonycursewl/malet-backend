@@ -3,6 +3,7 @@ import {
   Inject,
   NotFoundException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import {
   UpdateCommunityUseCase,
@@ -25,6 +26,8 @@ import { Community } from '../domain/entities/community.entity';
 
 @Injectable()
 export class UpdateCommunityService implements UpdateCommunityUseCase {
+  private readonly logger = new Logger(UpdateCommunityService.name);
+
   constructor(
     @Inject(COMMUNITY_REPOSITORY_PORT)
     private readonly communityRepository: CommunityRepository,
@@ -89,7 +92,10 @@ export class UpdateCommunityService implements UpdateCommunityUseCase {
           await this.fileStorage.deleteFile(community.getAvatarUrl()!);
         } catch (error) {
           // Ignorar errores al eliminar archivo anterior
-          console.warn('Error eliminando avatar anterior:', error);
+          this.logger.warn(
+            'Error eliminando avatar anterior: ' +
+              (error instanceof Error ? error.message : String(error)),
+          );
         }
       }
 
@@ -109,7 +115,10 @@ export class UpdateCommunityService implements UpdateCommunityUseCase {
           await this.fileStorage.deleteFile(community.getBannerUrl()!);
         } catch (error) {
           // Ignorar errores al eliminar archivo anterior
-          console.warn('Error eliminando banner anterior:', error);
+          this.logger.warn(
+            'Error eliminando banner anterior: ' +
+              (error instanceof Error ? error.message : String(error)),
+          );
         }
       }
 

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   PolicyAction,
   AuthenticatedUser,
@@ -17,6 +17,7 @@ import { CommunityPolicy } from 'src/shared/domain/policies/community.policy';
  */
 @Injectable()
 export class PolicyHandlerService {
+  private readonly logger = new Logger(PolicyHandlerService.name);
   private policies: Map<string, Policy<any>> = new Map();
 
   constructor() {
@@ -52,10 +53,8 @@ export class PolicyHandlerService {
     const policy = this.policies.get(resourceType);
 
     if (!policy) {
-      console.warn(
-        `[PolicyHandler] No policy found for resource type: ${resourceType}`,
-      );
-      return false; // Denegar por defecto si no hay política
+      this.logger.warn(`No policy found for resource type: ${resourceType}`);
+      return false;
     }
 
     switch (action) {
@@ -85,7 +84,7 @@ export class PolicyHandlerService {
         );
 
       default:
-        console.warn(`[PolicyHandler] Unknown action: ${action}`);
+        this.logger.warn(`Unknown action: ${action}`);
         return false;
     }
   }

@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import {
   UpdateUserProfileDto,
@@ -20,6 +21,8 @@ import {
 
 @Injectable()
 export class UpdateUserProfileService implements UpdateUserProfileUseCase {
+  private readonly logger = new Logger(UpdateUserProfileService.name);
+
   constructor(
     @Inject(USER_REPOSITORY_PORT)
     private readonly userRepository: UserRepository,
@@ -71,7 +74,11 @@ export class UpdateUserProfileService implements UpdateUserProfileUseCase {
         bannerUrl,
       });
     } catch (error) {
-      console.log(error);
+      this.logger.error(
+        'Error updating user profile: ' +
+          (error instanceof Error ? error.message : String(error)),
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new InternalServerErrorException(
         'Error al actualizar el perfil del usuario.',
       );
