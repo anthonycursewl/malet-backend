@@ -1,29 +1,23 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { APP_FILTER } from '@nestjs/core';
-import { TagErrorLoggerFilter } from './common/filters/tag-error-logger.filter';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
-import { APP_GUARD } from '@nestjs/core';
 
 import { ThrottlerModule } from '@nestjs/throttler';
 import { UserModule } from './context/users/user.module';
 import { WalletModule } from './context/wallet/wallet.module';
-import { CommunityModule } from './context/communities/community.module';
-import { OnboardingModule } from './context/onboarding/onboarding.module';
-import { FeedModule } from './context/feed/feed.module';
-import { MessagingModule } from './context/messaging/messaging.module';
+import { SharedAccountsModule } from './context/shared-accounts/shared-accounts.module';
 import { CommonModule } from './shared/common/common.module';
 import { DebugModule } from './debug/debug.module';
 import { FileStorageModule } from './shared/infrastructure/file-storage/file-storage.module';
-import { AuthorizationModule } from './shared/infrastructure/authorization/authorization.module';
 import { EmailModule } from './shared/infrastructure/email/email.module';
-import { GarzonModule } from './context/garzon/garzon.module';
-import { AIChatModule } from './context/ai-chat/ai-chat.module';
-import { IntegrationsModule } from './context/integrations/infrastructure/integrations.module';
 import { BotBlockerMiddleware } from './shared/common/middleware/bot-blocker.middleware';
 import { ThrottlerBehindProxyGuard } from './shared/common/guards/throttler-behind-proxy.guard';
-import { SharedAccountsModule } from './context/shared-accounts/shared-accounts.module';
-import { WebAuthModule } from './context/web-auth/web-auth.module';
-import { AgentModule } from './context/agent/agent.module';
+import { TagErrorLoggerFilter } from './common/filters/tag-error-logger.filter';
+import { AuthorizationModule } from './shared/infrastructure/authorization/authorization.module';
+import { GarzonModule } from './context/garzon/garzon.module';
+import { SyncModule } from './context/sync/sync.module';
+import { TaskitiModule } from './context/taskiti/taskiti.module';
+
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -31,17 +25,17 @@ import { AgentModule } from './context/agent/agent.module';
       {
         name: 'short',
         ttl: 1000,
-        limit: 20,
+        limit: 60,
       },
       {
         name: 'medium',
         ttl: 10000,
-        limit: 50,
+        limit: 120,
       },
       {
         name: 'long',
         ttl: 60000,
-        limit: 120,
+        limit: 300,
       },
     ]),
     CommonModule,
@@ -50,18 +44,11 @@ import { AgentModule } from './context/agent/agent.module';
     AuthorizationModule,
     UserModule,
     WalletModule,
-    CommunityModule,
-    OnboardingModule,
-    FeedModule,
-    MessagingModule,
+    SharedAccountsModule,
     DebugModule,
     GarzonModule,
-    AIChatModule,
-    // Agent module provides the AI agent with memory and tool-calling
-    AgentModule,
-    IntegrationsModule,
-    SharedAccountsModule,
-    WebAuthModule,
+    SyncModule,
+    TaskitiModule,
   ],
   providers: [
     {
