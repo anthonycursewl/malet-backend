@@ -10,6 +10,7 @@ import {
   Get,
   Param,
   Patch,
+  Post,
   Logger,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
@@ -36,6 +37,23 @@ export class UserProfileController {
   ) {}
 
   @Patch('update')
+  async updateProfile(@Req() req: any, @Body() body: UpdateProfileDto) {
+    const userId = req.user.userId;
+
+    const dto: UpdateUserProfileDto = {
+      userId,
+      name: body.name,
+      username: body.username,
+    };
+
+    const updatedUser = await this.updateUserProfileService.execute(dto);
+
+    const { password: _password, ...userWithoutPassword } =
+      updatedUser.toPrimitives();
+    return userWithoutPassword;
+  }
+
+  @Post('upload')
   @UseInterceptors(
     FileFieldsInterceptor(
       [
@@ -60,7 +78,7 @@ export class UserProfileController {
       },
     ),
   )
-  async updateProfile(
+  async uploadProfileMedia(
     @Req() req: any,
     @Body() body: UpdateProfileDto,
     @UploadedFiles()

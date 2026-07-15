@@ -12,7 +12,7 @@ import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class UserRepositoryAdapter implements UserRepository {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async save(user: User): Promise<User> {
     const { verification_type: _verification_type, ...createData } =
@@ -25,7 +25,6 @@ export class UserRepositoryAdapter implements UserRepository {
         name: user.getName(),
         username: user.getUsername(),
         password: user.getPassword(),
-
 
         banner_url: user.getBannerUrl(),
         google_id: user.getGoogleId(),
@@ -68,7 +67,6 @@ export class UserRepositoryAdapter implements UserRepository {
     return ufp;
   }
 
-
   async findByEmail(email: string): Promise<User | null> {
     const user = await this.prisma.user.findFirst({
       where: {
@@ -94,7 +92,6 @@ export class UserRepositoryAdapter implements UserRepository {
           },
         },
       },
-
     });
 
     if (!user) {
@@ -107,7 +104,6 @@ export class UserRepositoryAdapter implements UserRepository {
       google_id: user.google_id || undefined,
     });
   }
-
 
   async findById(id: string): Promise<User | null> {
     const user = await this.prisma.user.findUnique({
@@ -126,7 +122,6 @@ export class UserRepositoryAdapter implements UserRepository {
       google_id: user.google_id || undefined,
     });
   }
-
 
   async updateProfile(params: UpdateUserProfileParams): Promise<User> {
     const updateData: any = {};
@@ -165,9 +160,12 @@ export class UserRepositoryAdapter implements UserRepository {
       data: updateData,
     });
 
-    return User.fromPrimitives({ ...updatedUser, password: '', google_id: updatedUser.google_id || undefined });
+    return User.fromPrimitives({
+      ...updatedUser,
+      password: '',
+      google_id: updatedUser.google_id || undefined,
+    });
   }
-
 
   async findByUsername(
     username: string,
@@ -175,24 +173,23 @@ export class UserRepositoryAdapter implements UserRepository {
   ): Promise<User | string | null> {
     const select = onlyUsername
       ? {
-        username: true,
-      }
+          username: true,
+        }
       : {
-        id: true,
-        name: true,
-        username: true,
-        avatar_url: true,
-        banner_url: true,
-        created_at: true,
-        email: true,
-        verified: true,
-        email_verified: true,
-        email_verified_at: true,
+          id: true,
+          name: true,
+          username: true,
+          avatar_url: true,
+          banner_url: true,
+          created_at: true,
+          email: true,
+          verified: true,
+          email_verified: true,
+          email_verified_at: true,
 
-        verification_type_id: true,
-        google_id: true,
-      };
-
+          verification_type_id: true,
+          google_id: true,
+        };
 
     const user = await this.prisma.user.findFirst({
       where: {

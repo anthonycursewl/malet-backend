@@ -6,7 +6,7 @@ import { UpdateAccount } from '../../domain/ports/in/update-account.usecase';
 
 @Injectable()
 export class AccountRepositoryAdapter implements AccountRepository {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(account: Account): Promise<Account> {
     const accountPrimitives = account.toPrimitives();
@@ -16,7 +16,6 @@ export class AccountRepositoryAdapter implements AccountRepository {
         balance: accountPrimitives.balance,
       },
     });
-
 
     const primitives = {
       ...created,
@@ -45,8 +44,6 @@ export class AccountRepositoryAdapter implements AccountRepository {
         created_at: 'desc',
       },
     });
-
-
 
     const primitives = accounts.map((account) => {
       return {
@@ -102,7 +99,6 @@ export class AccountRepositoryAdapter implements AccountRepository {
     return Account.fromPrimitives(primitives);
   }
 
-
   async softDelete(accountId: string): Promise<void> {
     await this.prisma.accounts.update({
       where: { id: accountId },
@@ -124,7 +120,6 @@ export class AccountRepositoryAdapter implements AccountRepository {
   }
 
   async findDeletedOlderThan(date: Date): Promise<Account[]> {
-
     const accounts = await this.prisma.accounts.findMany({
       where: {
         deleted_at: {
@@ -164,7 +159,6 @@ export class AccountRepositoryAdapter implements AccountRepository {
       },
     });
 
-
     return accounts.map((account) => {
       const primitives = {
         ...account,
@@ -180,5 +174,3 @@ export class AccountRepositoryAdapter implements AccountRepository {
     });
   }
 }
-
-

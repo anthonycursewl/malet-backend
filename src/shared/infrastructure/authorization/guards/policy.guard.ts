@@ -112,7 +112,6 @@ export class PolicyGuard implements CanActivate {
 
     const resource = await resolver.resolve(resourceId, options);
 
-
     if (!resource) {
       throw new NotFoundException('Recurso no encontrado');
     }

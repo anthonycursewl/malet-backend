@@ -7,7 +7,6 @@ import {
   UserPolicy,
   TransactionPolicy,
 } from 'src/shared/domain/policies';
-import { CommunityPolicy } from 'src/shared/domain/policies/community.policy';
 
 /**
  * Servicio central que gestiona y ejecuta las políticas de autorización.
@@ -25,7 +24,6 @@ export class PolicyHandlerService {
     this.policies.set('account', new AccountPolicy());
     this.policies.set('user', new UserPolicy());
     this.policies.set('transaction', new TransactionPolicy());
-    this.policies.set('community', new CommunityPolicy());
   }
 
   /**

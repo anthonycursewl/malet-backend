@@ -15,7 +15,7 @@ export class AccountResourceResolver implements ResourceResolver<Account> {
   constructor(
     @Inject(ACCOUNT_REPOSITORY_PORT)
     private readonly accountRepository: AccountRepository,
-  ) { }
+  ) {}
 
   /**
    * Resuelve una cuenta por su ID
@@ -27,7 +27,6 @@ export class AccountResourceResolver implements ResourceResolver<Account> {
         options?.includeDeleted,
       );
     } catch {
-
       return null;
     }
   }

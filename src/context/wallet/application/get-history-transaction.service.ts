@@ -14,11 +14,9 @@ export class GetHistoryTransactionService implements GetHistoryTransactionUseCas
   constructor(
     @Inject(TRANSACTION_REPOSITORY_PORT)
     private readonly transactionRepository: TransactionRepository,
-  ) { }
+  ) {}
 
   async execute(options: HistoryTransactionOptions): Promise<Transaction[]> {
     return this.transactionRepository.getHistoryTransaction(options);
   }
 }
-
-

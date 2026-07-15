@@ -17,27 +17,43 @@ export class TagErrorLoggerFilter implements ExceptionFilter {
     const res = ctx.getResponse<Response>();
     const path = req?.url || '';
 
-    if (path.startsWith('/tags') || path.startsWith('/transactions')) {
-      const status =
-        exception instanceof HttpException ? exception.getStatus() : 500;
-      const message =
-        exception instanceof HttpException
-          ? exception.getResponse()
-          : exception;
-      const msg =
-        typeof message === 'string' ? message : JSON.stringify(message);
-      this.logger.error(
-        `${req.method} ${path} - ${status}: ${msg}`,
-        exception instanceof Error ? exception.stack : undefined,
-      );
+    this.logger.error(
+      `${req.method} ${path}: ${exception instanceof Error ? exception.message : 'Unknown error'}`,
+      exception instanceof Error ? exception.stack : undefined,
+    );
+
+    let status: number;
+    let body: Record<string, any>;
+
+    if (exception instanceof HttpException) {
+      status = exception.getStatus();
+      const responseBody = exception.getResponse();
+
+      if (typeof responseBody === 'string') {
+        body = { statusCode: status, message: responseBody };
+      } else if (typeof responseBody === 'object' && responseBody !== null) {
+        body = { ...responseBody, statusCode: status };
+        if (
+          body.message !== undefined &&
+          body.message !== null &&
+          typeof body.message !== 'string' &&
+          !Array.isArray(body.message)
+        ) {
+          body.message = exception.message;
+        }
+        if (body.message === undefined || body.message === null) {
+          body.message = exception.message;
+        }
+      } else {
+        body = { statusCode: status, message: exception.message };
+      }
+    } else {
+      status = 500;
+      body = { statusCode: 500, message: 'Internal server error' };
     }
 
-    const status =
-      exception instanceof HttpException ? exception.getStatus() : 500;
-    const message =
-      exception instanceof HttpException ? exception.getResponse() : exception;
     if (res && typeof res.status === 'function') {
-      res.status(status).json({ statusCode: status, message });
+      res.status(status).json(body);
     }
   }
 }

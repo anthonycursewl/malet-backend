@@ -90,8 +90,8 @@ export class AccountsController {
    * @CanUpdate verifica automáticamente que el usuario sea dueño de la cuenta.
    * @ResolvedResource proporciona la cuenta ya verificada (evita doble fetch).
    */
-  @Put('update/:account_id')
-  @CanUpdate('account', 'account_id') // ← Verificación declarativa de ownership
+  @Put(':account_id')
+  @CanUpdate('account', 'account_id')
   async updateAccount(
     @ResolvedResource() account: Account, // ← Cuenta ya verificada por el guard
     @Body() updateAccountDto: UpdateAccountDto,

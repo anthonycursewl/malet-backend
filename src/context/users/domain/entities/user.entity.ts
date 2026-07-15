@@ -89,7 +89,6 @@ export class User {
       | 'email_verified_at'
     > & { password: string },
   ): Promise<User> {
-
     const hashedPassword = await this.hashPassword(user.password);
 
     return new User({
@@ -128,7 +127,6 @@ export class User {
       email_verified_at: new Date(),
     });
   }
-
 
   toPrimitives(): UserPrimitives {
     return {
@@ -181,7 +179,6 @@ export class User {
   getGoogleId(): string | undefined {
     return this.google_id;
   }
-
 
   getAvatarUrl(): string | undefined {
     return this.avatar_url;

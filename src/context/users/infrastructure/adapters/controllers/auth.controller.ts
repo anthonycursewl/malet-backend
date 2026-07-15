@@ -1,4 +1,12 @@
-import { Controller, Get, Req, Post, Body, Inject, Logger } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Req,
+  Post,
+  Body,
+  Inject,
+  Logger,
+} from '@nestjs/common';
 import { Request } from 'express';
 import { AuthUseCase } from 'src/context/users/application/auth.service';
 import { LoginGoogleDto } from '../dtos/login-google.dto';
@@ -15,7 +23,7 @@ export class AuthController {
     private readonly authUseCase: AuthUseCase,
     @Inject(LOGIN_GOOGLE_USER_USECASE)
     private readonly loginWithGoogleUseCase: LoginWithGoogleUseCase,
-  ) { }
+  ) {}
 
   @Get('verify')
   async verify(@Req() req: Request) {
@@ -35,4 +43,3 @@ export class AuthController {
     return await this.loginWithGoogleUseCase.execute(body.idToken);
   }
 }
-

@@ -10,7 +10,6 @@ export interface AccountPrimitives {
   deleted_at?: Date | null;
 }
 
-
 export class Account {
   private readonly id: string;
   private readonly name: string;
@@ -21,7 +20,6 @@ export class Account {
   private readonly created_at: Date;
   private readonly updated_at: Date;
   private readonly deleted_at?: Date | null;
-
 
   constructor(
     id: string,
@@ -34,7 +32,6 @@ export class Account {
     icon?: string,
     deleted_at?: Date | null,
   ) {
-
     this.id = id;
     this.name = name;
     this.balance = balance;
@@ -45,7 +42,6 @@ export class Account {
     this.icon = icon;
     this.deleted_at = deleted_at;
   }
-
 
   static create(
     account: Omit<AccountPrimitives, 'id' | 'created_at' | 'updated_at'>,
@@ -81,7 +77,6 @@ export class Account {
       updated_at: this.updated_at,
       deleted_at: this.deleted_at,
     };
-
   }
 
   static fromPrimitives(primitives: AccountPrimitives): Account {
@@ -96,7 +91,6 @@ export class Account {
       primitives.icon,
       primitives.deleted_at,
     );
-
   }
 
   getId() {
@@ -135,4 +129,3 @@ export class Account {
     return this.deleted_at;
   }
 }
-

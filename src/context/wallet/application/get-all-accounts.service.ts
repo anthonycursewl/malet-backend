@@ -11,7 +11,7 @@ export class GetAllAccountsService implements GetAllAccountsUseCase {
   constructor(
     @Inject(ACCOUNT_REPOSITORY_PORT)
     private readonly accountRepository: AccountRepository,
-  ) { }
+  ) {}
 
   async execute(
     userId: string,
@@ -21,4 +21,3 @@ export class GetAllAccountsService implements GetAllAccountsUseCase {
     return this.accountRepository.getAllAccounts(userId, take, cursor);
   }
 }
-

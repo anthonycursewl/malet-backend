@@ -35,7 +35,7 @@ export class SaveTransactionService implements SaveTransactionUseCase {
     @Inject(TRANSACTION_TAG_REPOSITORY_PORT)
     private readonly tagRepository: TransactionTagRepository,
     private readonly snowflakeService: SnowflakeService,
-  ) { }
+  ) {}
 
   async execute(userId: string, tx: TransactionWithTags): Promise<Transaction> {
     const account = await this.accountRepository.findById(tx.account_id);

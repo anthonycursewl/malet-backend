@@ -1,9 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  NotFoundException,
-  Logger,
-} from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { RestoreTransactionUseCase } from '../domain/ports/in/restore-transaction.usecase';
 import {
   TRANSACTION_REPOSITORY_PORT,
@@ -16,13 +11,16 @@ export class RestoreTransactionService implements RestoreTransactionUseCase {
   constructor(
     @Inject(TRANSACTION_REPOSITORY_PORT)
     private readonly transactionRepository: TransactionRepository,
-  ) { }
+  ) {}
 
   async execute(userId: string, indexId: string) {
     const restored = await this.transactionRepository.restore(indexId, userId);
-    if (!restored) throw new NotFoundException('Transaction not found or permission denied');
+    if (!restored)
+      throw new NotFoundException('Transaction not found or permission denied');
 
-    this.logger.log(`Transaction ${restored.getId()} restored by user ${userId}`);
+    this.logger.log(
+      `Transaction ${restored.getId()} restored by user ${userId}`,
+    );
     return restored;
   }
 }

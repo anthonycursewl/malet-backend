@@ -156,7 +156,7 @@ export class TransactionController {
     return updatedTransaction.toPrimitives();
   }
 
-  @Delete('delete/:index_id')
+  @Delete(':index_id')
   async delete(
     @CurrentUser() user: { userId: string; email: string },
     @Param('index_id') index_id: string,
@@ -166,7 +166,6 @@ export class TransactionController {
       index_id,
     );
 
-    // devolver la entidad soft-deleted para que el frontend la elimine de memoria
     return deleted.toPrimitives();
   }
 

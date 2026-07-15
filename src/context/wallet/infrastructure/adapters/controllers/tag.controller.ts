@@ -65,7 +65,7 @@ export class TransactionTagController {
   ) {
     // Validaciones y normalización en el controller
     // Normalizar color único (si existe)
-    let normalizedColor: string | undefined = dto.color?.trim().toLowerCase();
+    const normalizedColor: string | undefined = dto.color?.trim().toLowerCase();
     const hexColorPattern = /^#[0-9a-f]{3}([0-9a-f]{3})?$/;
     if (normalizedColor && !hexColorPattern.test(normalizedColor)) {
       throw new BadRequestException(

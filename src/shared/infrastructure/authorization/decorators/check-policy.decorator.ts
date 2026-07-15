@@ -17,7 +17,6 @@ export interface PolicyMetadata {
   options?: any;
 }
 
-
 /**
  * Decorador principal para verificar políticas de autorización.
  *
@@ -44,7 +43,6 @@ export const CheckPolicy = (
     options,
   } as PolicyMetadata);
 
-
 // ============================================
 // Decoradores de conveniencia para cada acción
 // ============================================
@@ -53,8 +51,11 @@ export const CheckPolicy = (
  * Verifica que el usuario puede LEER el recurso
  * @example @CanRead('account', 'account_id')
  */
-export const CanRead = (resource: string, idParam: string = 'id', options?: any) =>
-  CheckPolicy(PolicyAction.READ, resource, idParam, options);
+export const CanRead = (
+  resource: string,
+  idParam: string = 'id',
+  options?: any,
+) => CheckPolicy(PolicyAction.READ, resource, idParam, options);
 
 /**
  * Verifica que el usuario puede ACTUALIZAR el recurso
@@ -65,7 +66,6 @@ export const CanUpdate = (
   idParam: string = 'id',
   options?: any,
 ) => CheckPolicy(PolicyAction.UPDATE, resource, idParam, options);
-
 
 /**
  * Verifica que el usuario puede ELIMINAR el recurso

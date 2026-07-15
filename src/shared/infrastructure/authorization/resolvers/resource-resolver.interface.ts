@@ -15,7 +15,6 @@ export interface ResourceResolver<T> {
   resolve(resourceId: string, options?: any): Promise<T | null>;
 }
 
-
 /**
  * Token de inyección para el registro de resolvers
  */

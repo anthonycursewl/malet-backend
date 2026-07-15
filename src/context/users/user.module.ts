@@ -28,7 +28,6 @@ import { LoginWithGoogleService } from './application/login-with-google.service'
 import { GOOGLE_AUTH_SERVICE } from './domain/ports/out/auth.service';
 import { GoogleAuthService } from './infrastructure/services/google-auth.provider';
 
-
 @Module({
   imports: [PrismaModule, AuthModule, FileStorageModule],
   providers: [
@@ -57,7 +56,6 @@ import { GoogleAuthService } from './infrastructure/services/google-auth.provide
       provide: GOOGLE_AUTH_SERVICE,
       useClass: GoogleAuthService,
     },
-
 
     // Casos de uso de verificación de email
     {
@@ -90,4 +88,4 @@ import { GoogleAuthService } from './infrastructure/services/google-auth.provide
   ],
   exports: [USER_REPOSITORY_PORT],
 })
-export class UserModule { }
+export class UserModule {}
