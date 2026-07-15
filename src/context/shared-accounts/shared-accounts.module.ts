@@ -19,38 +19,38 @@ import { RestoreSharedAccountService } from './application/restore-shared-accoun
 import { HardDeleteSharedAccountService } from './application/hard-delete-shared-account.service';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [SharedAccountsController],
-    providers: [
-        {
-            provide: SHARED_ACCOUNT_REPOSITORY_PORT,
-            useClass: SharedAccountRepositoryAdapter,
-        },
-        {
-            provide: CREATE_SHARED_ACCOUNT_USECASE,
-            useClass: CreateSharedAccountService,
-        },
-        {
-            provide: GET_SHARED_ACCOUNTS_USECASE,
-            useClass: GetSharedAccountsService,
-        },
-        {
-            provide: UPDATE_SHARED_ACCOUNT_USECASE,
-            useClass: UpdateSharedAccountService,
-        },
-        {
-            provide: DELETE_SHARED_ACCOUNT_USECASE,
-            useClass: DeleteSharedAccountService,
-        },
-        {
-            provide: RESTORE_SHARED_ACCOUNT_USECASE,
-            useClass: RestoreSharedAccountService,
-        },
-        {
-            provide: HARD_DELETE_SHARED_ACCOUNT_USECASE,
-            useClass: HardDeleteSharedAccountService,
-        },
-    ],
-    exports: [SHARED_ACCOUNT_REPOSITORY_PORT],
+  imports: [PrismaModule],
+  controllers: [SharedAccountsController],
+  providers: [
+    {
+      provide: SHARED_ACCOUNT_REPOSITORY_PORT,
+      useClass: SharedAccountRepositoryAdapter,
+    },
+    {
+      provide: CREATE_SHARED_ACCOUNT_USECASE,
+      useClass: CreateSharedAccountService,
+    },
+    {
+      provide: GET_SHARED_ACCOUNTS_USECASE,
+      useClass: GetSharedAccountsService,
+    },
+    {
+      provide: UPDATE_SHARED_ACCOUNT_USECASE,
+      useClass: UpdateSharedAccountService,
+    },
+    {
+      provide: DELETE_SHARED_ACCOUNT_USECASE,
+      useClass: DeleteSharedAccountService,
+    },
+    {
+      provide: RESTORE_SHARED_ACCOUNT_USECASE,
+      useClass: RestoreSharedAccountService,
+    },
+    {
+      provide: HARD_DELETE_SHARED_ACCOUNT_USECASE,
+      useClass: HardDeleteSharedAccountService,
+    },
+  ],
+  exports: [SHARED_ACCOUNT_REPOSITORY_PORT],
 })
-export class SharedAccountsModule { }
+export class SharedAccountsModule {}
