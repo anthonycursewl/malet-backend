@@ -65,13 +65,13 @@ export class TaskitiAuthService {
 
     const match = await bcrypt.compare(oldRawToken, stored.token_hash);
     if (!match || stored.expires_at < new Date()) {
-      await this.prisma.taskiti_refresh_tokens.delete({
+      await this.prisma.taskiti_refresh_tokens.deleteMany({
         where: { id: stored.id },
       });
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
 
-    await this.prisma.taskiti_refresh_tokens.delete({
+    await this.prisma.taskiti_refresh_tokens.deleteMany({
       where: { id: stored.id },
     });
 

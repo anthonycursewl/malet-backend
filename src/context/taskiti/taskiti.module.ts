@@ -7,12 +7,14 @@ import { TaskitiLoginService } from './application/taskiti-login.service';
 import { TaskitiRegisterService } from './application/taskiti-register.service';
 import { TaskitiRefreshService } from './application/taskiti-refresh.service';
 import { TaskitiTasksService } from './application/taskiti-tasks.service';
+import { TaskitiAnalyticsService } from './application/taskiti-analytics.service';
 import { TaskitiAuthController } from './infrastructure/adapters/controllers/taskiti-auth.controller';
 import { TaskitiTasksController } from './infrastructure/adapters/controllers/taskiti-tasks.controller';
+import { TaskitiAnalyticsController } from './infrastructure/adapters/controllers/taskiti-analytics.controller';
 
 @Module({
   imports: [PrismaModule, AuthModule],
-  controllers: [TaskitiAuthController, TaskitiTasksController],
+  controllers: [TaskitiAuthController, TaskitiTasksController, TaskitiAnalyticsController],
   providers: [
     TaskitiJwtStrategy,
     TaskitiAuthService,
@@ -20,6 +22,7 @@ import { TaskitiTasksController } from './infrastructure/adapters/controllers/ta
     TaskitiRegisterService,
     TaskitiRefreshService,
     TaskitiTasksService,
+    TaskitiAnalyticsService,
   ],
 })
 export class TaskitiModule {}

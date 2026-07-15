@@ -1,4 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../../prisma.service';
 import { TaskitiAuthService } from '../infrastructure/services/taskiti-auth.service';
 
@@ -20,7 +21,7 @@ export class TaskitiRefreshService {
       const match = await this.compareHash(refreshToken, stored.token_hash);
       if (match) {
         matchedUserId = stored.user_id;
-        await this.prisma.taskiti_refresh_tokens.delete({
+        await this.prisma.taskiti_refresh_tokens.deleteMany({
           where: { id: stored.id },
         });
         break;
@@ -55,11 +56,7 @@ export class TaskitiRefreshService {
     };
   }
 
-  private async compareHash(
-    plain: string,
-    hash: string,
-  ): Promise<boolean> {
-    const { compare } = await import('bcrypt');
-    return compare(plain, hash);
+  private async compareHash(plain: string, hash: string): Promise<boolean> {
+    return bcrypt.compare(plain, hash);
   }
 }

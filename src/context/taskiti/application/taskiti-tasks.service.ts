@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   ConflictException,
   InternalServerErrorException,
+  BadRequestException,
   Logger,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
@@ -85,6 +86,38 @@ export class TaskitiTasksService {
     }
   }
 
+  async findOne(userId: string, taskId: string) {
+    if (!taskId || taskId === 'undefined' || taskId === 'null') {
+      throw new BadRequestException('Invalid task id');
+    }
+
+    try {
+      const task = await this.prisma.taskiti_tasks.findUnique({
+        where: { id: taskId },
+      });
+
+      if (!task) {
+        throw new NotFoundException('Task not found');
+      }
+
+      if (task.user_id !== userId) {
+        throw new ForbiddenException('Not your task');
+      }
+
+      return { task };
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      this.logger.error(`Failed to get task ${taskId}: ${error.message}`, error.stack);
+      throw new InternalServerErrorException('Failed to get task');
+    }
+  }
+
   async create(userId: string, dto: CreateTaskDto) {
     const now = new Date();
     let created_at = now;
@@ -133,6 +166,9 @@ export class TaskitiTasksService {
   }
 
   async update(userId: string, taskId: string, dto: UpdateTaskDto) {
+    if (!taskId || taskId === 'undefined' || taskId === 'null') {
+      throw new BadRequestException('Invalid task id');
+    }
     try {
       const existing = await this.prisma.taskiti_tasks.findUnique({
         where: { id: taskId },
@@ -178,7 +214,7 @@ export class TaskitiTasksService {
 
       return { task };
     } catch (error) {
-      if (error instanceof NotFoundException || error instanceof ForbiddenException || error instanceof ConflictException) {
+      if (error instanceof NotFoundException || error instanceof ForbiddenException || error instanceof ConflictException || error instanceof BadRequestException) {
         throw error;
       }
       this.logger.error(`Failed to update task ${taskId}: ${error.message}`, error.stack);
@@ -187,6 +223,9 @@ export class TaskitiTasksService {
   }
 
   async remove(userId: string, taskId: string) {
+    if (!taskId || taskId === 'undefined' || taskId === 'null') {
+      throw new BadRequestException('Invalid task id');
+    }
     try {
       const existing = await this.prisma.taskiti_tasks.findUnique({
         where: { id: taskId },
@@ -207,7 +246,7 @@ export class TaskitiTasksService {
 
       return { deleted_at: task.deleted_at };
     } catch (error) {
-      if (error instanceof NotFoundException || error instanceof ForbiddenException) {
+      if (error instanceof NotFoundException || error instanceof ForbiddenException || error instanceof BadRequestException) {
         throw error;
       }
       this.logger.error(`Failed to delete task ${taskId}: ${error.message}`, error.stack);

@@ -27,8 +27,9 @@ model user {
   email_verification_tokens email_verification_token[]
   transaction_tags          transaction_tag[]
   sharedAccounts            shared_accounts[]
-  taskiti_tasks             taskiti_tasks[]
-  taskiti_refresh_tokens    taskiti_refresh_tokens[]
+   taskiti_tasks             taskiti_tasks[]
+   taskiti_refresh_tokens    taskiti_refresh_tokens[]
+   taskiti_analytics         taskiti_analytics[]
 }
 
 model verification_type {
@@ -183,4 +184,25 @@ model taskiti_refresh_tokens {
 
   @@index([user_id])
   @@index([expires_at])
+}
+
+model taskiti_analytics {
+    id                String    @id @default(uuid()) @db.Uuid
+    user_id           String    @db.VarChar(255)
+    date              DateTime  @db.Date
+    tasks_created     Int       @default(0)
+    tasks_completed   Int       @default(0)
+    tasks_deleted     Int       @default(0)
+    tasks_expired     Int       @default(0)
+    priority_low      Int       @default(0)
+    priority_medium   Int       @default(0)
+    priority_high     Int       @default(0)
+    priority_urgent   Int       @default(0)
+    avg_completion_hours Float?
+    created_at        DateTime  @default(now()) @db.Timestamptz(6)
+
+    user user @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+    @@unique([user_id, date])
+    @@index([user_id, date])
 }

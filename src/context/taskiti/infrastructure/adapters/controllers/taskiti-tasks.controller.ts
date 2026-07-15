@@ -42,6 +42,12 @@ export class TaskitiTasksController {
     });
   }
 
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  async findOne(@Req() req: any, @Param('id') id: string) {
+    return this.tasksService.findOne(req.user.userId, id);
+  }
+
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Req() req: any, @Body() body: any) {
