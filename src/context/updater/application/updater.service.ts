@@ -50,7 +50,7 @@ export class UpdaterService {
         notes: '',
         pub_date: new Date().toISOString(),
         platforms: {
-          'windows-x86_64': { signature: '', url: '' },
+          'windows-x86_64': { signature: '', url: 'https://apimalet.breadriuss.com/releases/.placeholder' },
         },
       };
     }
