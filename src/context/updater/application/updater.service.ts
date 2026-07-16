@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -69,10 +69,23 @@ export class UpdaterService {
     signature: string,
     installerFilename: string,
   ): Promise<UpdateManifest> {
+    if (!version) {
+      throw new BadRequestException('version is required');
+    }
+    if (!platform) {
+      throw new BadRequestException('platform is required');
+    }
+    if (!signature) {
+      throw new BadRequestException('signature is required');
+    }
+    if (!installerFilename) {
+      throw new BadRequestException('installer_filename is required');
+    }
+
     const manifest = this.getManifest();
 
     manifest.version = version;
-    manifest.notes = notes;
+    manifest.notes = notes || '';
     manifest.pub_date = new Date().toISOString();
 
     const installerUrl = `https://apimalet.breadriuss.com/releases/${installerFilename}`;

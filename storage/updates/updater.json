@@ -1,9 +1,6 @@
 {
-  "pub_date": "2026-07-16T13:23:12.023Z",
-  "platforms": {
-    "windows-x86_64": {
-      "signature": "",
-      "url": "https://apimalet.breadriuss.com/releases/brd-tasks-desktop_0.1.0_x64-setup.exe"
-    }
-  }
+  "version": "0.1.0",
+  "notes": "Versión inicial",
+  "pub_date": "2026-07-16T12:00:00.000Z",
+  "platforms": {}
 }
