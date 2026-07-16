@@ -1,6 +1,11 @@
 {
   "version": "0.1.0",
-  "notes": "Versión inicial",
-  "pub_date": "2026-07-16T12:00:00.000Z",
-  "platforms": {}
+  "notes": "",
+  "pub_date": "2026-07-16T00:00:00Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "",
+      "url": ""
+    }
+  }
 }

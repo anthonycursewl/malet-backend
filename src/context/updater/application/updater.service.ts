@@ -46,10 +46,12 @@ export class UpdaterService {
     } catch (error: any) {
       this.logger.error(`Failed to read updater manifest: ${error.message}`);
       return {
-        version: '0.0.0',
-        notes: 'No updates available',
+        version: '0.1.0',
+        notes: '',
         pub_date: new Date().toISOString(),
-        platforms: {},
+        platforms: {
+          'windows-x86_64': { signature: '', url: '' },
+        },
       };
     }
   }
