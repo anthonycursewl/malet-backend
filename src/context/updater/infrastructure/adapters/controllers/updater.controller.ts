@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Body,
   Param,
   Res,
@@ -10,9 +11,15 @@ import {
   NotFoundException,
   Header,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import * as fs from 'fs';
+import * as path from 'path';
+import { diskStorage } from 'multer';
 import { ApiKeyGuard } from '../../../../../auth/guards/api-key.guard';
 import { UpdaterService } from '../../../application/updater.service';
 
@@ -45,6 +52,33 @@ export class UpdaterController {
 
     const stream = fs.createReadStream(filePath);
     stream.pipe(res);
+  }
+
+  @Put('releases/upload')
+  @UseGuards(ApiKeyGuard)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: path.resolve(process.env.RELEASES_DIR || 'storage/releases'),
+        filename: (_req, file, cb) => {
+          cb(null, file.originalname);
+        },
+      }),
+      limits: { fileSize: 500 * 1024 * 1024 },
+    }),
+  )
+  @HttpCode(HttpStatus.OK)
+  async uploadRelease(
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('File is required');
+    }
+    return {
+      message: 'Release uploaded successfully',
+      filename: file.originalname,
+      size: file.size,
+    };
   }
 
   @Post('updates/publish')
