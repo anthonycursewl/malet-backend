@@ -17,6 +17,7 @@ import { AuthorizationModule } from './shared/infrastructure/authorization/autho
 import { GarzonModule } from './context/garzon/garzon.module';
 import { SyncModule } from './context/sync/sync.module';
 import { TaskitiModule } from './context/taskiti/taskiti.module';
+import { UpdaterModule } from './context/updater/updater.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { TaskitiModule } from './context/taskiti/taskiti.module';
     GarzonModule,
     SyncModule,
     TaskitiModule,
+    UpdaterModule,
   ],
   providers: [
     {
