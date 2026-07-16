@@ -2,7 +2,6 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
-  ConflictException,
   InternalServerErrorException,
   BadRequestException,
   Logger,
@@ -182,17 +181,9 @@ export class TaskitiTasksService {
         throw new ForbiddenException('Not your task');
       }
 
-      if (dto.version < existing.version) {
-        throw new ConflictException({
-          error: 'version_conflict',
-          message: 'Task was modified by another device',
-          server_task: existing,
-        });
-      }
-
       const data: any = {
         updated_at: new Date(),
-        version: existing.version + 1,
+        version: Math.max(existing.version, dto.version || 0) + 1,
       };
 
       if (dto.title !== undefined) data.title = dto.title;
@@ -214,7 +205,7 @@ export class TaskitiTasksService {
 
       return { task };
     } catch (error) {
-      if (error instanceof NotFoundException || error instanceof ForbiddenException || error instanceof ConflictException || error instanceof BadRequestException) {
+      if (error instanceof NotFoundException || error instanceof ForbiddenException || error instanceof BadRequestException) {
         throw error;
       }
       this.logger.error(`Failed to update task ${taskId}: ${error.message}`, error.stack);
@@ -269,67 +260,67 @@ export class TaskitiTasksService {
     },
   ) {
     try {
-      const conflicts: any[] = [];
       const now = new Date();
+      const lastSyncAt = this.safeDate(payload.last_sync_at, new Date(0));
+      const processedIds: string[] = [];
+      const conflicts: any[] = [];
 
-      for (const clientTask of payload.tasks || []) {
+      for (const ct of payload.tasks || []) {
+        if (!ct.id) continue;
+        processedIds.push(ct.id);
+
         const existing = await this.prisma.taskiti_tasks.findUnique({
-          where: { id: clientTask.id },
+          where: { id: ct.id },
         });
 
         if (!existing) {
           await this.prisma.taskiti_tasks.create({
             data: {
-              id: clientTask.id,
+              id: ct.id,
               user_id: userId,
-              title: clientTask.title,
-              description: clientTask.description || '',
-              completed: clientTask.completed || false,
-              priority: clientTask.priority || 'medium',
-              tags: clientTask.tags || [],
-              notes: clientTask.notes || '',
-              created_at: this.safeDate(clientTask.created_at, now),
-              expires_at: this.safeDate(clientTask.expires_at, now),
+              title: ct.title || 'Untitled',
+              description: ct.description || '',
+              completed: ct.completed || false,
+              priority: ct.priority || 'medium',
+              tags: ct.tags || [],
+              notes: ct.notes || '',
+              created_at: this.safeDate(ct.created_at, now),
+              expires_at: this.safeDate(ct.expires_at, new Date(now.getTime() + 86400000)),
               updated_at: now,
-              deleted_at: clientTask.deleted_at
-                ? this.safeDate(clientTask.deleted_at)
-                : null,
-              version: clientTask.version || 1,
+              deleted_at: ct.deleted_at ? this.safeDate(ct.deleted_at) : null,
+              version: ct.version || 1,
             },
           });
         } else if (existing.user_id !== userId) {
           continue;
-        } else if (clientTask.version < existing.version) {
+        } else if (ct.version < existing.version) {
           conflicts.push({
-            task_id: clientTask.id,
-            client_version: clientTask.version,
+            task_id: ct.id,
+            client_version: ct.version,
             server_version: existing.version,
             server_task: existing,
           });
         } else {
-          const data: any = { updated_at: now };
-          if (clientTask.title !== undefined) data.title = clientTask.title;
-          if (clientTask.description !== undefined)
-            data.description = clientTask.description;
-          if (clientTask.completed !== undefined)
-            data.completed = clientTask.completed;
-          if (clientTask.priority !== undefined)
-            data.priority = clientTask.priority;
-          if (clientTask.tags !== undefined) data.tags = clientTask.tags;
-          if (clientTask.notes !== undefined) data.notes = clientTask.notes;
-          if (clientTask.expires_at !== undefined)
-            data.expires_at = this.safeDate(clientTask.expires_at);
-          if (clientTask.deleted_at !== undefined) {
-            data.deleted_at = clientTask.deleted_at
-              ? this.safeDate(clientTask.deleted_at)
+          const data: any = {
+            updated_at: now,
+            version: Math.max(existing.version, ct.version || 0) + 1,
+          };
+          if (ct.title !== undefined) data.title = ct.title;
+          if (ct.description !== undefined) data.description = ct.description;
+          if (ct.completed !== undefined) data.completed = ct.completed;
+          if (ct.priority !== undefined) data.priority = ct.priority;
+          if (ct.tags !== undefined) data.tags = ct.tags;
+          if (ct.notes !== undefined) data.notes = ct.notes;
+          if (ct.expires_at !== undefined)
+            data.expires_at = this.safeDate(ct.expires_at);
+          if (ct.deleted_at !== undefined) {
+            data.deleted_at = ct.deleted_at
+              ? this.safeDate(ct.deleted_at)
               : null;
           }
 
-          const clientVersion = clientTask.version || 0;
-          data.version = Math.max(existing.version, clientVersion) + 1;
-
           await this.prisma.taskiti_tasks.update({
-            where: { id: clientTask.id },
+            where: { id: ct.id },
             data,
           });
         }
@@ -338,7 +329,8 @@ export class TaskitiTasksService {
       const serverChanges = await this.prisma.taskiti_tasks.findMany({
         where: {
           user_id: userId,
-          updated_at: { gt: this.safeDate(payload.last_sync_at, new Date(0)) },
+          updated_at: { gt: lastSyncAt },
+          id: { notIn: processedIds },
         },
         orderBy: { updated_at: 'asc' },
       });

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron, CronExpression, Timeout } from '@nestjs/schedule';
 import { PrismaService } from '../../../prisma.service';
 
 @Injectable()
@@ -29,6 +29,26 @@ export class TaskitiAnalyticsService {
       }
     }
     this.logger.log('Daily analytics precomputed');
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  @Timeout(30000)
+  async purgeDeletedTasks() {
+    this.logger.log('Purging tasks deleted >30 days...');
+    const cutoff = new Date(Date.now() - 30 * 86400000);
+
+    try {
+      const { count } = await this.prisma.taskiti_tasks.deleteMany({
+        where: {
+          deleted_at: { not: null, lt: cutoff },
+        },
+      });
+      if (count > 0) {
+        this.logger.log(`Purged ${count} old deleted tasks`);
+      }
+    } catch (error: any) {
+      this.logger.error(`Failed to purge deleted tasks: ${error.message}`);
+    }
   }
 
   async computeDay(userId: string, dateStr: string) {
