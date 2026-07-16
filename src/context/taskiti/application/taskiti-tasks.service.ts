@@ -78,6 +78,11 @@ export class TaskitiTasksService {
       const nextCursor =
         tasks.length === params.take ? tasks[tasks.length - 1].id : null;
 
+      this.logger.log(
+        `[Pull] user=${userId} since=${params.since || 'none'} status=${params.status || 'all'}\n` +
+          `  → returned: ${tasks.length} tasks [${tasks.map((t) => t.id).slice(0, 10).join(', ')}${tasks.length > 10 ? '...' : ''}]`,
+      );
+
       return { tasks, next_cursor: nextCursor };
     } catch (error) {
       this.logger.error(`Failed to list tasks: ${error.message}`, error.stack);
@@ -112,7 +117,10 @@ export class TaskitiTasksService {
       ) {
         throw error;
       }
-      this.logger.error(`Failed to get task ${taskId}: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to get task ${taskId}: ${error.message}`,
+        error.stack,
+      );
       throw new InternalServerErrorException('Failed to get task');
     }
   }
@@ -143,6 +151,11 @@ export class TaskitiTasksService {
           version: 1,
         },
       });
+
+      this.logger.log(
+        `Task created: id=${task.id} title="${task.title}" user=${userId}`,
+      );
+
       return { task };
     } catch (error) {
       if (
@@ -159,7 +172,10 @@ export class TaskitiTasksService {
           return { task: existing };
         }
       }
-      this.logger.error(`Failed to create task: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to create task: ${error.message}`,
+        error.stack,
+      );
       throw new InternalServerErrorException('Failed to create task');
     }
   }
@@ -205,10 +221,17 @@ export class TaskitiTasksService {
 
       return { task };
     } catch (error) {
-      if (error instanceof NotFoundException || error instanceof ForbiddenException || error instanceof BadRequestException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
-      this.logger.error(`Failed to update task ${taskId}: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to update task ${taskId}: ${error.message}`,
+        error.stack,
+      );
       throw new InternalServerErrorException('Failed to update task');
     }
   }
@@ -237,10 +260,17 @@ export class TaskitiTasksService {
 
       return { deleted_at: task.deleted_at };
     } catch (error) {
-      if (error instanceof NotFoundException || error instanceof ForbiddenException || error instanceof BadRequestException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
-      this.logger.error(`Failed to delete task ${taskId}: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to delete task ${taskId}: ${error.message}`,
+        error.stack,
+      );
       throw new InternalServerErrorException('Failed to delete task');
     }
   }
@@ -251,10 +281,29 @@ export class TaskitiTasksService {
     return isNaN(d.getTime()) ? fallback : d;
   }
 
+  private hasContentChanged(ct: any, existing: any): boolean {
+    return (
+      (ct.title !== undefined && ct.title !== existing.title) ||
+      (ct.completed !== undefined && ct.completed !== existing.completed) ||
+      (ct.priority !== undefined && ct.priority !== existing.priority) ||
+      (ct.description !== undefined && ct.description !== existing.description) ||
+      (ct.notes !== undefined && ct.notes !== existing.notes) ||
+      (ct.tags !== undefined &&
+        JSON.stringify(ct.tags) !== JSON.stringify(existing.tags)) ||
+      (ct.expires_at !== undefined &&
+        this.safeDate(ct.expires_at).getTime() !==
+          new Date(existing.expires_at).getTime()) ||
+      (ct.deleted_at !== undefined &&
+        (ct.deleted_at ? true : false) !==
+          (existing.deleted_at ? true : false))
+    );
+  }
+
   async sync(
     userId: string,
     payload: {
       tasks: any[];
+      deleted_ids?: string[];
       last_sync_at: string;
       device_id?: string;
     },
@@ -263,7 +312,37 @@ export class TaskitiTasksService {
       const now = new Date();
       const lastSyncAt = this.safeDate(payload.last_sync_at, new Date(0));
       const processedIds: string[] = [];
+      const upsertedIds: string[] = [];
+      const softDeletedIds: string[] = [];
       const conflicts: any[] = [];
+
+      this.logger.log(
+        `[Sync Push] user=${userId} device=${payload.device_id || 'unknown'}\n` +
+          `  tasks_recibidas: [${(payload.tasks || []).map((t) => t.id).join(', ')}] (${(payload.tasks || []).length} tareas)\n` +
+          `  deleted_ids:     [${(payload.deleted_ids || []).join(', ')}]\n` +
+          `  last_sync_at:    ${payload.last_sync_at}`,
+      );
+
+      for (const deletedId of payload.deleted_ids || []) {
+        if (!deletedId) continue;
+        processedIds.push(deletedId);
+
+        const existing = await this.prisma.taskiti_tasks.findUnique({
+          where: { id: deletedId },
+        });
+
+        if (existing && existing.user_id === userId && !existing.deleted_at) {
+          await this.prisma.taskiti_tasks.update({
+            where: { id: deletedId },
+            data: {
+              deleted_at: now,
+              updated_at: now,
+              version: existing.version + 1,
+            },
+          });
+          softDeletedIds.push(deletedId);
+        }
+      }
 
       for (const ct of payload.tasks || []) {
         if (!ct.id) continue;
@@ -285,12 +364,16 @@ export class TaskitiTasksService {
               tags: ct.tags || [],
               notes: ct.notes || '',
               created_at: this.safeDate(ct.created_at, now),
-              expires_at: this.safeDate(ct.expires_at, new Date(now.getTime() + 86400000)),
+              expires_at: this.safeDate(
+                ct.expires_at,
+                new Date(now.getTime() + 86400000),
+              ),
               updated_at: now,
               deleted_at: ct.deleted_at ? this.safeDate(ct.deleted_at) : null,
               version: ct.version || 1,
             },
           });
+          upsertedIds.push(ct.id);
         } else if (existing.user_id !== userId) {
           continue;
         } else if (ct.version < existing.version) {
@@ -301,10 +384,16 @@ export class TaskitiTasksService {
             server_task: existing,
           });
         } else {
+          const changed = this.hasContentChanged(ct, existing);
+
           const data: any = {
-            updated_at: now,
             version: Math.max(existing.version, ct.version || 0) + 1,
           };
+
+          if (changed) {
+            data.updated_at = now;
+          }
+
           if (ct.title !== undefined) data.title = ct.title;
           if (ct.description !== undefined) data.description = ct.description;
           if (ct.completed !== undefined) data.completed = ct.completed;
@@ -323,6 +412,8 @@ export class TaskitiTasksService {
             where: { id: ct.id },
             data,
           });
+
+          if (changed) upsertedIds.push(ct.id);
         }
       }
 
@@ -339,6 +430,18 @@ export class TaskitiTasksService {
         .filter((t) => t.deleted_at)
         .map((t) => t.id);
 
+      const remoteIds = serverChanges
+        .filter((t) => !t.deleted_at)
+        .map((t) => t.id);
+
+      this.logger.log(
+        `[Sync Response] user=${userId}\n` +
+          `  → upserted:      [${upsertedIds.join(', ')}]\n` +
+          `  → soft_deleted:  [${softDeletedIds.join(', ')}]\n` +
+          `  → remote_changes: [${remoteIds.join(', ')}]\n` +
+          `  → conflicts:     [${conflicts.map((c) => c.task_id).join(', ')}]`,
+      );
+
       return {
         tasks: serverChanges,
         deleted_ids: deletedIds,
@@ -346,7 +449,10 @@ export class TaskitiTasksService {
         conflicts,
       };
     } catch (error) {
-      this.logger.error(`Failed to sync tasks: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to sync tasks: ${error.message}`,
+        error.stack,
+      );
       throw new InternalServerErrorException('Failed to sync tasks');
     }
   }

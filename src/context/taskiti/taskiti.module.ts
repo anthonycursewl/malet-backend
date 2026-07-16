@@ -11,10 +11,11 @@ import { TaskitiAnalyticsService } from './application/taskiti-analytics.service
 import { TaskitiAuthController } from './infrastructure/adapters/controllers/taskiti-auth.controller';
 import { TaskitiTasksController } from './infrastructure/adapters/controllers/taskiti-tasks.controller';
 import { TaskitiAnalyticsController } from './infrastructure/adapters/controllers/taskiti-analytics.controller';
+import { TaskitiDebugController } from './infrastructure/adapters/controllers/taskiti-debug.controller';
 
 @Module({
   imports: [PrismaModule, AuthModule],
-  controllers: [TaskitiAuthController, TaskitiTasksController, TaskitiAnalyticsController],
+  controllers: [TaskitiAuthController, TaskitiTasksController, TaskitiAnalyticsController, TaskitiDebugController],
   providers: [
     TaskitiJwtStrategy,
     TaskitiAuthService,
