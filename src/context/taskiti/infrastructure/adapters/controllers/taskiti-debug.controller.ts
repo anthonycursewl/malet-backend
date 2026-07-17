@@ -30,6 +30,7 @@ export class TaskitiDebugController {
         updated_at: true,
         deleted_at: true,
         completed: true,
+        expires_at: true,
       },
       orderBy: { updated_at: 'desc' },
     });
@@ -41,7 +42,7 @@ export class TaskitiDebugController {
     return {
       user_id: userId,
       total_tasks: tasks.length,
-      active: tasks.filter((t) => !t.deleted_at).length,
+      active: tasks.filter((t) => !t.deleted_at && !t.completed && (!t.expires_at || t.expires_at > new Date())).length,
       deleted: tasks.filter((t) => t.deleted_at).length,
       tasks,
     };

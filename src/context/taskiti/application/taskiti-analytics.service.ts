@@ -31,6 +31,26 @@ export class TaskitiAnalyticsService {
     this.logger.log('Daily analytics precomputed');
   }
 
+  @Cron(CronExpression.EVERY_HOUR)
+  async purgeCompletedTasks() {
+    this.logger.log('Purging tasks completed >1 day...');
+    const cutoff = new Date(Date.now() - 86400000);
+
+    try {
+      const { count } = await this.prisma.taskiti_tasks.deleteMany({
+        where: {
+          completed: true,
+          completed_at: { not: null, lt: cutoff },
+        },
+      });
+      if (count > 0) {
+        this.logger.log(`Purged ${count} old completed tasks`);
+      }
+    } catch (error: any) {
+      this.logger.error(`Failed to purge completed tasks: ${error.message}`);
+    }
+  }
+
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   @Timeout(30000)
   async purgeDeletedTasks() {
@@ -302,14 +322,15 @@ export class TaskitiAnalyticsService {
       select: { completed: true, deleted_at: true, priority: true, expires_at: true },
     });
 
+    const now = new Date();
     const total = allUserTasks.length;
     const completed = allUserTasks.filter((t) => t.completed).length;
     const activeTasks = allUserTasks.filter(
-      (t) => !t.completed && !t.deleted_at,
+      (t) => !t.completed && !t.deleted_at && (!t.expires_at || t.expires_at > now),
     ).length;
     const deleted = allUserTasks.filter((t) => t.deleted_at).length;
     const overdue = allUserTasks.filter(
-      (t) => !t.completed && !t.deleted_at && t.expires_at < new Date(),
+      (t) => !t.completed && !t.deleted_at && t.expires_at < now,
     ).length;
 
     const priorityDist = { low: 0, medium: 0, high: 0, urgent: 0 };

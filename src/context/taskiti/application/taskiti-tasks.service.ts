@@ -6,30 +6,15 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, taskiti_tasks } from '@prisma/client';
 import { PrismaService } from '../../../prisma.service';
-
-interface CreateTaskDto {
-  id: string;
-  title: string;
-  description?: string;
-  priority?: 'low' | 'medium' | 'high' | 'urgent';
-  tags?: string[];
-  notes?: string;
-  expiry_hours?: number;
-  created_at?: string;
-}
-
-interface UpdateTaskDto {
-  title?: string;
-  description?: string;
-  priority?: 'low' | 'medium' | 'high' | 'urgent';
-  tags?: string[];
-  notes?: string;
-  completed?: boolean;
-  expiry_hours?: number;
-  version: number;
-}
+import {
+  CreateTaskInput,
+  UpdateTaskInput,
+  SyncPayload,
+  SyncConflict,
+  FindAllParams,
+} from '../domain/types';
 
 @Injectable()
 export class TaskitiTasksService {
@@ -37,18 +22,9 @@ export class TaskitiTasksService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(
-    userId: string,
-    params: {
-      include_deleted?: string;
-      since?: string;
-      status?: string;
-      take: number;
-      cursor?: string;
-    },
-  ) {
+  async findAll(userId: string, params: FindAllParams) {
     try {
-      const where: any = { user_id: userId };
+      const where: Prisma.taskiti_tasksWhereInput = { user_id: userId };
       const includeDeleted = params.include_deleted === 'true';
 
       if (!includeDeleted) {
@@ -63,6 +39,8 @@ export class TaskitiTasksService {
         where.completed = true;
       } else if (params.status === 'active') {
         where.completed = false;
+        // exclude expired tasks from active list
+        where.expires_at = { gt: new Date() };
       }
 
       const tasks = await this.prisma.taskiti_tasks.findMany({
@@ -125,7 +103,7 @@ export class TaskitiTasksService {
     }
   }
 
-  async create(userId: string, dto: CreateTaskDto) {
+  async create(userId: string, dto: CreateTaskInput) {
     const now = new Date();
     let created_at = now;
     if (dto.created_at) {
@@ -180,7 +158,7 @@ export class TaskitiTasksService {
     }
   }
 
-  async update(userId: string, taskId: string, dto: UpdateTaskDto) {
+  async update(userId: string, taskId: string, dto: UpdateTaskInput) {
     if (!taskId || taskId === 'undefined' || taskId === 'null') {
       throw new BadRequestException('Invalid task id');
     }
@@ -197,7 +175,7 @@ export class TaskitiTasksService {
         throw new ForbiddenException('Not your task');
       }
 
-      const data: any = {
+      const data: Prisma.taskiti_tasksUpdateInput = {
         updated_at: new Date(),
         version: Math.max(existing.version, dto.version || 0) + 1,
       };
@@ -207,10 +185,14 @@ export class TaskitiTasksService {
       if (dto.priority !== undefined) data.priority = dto.priority;
       if (dto.tags !== undefined) data.tags = dto.tags;
       if (dto.notes !== undefined) data.notes = dto.notes;
-      if (dto.completed !== undefined) data.completed = dto.completed;
+      if (dto.completed !== undefined) {
+        data.completed = dto.completed;
+        data.completed_at = dto.completed ? new Date() : null;
+      }
       if (dto.expiry_hours !== undefined) {
+        const base = existing.created_at || new Date();
         data.expires_at = new Date(
-          Date.now() + Math.max(1, dto.expiry_hours) * 3600000,
+          base.getTime() + Math.max(1, dto.expiry_hours) * 3600000,
         );
       }
 
@@ -299,22 +281,15 @@ export class TaskitiTasksService {
     );
   }
 
-  async sync(
-    userId: string,
-    payload: {
-      tasks: any[];
-      deleted_ids?: string[];
-      last_sync_at: string;
-      device_id?: string;
-    },
-  ) {
+  async sync(userId: string, payload: SyncPayload) {
     try {
       const now = new Date();
       const lastSyncAt = this.safeDate(payload.last_sync_at, new Date(0));
+      const take = Math.min(Math.max(payload.take || 50, 1), 200);
       const processedIds: string[] = [];
       const upsertedIds: string[] = [];
       const softDeletedIds: string[] = [];
-      const conflicts: any[] = [];
+      const conflicts: SyncConflict[] = [];
 
       this.logger.log(
         `[Sync Push] user=${userId} device=${payload.device_id || 'unknown'}\n` +
@@ -323,55 +298,69 @@ export class TaskitiTasksService {
           `  last_sync_at:    ${payload.last_sync_at}`,
       );
 
+      // Bulk processing: collect ids and existing tasks in one query
+      const incomingIds = Array.from(
+        new Set([
+          ...(payload.tasks || []).map((t: any) => t.id).filter(Boolean),
+          ...(payload.deleted_ids || []),
+        ]),
+      );
+
+      const existingTasks = incomingIds.length
+        ? await this.prisma.taskiti_tasks.findMany({
+            where: { id: { in: incomingIds } },
+          })
+        : [];
+
+      const existingById: Record<string, taskiti_tasks> = {};
+      for (const e of existingTasks) existingById[e.id] = e;
+
+      const createData: Prisma.taskiti_tasksCreateManyInput[] = [];
+      const updateOps: Prisma.PrismaPromise<any>[] = [];
+
+      // handle deletions
       for (const deletedId of payload.deleted_ids || []) {
         if (!deletedId) continue;
         processedIds.push(deletedId);
-
-        const existing = await this.prisma.taskiti_tasks.findUnique({
-          where: { id: deletedId },
-        });
-
+        const existing = existingById[deletedId];
         if (existing && existing.user_id === userId && !existing.deleted_at) {
-          await this.prisma.taskiti_tasks.update({
-            where: { id: deletedId },
-            data: {
-              deleted_at: now,
-              updated_at: now,
-              version: existing.version + 1,
-            },
-          });
+          // schedule update op
+          updateOps.push(
+            this.prisma.taskiti_tasks.update({
+              where: { id: deletedId },
+              data: { deleted_at: now, updated_at: now, version: existing.version + 1 },
+            }),
+          );
           softDeletedIds.push(deletedId);
         }
       }
 
+      // handle tasks: partition create / update / conflicts
       for (const ct of payload.tasks || []) {
         if (!ct.id) continue;
         processedIds.push(ct.id);
-
-        const existing = await this.prisma.taskiti_tasks.findUnique({
-          where: { id: ct.id },
-        });
-
+        const existing = existingById[ct.id];
         if (!existing) {
-          await this.prisma.taskiti_tasks.create({
-            data: {
-              id: ct.id,
-              user_id: userId,
-              title: ct.title || 'Untitled',
-              description: ct.description || '',
-              completed: ct.completed || false,
-              priority: ct.priority || 'medium',
-              tags: ct.tags || [],
-              notes: ct.notes || '',
-              created_at: this.safeDate(ct.created_at, now),
-              expires_at: this.safeDate(
-                ct.expires_at,
-                new Date(now.getTime() + 86400000),
-              ),
-              updated_at: now,
-              deleted_at: ct.deleted_at ? this.safeDate(ct.deleted_at) : null,
-              version: ct.version || 1,
-            },
+          const created_at = this.safeDate(ct.created_at, now);
+          const expires_at = ct.expires_at
+            ? this.safeDate(ct.expires_at)
+            : new Date(created_at.getTime() + 86400000);
+
+          createData.push({
+            id: ct.id,
+            user_id: userId,
+            title: ct.title || 'Untitled',
+            description: ct.description || '',
+            completed: ct.completed || false,
+            completed_at: ct.completed ? now : null,
+            priority: ct.priority || 'medium',
+            tags: ct.tags || [],
+            notes: ct.notes || '',
+            created_at,
+            expires_at,
+            updated_at: now,
+            deleted_at: ct.deleted_at ? this.safeDate(ct.deleted_at) : null,
+            version: ct.version || 1,
           });
           upsertedIds.push(ct.id);
         } else if (existing.user_id !== userId) {
@@ -385,36 +374,34 @@ export class TaskitiTasksService {
           });
         } else {
           const changed = this.hasContentChanged(ct, existing);
-
-          const data: any = {
-            version: Math.max(existing.version, ct.version || 0) + 1,
-          };
-
-          if (changed) {
-            data.updated_at = now;
-          }
-
+          const data: Prisma.taskiti_tasksUpdateInput = { version: Math.max(existing.version, ct.version || 0) + 1 };
+          if (changed) data.updated_at = now;
           if (ct.title !== undefined) data.title = ct.title;
           if (ct.description !== undefined) data.description = ct.description;
-          if (ct.completed !== undefined) data.completed = ct.completed;
+          if (ct.completed !== undefined) {
+            data.completed = ct.completed;
+            data.completed_at = ct.completed ? now : null;
+          }
           if (ct.priority !== undefined) data.priority = ct.priority;
           if (ct.tags !== undefined) data.tags = ct.tags;
           if (ct.notes !== undefined) data.notes = ct.notes;
-          if (ct.expires_at !== undefined)
-            data.expires_at = this.safeDate(ct.expires_at);
-          if (ct.deleted_at !== undefined) {
-            data.deleted_at = ct.deleted_at
-              ? this.safeDate(ct.deleted_at)
-              : null;
-          }
+          if (ct.expires_at !== undefined) data.expires_at = this.safeDate(ct.expires_at);
+          if (ct.deleted_at !== undefined) data.deleted_at = ct.deleted_at ? this.safeDate(ct.deleted_at) : null;
 
-          await this.prisma.taskiti_tasks.update({
-            where: { id: ct.id },
-            data,
-          });
-
+          updateOps.push(this.prisma.taskiti_tasks.update({ where: { id: ct.id }, data }));
           if (changed) upsertedIds.push(ct.id);
         }
+      }
+
+      // execute all operations in a transaction
+      const txOps: Prisma.PrismaPromise<any>[] = [];
+      if (createData.length > 0) {
+        txOps.push(this.prisma.taskiti_tasks.createMany({ data: createData, skipDuplicates: true }));
+      }
+      txOps.push(...updateOps);
+
+      if (txOps.length > 0) {
+        await this.prisma.$transaction(txOps, { timeout: 30000 });
       }
 
       const serverChanges = await this.prisma.taskiti_tasks.findMany({
@@ -423,8 +410,16 @@ export class TaskitiTasksService {
           updated_at: { gt: lastSyncAt },
           id: { notIn: processedIds },
         },
+        take: take + 1,
+        ...(payload.cursor && { skip: 1, cursor: { id: payload.cursor } }),
         orderBy: { updated_at: 'asc' },
       });
+
+      const hasMore = serverChanges.length > take;
+      if (hasMore) serverChanges.pop();
+      const nextCursor = hasMore
+        ? serverChanges[serverChanges.length - 1].id
+        : null;
 
       const deletedIds = serverChanges
         .filter((t) => t.deleted_at)
@@ -447,6 +442,8 @@ export class TaskitiTasksService {
         deleted_ids: deletedIds,
         sync_at: now.toISOString(),
         conflicts,
+        has_more: hasMore,
+        next_cursor: nextCursor,
       };
     } catch (error) {
       this.logger.error(

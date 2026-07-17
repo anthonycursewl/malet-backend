@@ -18,6 +18,8 @@ async function bootstrap() {
     }),
   );
 
+  app.useBodyParser('json', { limit: '10mb' });
+
   app.enableCors({
     origin: '*',
     credentials: true,

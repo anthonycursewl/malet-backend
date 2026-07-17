@@ -157,6 +157,7 @@ model taskiti_tasks {
   title       String    @db.VarChar(500)
   description String    @default("") @db.Text
   completed   Boolean   @default(false)
+  completed_at DateTime? @db.Timestamptz(6)
   priority    String    @default("medium") @db.VarChar(20)
   tags        String[]
   notes       String    @default("") @db.VarChar(2000)
@@ -171,6 +172,7 @@ model taskiti_tasks {
   @@index([user_id])
   @@index([updated_at])
   @@index([user_id, deleted_at])
+  @@index([completed_at])
 }
 
 model taskiti_refresh_tokens {
