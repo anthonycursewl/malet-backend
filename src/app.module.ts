@@ -65,6 +65,9 @@ import { UpdaterModule } from './context/updater/updater.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(BotBlockerMiddleware).forRoutes('*');
+    consumer
+      .apply(BotBlockerMiddleware)
+      .exclude('releases/(.*)')
+      .forRoutes('*');
   }
 }
