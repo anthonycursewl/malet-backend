@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression, Timeout } from '@nestjs/schedule';
 import { PrismaService } from '../../../prisma.service';
+import { StreakResult } from '../domain/types';
 
 @Injectable()
 export class TaskitiAnalyticsService {
@@ -388,7 +389,9 @@ export class TaskitiAnalyticsService {
     };
   }
 
-  private async computeStreaks(userId: string) {
+  private async computeStreaks(userId: string): Promise<StreakResult> {
+    const GRACE_DAYS = 3;
+
     let records: { date: Date; tasks_completed: number }[] = [];
     try {
       records = await this.prisma.taskiti_analytics.findMany({
@@ -400,29 +403,57 @@ export class TaskitiAnalyticsService {
       // table doesn't exist yet
     }
 
-    let current = 0;
-    let longest = 0;
-    let streak = 0;
-    let foundBreak = false;
+    if (records.length === 0) {
+      return { current: 0, longest: 0, cold_days: 0, status: 'broken' };
+    }
 
+    // Longest streak across all history
+    let longest = 0;
+    let run = 0;
     for (const r of records) {
       if (r.tasks_completed > 0) {
-        streak++;
-        if (!foundBreak) current = streak;
+        run++;
       } else {
-        if (!foundBreak) {
-          current = streak;
-          streak = 0;
-          foundBreak = true;
-        } else {
-          longest = Math.max(longest, streak);
-          streak = 0;
+        longest = Math.max(longest, run);
+        run = 0;
+      }
+    }
+    longest = Math.max(longest, run);
+
+    // Current streak state
+    let current = 0;
+    let coldDays = 0;
+    let status: StreakResult['status'];
+
+    if (records[0].tasks_completed > 0) {
+      // Most recent day has activity — active streak
+      for (const r of records) {
+        if (r.tasks_completed > 0) current++;
+        else break;
+      }
+      status = 'active';
+      coldDays = 0;
+    } else {
+      // Most recent day is a zero — count cold days
+      let i = 0;
+      while (i < records.length && records[i].tasks_completed === 0) {
+        coldDays++;
+        i++;
+      }
+
+      if (coldDays >= GRACE_DAYS) {
+        status = 'broken';
+        current = 0;
+      } else {
+        status = 'cold';
+        while (i < records.length && records[i].tasks_completed > 0) {
+          current++;
+          i++;
         }
       }
     }
-    longest = Math.max(longest, streak);
 
-    return { current, longest };
+    return { current, longest, cold_days: coldDays, status };
   }
 
   private async getGlobalOverview(userId: string) {

@@ -69,3 +69,12 @@ export interface DeletedResult {
 }
 
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
+
+export type StreakStatus = 'active' | 'cold' | 'broken';
+
+export interface StreakResult {
+  current: number;
+  longest: number;
+  cold_days: number;
+  status: StreakStatus;
+}
