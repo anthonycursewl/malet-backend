@@ -42,7 +42,12 @@ export class TaskitiDebugController {
     return {
       user_id: userId,
       total_tasks: tasks.length,
-      active: tasks.filter((t) => !t.deleted_at && !t.completed && (!t.expires_at || t.expires_at > new Date())).length,
+      active: tasks.filter(
+        (t) =>
+          !t.deleted_at &&
+          !t.completed &&
+          (!t.expires_at || t.expires_at > new Date()),
+      ).length,
       deleted: tasks.filter((t) => t.deleted_at).length,
       tasks,
     };

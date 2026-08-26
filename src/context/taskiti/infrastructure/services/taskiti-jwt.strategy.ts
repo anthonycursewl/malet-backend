@@ -4,7 +4,10 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 @Injectable()
-export class TaskitiJwtStrategy extends PassportStrategy(Strategy, 'taskiti-jwt') {
+export class TaskitiJwtStrategy extends PassportStrategy(
+  Strategy,
+  'taskiti-jwt',
+) {
   constructor(configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),

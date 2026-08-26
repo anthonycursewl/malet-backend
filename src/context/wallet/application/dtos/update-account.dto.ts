@@ -9,7 +9,7 @@ import {
   IsUrl,
   Validate,
 } from 'class-validator';
-import { IsCurrencyCode } from 'src/common/validators/currency.validator';
+import { IsCurrencyCode } from 'src/shared/common/validators/currency.validator';
 
 export class UpdateAccountDto {
   @MaxLength(255, { message: 'Name must be a string of length 255.' })

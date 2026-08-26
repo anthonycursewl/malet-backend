@@ -59,7 +59,9 @@ export class UpdaterController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: path.resolve(process.env.RELEASES_DIR || 'storage/releases'),
+        destination: path.resolve(
+          process.env.RELEASES_DIR || 'storage/releases',
+        ),
         filename: (_req, file, cb) => {
           cb(null, file.originalname);
         },
@@ -68,9 +70,7 @@ export class UpdaterController {
     }),
   )
   @HttpCode(HttpStatus.OK)
-  async uploadRelease(
-    @UploadedFile() file: Express.Multer.File,
-  ) {
+  async uploadRelease(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('File is required');
     }

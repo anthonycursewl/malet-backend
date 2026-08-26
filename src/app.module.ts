@@ -1,7 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
-
 import { ThrottlerModule } from '@nestjs/throttler';
 import { UserModule } from './context/users/user.module';
 import { WalletModule } from './context/wallet/wallet.module';
@@ -12,7 +11,7 @@ import { FileStorageModule } from './shared/infrastructure/file-storage/file-sto
 import { EmailModule } from './shared/infrastructure/email/email.module';
 import { BotBlockerMiddleware } from './shared/common/middleware/bot-blocker.middleware';
 import { ThrottlerBehindProxyGuard } from './shared/common/guards/throttler-behind-proxy.guard';
-import { TagErrorLoggerFilter } from './common/filters/tag-error-logger.filter';
+import { TagErrorLoggerFilter } from './shared/common/filters/tag-error-logger.filter';
 import { AuthorizationModule } from './shared/infrastructure/authorization/authorization.module';
 import { GarzonModule } from './context/garzon/garzon.module';
 import { SyncModule } from './context/sync/sync.module';

@@ -1,5 +1,13 @@
 import { SyncBatchDto } from './sync-batch.dto';
-import { IsArray, IsOptional, ValidateNested, IsString, IsInt, Min, Max } from 'class-validator';
+import {
+  IsArray,
+  IsOptional,
+  ValidateNested,
+  IsString,
+  IsInt,
+  Min,
+  Max,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class SyncRequestDto {

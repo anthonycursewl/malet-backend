@@ -18,8 +18,14 @@ function base64url(input: string | Buffer) {
 function signJwt(payload: object, secret: string) {
   const header = { alg: 'HS256', typ: 'JWT' };
   const encoded = `${base64url(JSON.stringify(header))}.${base64url(JSON.stringify(payload))}`;
-  const signature = crypto.createHmac('sha256', secret).update(encoded).digest('base64');
-  const sig = signature.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const signature = crypto
+    .createHmac('sha256', secret)
+    .update(encoded)
+    .digest('base64');
+  const sig = signature
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
   return `${encoded}.${sig}`;
 }
 
@@ -56,7 +62,10 @@ describe('Taskiti Sync (e2e)', () => {
   });
 
   it('pushes a batch and pulls it back', async () => {
-    const token = signJwt({ sub: userId, source: 'taskiti', email: 'a@b', name: 'e2e' }, secret);
+    const token = signJwt(
+      { sub: userId, source: 'taskiti', email: 'a@b', name: 'e2e' },
+      secret,
+    );
 
     const task = {
       id: crypto.randomUUID(),
@@ -68,7 +77,15 @@ describe('Taskiti Sync (e2e)', () => {
       .post('/tasks/sync')
       .set('Authorization', `Bearer ${token}`)
       .set('X-Client-Source', 'taskiti')
-      .send({ batches: [{ tasks: [task], deleted_ids: [], last_sync_at: new Date(0).toISOString() }] })
+      .send({
+        batches: [
+          {
+            tasks: [task],
+            deleted_ids: [],
+            last_sync_at: new Date(0).toISOString(),
+          },
+        ],
+      })
       .expect(200);
 
     expect(pushRes.body).toBeDefined();
@@ -83,7 +100,9 @@ describe('Taskiti Sync (e2e)', () => {
 
     expect(pullRes.body).toBeDefined();
     const tasks = pullRes.body.tasks || pullRes.body;
-    const found = Array.isArray(tasks) ? tasks.find((t) => t.id === task.id) : null;
+    const found = Array.isArray(tasks)
+      ? tasks.find((t) => t.id === task.id)
+      : null;
     expect(found).toBeDefined();
   }, 20000);
 });

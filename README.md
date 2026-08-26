@@ -4,7 +4,7 @@ Backend Application for the **Malet** platform, built with [NestJS](https://nest
 
 ## 🚀 Overview
 
-This repository contains the server-side logic for the Malet platform. It is a robust, scalable backend handling user identities, communities, financial wallets, real-time messaging, and intelligent feed recommendations. It also facilitates integrations with external systems like Garzon and AI providers (Google Gemini).
+This repository contains the server-side logic for the Malet platform. It is a robust, scalable backend handling user identities, financial wallets, task management (Taskiti), and integrations with external systems like Garzon.
 
 The architecture follows **Domain-Driven Design (DDD)** principles, organizing the codebase into distinct Bounded Contexts to ensure maintainability and scalability.
 
@@ -25,14 +25,18 @@ The architecture follows **Domain-Driven Design (DDD)** principles, organizing t
 The source code is structured around functional domains located in `src/context/`:
 
 *   **`users`**: User management, profiles, authentication, and email verification.
-*   **`communities`**: Logic for creating and managing communities and memberships.
-*   **`feed`**: Recommendation engine and content feed generation.
-*   **`messaging`**: Real-time chat system, including WebSocket gateways and conversation management.
 *   **`wallet`**: Management of accounts, balances, and transactions.
-*   **`integrations`**: Abstraction layer for external OAuth providers and user provisioning (e.g., Wheek).
+*   **`shared-accounts`**: Shared accounts management.
+*   **`sync`**: Generic entity sync engine (push/pull) for offline-first clients.
+*   **`taskiti`**: Task app context: auth, tasks CRUD + offline sync, and analytics.
+*   **`updater`**: Desktop app updater (manifest + release upload).
 *   **`garzon`**: Adapters for integration with the external "Garzon" system.
-*   **`ai-chat`**: Interface for AI chat capabilities (currently using Gemini).
-*   **`onboarding`**: User onboarding flows and interest capture.
+
+### 🗺️ Roadmap / planificados
+
+Los siguientes dominios están previstos pero aún no tienen implementación en `src/context/`:
+
+*   `communities`, `feed`, `messaging`, `ai-chat`, `onboarding`, `integrations`
 
 ## ⚙️ Prerequisites
 
@@ -114,7 +118,8 @@ npm run test:e2e
 ## 📚 Documentation & Resources
 
 *   **Security Audit**: Refer to `.security-audit-report.md` for security details.
-*   **Redis Setup**: See `docs/REDIS_PROXMOX_SETUP.md` (if available) for infrastructure details.
+*   **API Contract (Taskiti)**: See `taskiti-api-contract.md` for the task app contract.
+*   **Endpoints**: See `endpoints.md` for the wallet/shared-accounts endpoint reference.
 
 ## 📄 License
 

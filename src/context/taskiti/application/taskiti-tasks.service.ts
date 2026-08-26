@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   InternalServerErrorException,
   BadRequestException,
+  ConflictException,
   Logger,
 } from '@nestjs/common';
 import { Prisma, taskiti_tasks } from '@prisma/client';
@@ -58,7 +59,10 @@ export class TaskitiTasksService {
 
       this.logger.log(
         `[Pull] user=${userId} since=${params.since || 'none'} status=${params.status || 'all'}\n` +
-          `  → returned: ${tasks.length} tasks [${tasks.map((t) => t.id).slice(0, 10).join(', ')}${tasks.length > 10 ? '...' : ''}]`,
+          `  → returned: ${tasks.length} tasks [${tasks
+            .map((t) => t.id)
+            .slice(0, 10)
+            .join(', ')}${tasks.length > 10 ? '...' : ''}]`,
       );
 
       return { tasks, next_cursor: nextCursor };
@@ -150,10 +154,7 @@ export class TaskitiTasksService {
           return { task: existing };
         }
       }
-      this.logger.error(
-        `Failed to create task: ${error.message}`,
-        error.stack,
-      );
+      this.logger.error(`Failed to create task: ${error.message}`, error.stack);
       throw new InternalServerErrorException('Failed to create task');
     }
   }
@@ -175,9 +176,20 @@ export class TaskitiTasksService {
         throw new ForbiddenException('Not your task');
       }
 
+      if (dto.version !== existing.version) {
+        throw new ConflictException({
+          error: 'version_conflict',
+          message: 'Task was modified by another client',
+          task_id: taskId,
+          client_version: dto.version,
+          server_version: existing.version,
+          server_task: existing,
+        });
+      }
+
       const data: Prisma.taskiti_tasksUpdateInput = {
         updated_at: new Date(),
-        version: Math.max(existing.version, dto.version || 0) + 1,
+        version: existing.version + 1,
       };
 
       if (dto.title !== undefined) data.title = dto.title;
@@ -206,7 +218,8 @@ export class TaskitiTasksService {
       if (
         error instanceof NotFoundException ||
         error instanceof ForbiddenException ||
-        error instanceof BadRequestException
+        error instanceof BadRequestException ||
+        error instanceof ConflictException
       ) {
         throw error;
       }
@@ -268,7 +281,8 @@ export class TaskitiTasksService {
       (ct.title !== undefined && ct.title !== existing.title) ||
       (ct.completed !== undefined && ct.completed !== existing.completed) ||
       (ct.priority !== undefined && ct.priority !== existing.priority) ||
-      (ct.description !== undefined && ct.description !== existing.description) ||
+      (ct.description !== undefined &&
+        ct.description !== existing.description) ||
       (ct.notes !== undefined && ct.notes !== existing.notes) ||
       (ct.tags !== undefined &&
         JSON.stringify(ct.tags) !== JSON.stringify(existing.tags)) ||
@@ -276,8 +290,7 @@ export class TaskitiTasksService {
         this.safeDate(ct.expires_at).getTime() !==
           new Date(existing.expires_at).getTime()) ||
       (ct.deleted_at !== undefined &&
-        (ct.deleted_at ? true : false) !==
-          (existing.deleted_at ? true : false))
+        (ct.deleted_at ? true : false) !== (existing.deleted_at ? true : false))
     );
   }
 
@@ -303,6 +316,7 @@ export class TaskitiTasksService {
         new Set([
           ...(payload.tasks || []).map((t: any) => t.id).filter(Boolean),
           ...(payload.deleted_ids || []),
+          ...(payload.completed_ids || []),
         ]),
       );
 
@@ -328,10 +342,44 @@ export class TaskitiTasksService {
           updateOps.push(
             this.prisma.taskiti_tasks.update({
               where: { id: deletedId },
-              data: { deleted_at: now, updated_at: now, version: existing.version + 1 },
+              data: {
+                deleted_at: now,
+                updated_at: now,
+                version: existing.version + 1,
+              },
             }),
           );
           softDeletedIds.push(deletedId);
+        }
+      }
+
+      // handle completions from completed_ids (skip ids that arrive in tasks[]
+      // so the task's own payload state is not overwritten)
+      const taskPayloadIds = new Set(
+        (payload.tasks || []).map((t: any) => t.id).filter(Boolean),
+      );
+      for (const completedId of payload.completed_ids || []) {
+        if (!completedId || taskPayloadIds.has(completedId)) continue;
+        processedIds.push(completedId);
+        const existing = existingById[completedId];
+        if (
+          existing &&
+          existing.user_id === userId &&
+          !existing.completed &&
+          !existing.deleted_at
+        ) {
+          updateOps.push(
+            this.prisma.taskiti_tasks.update({
+              where: { id: completedId },
+              data: {
+                completed: true,
+                completed_at: now,
+                updated_at: now,
+                version: existing.version + 1,
+              },
+            }),
+          );
+          upsertedIds.push(completedId);
         }
       }
 
@@ -374,7 +422,9 @@ export class TaskitiTasksService {
           });
         } else {
           const changed = this.hasContentChanged(ct, existing);
-          const data: Prisma.taskiti_tasksUpdateInput = { version: Math.max(existing.version, ct.version || 0) + 1 };
+          const data: Prisma.taskiti_tasksUpdateInput = {
+            version: Math.max(existing.version, ct.version || 0) + 1,
+          };
           if (changed) data.updated_at = now;
           if (ct.title !== undefined) data.title = ct.title;
           if (ct.description !== undefined) data.description = ct.description;
@@ -385,10 +435,16 @@ export class TaskitiTasksService {
           if (ct.priority !== undefined) data.priority = ct.priority;
           if (ct.tags !== undefined) data.tags = ct.tags;
           if (ct.notes !== undefined) data.notes = ct.notes;
-          if (ct.expires_at !== undefined) data.expires_at = this.safeDate(ct.expires_at);
-          if (ct.deleted_at !== undefined) data.deleted_at = ct.deleted_at ? this.safeDate(ct.deleted_at) : null;
+          if (ct.expires_at !== undefined)
+            data.expires_at = this.safeDate(ct.expires_at);
+          if (ct.deleted_at !== undefined)
+            data.deleted_at = ct.deleted_at
+              ? this.safeDate(ct.deleted_at)
+              : null;
 
-          updateOps.push(this.prisma.taskiti_tasks.update({ where: { id: ct.id }, data }));
+          updateOps.push(
+            this.prisma.taskiti_tasks.update({ where: { id: ct.id }, data }),
+          );
           if (changed) upsertedIds.push(ct.id);
         }
       }
@@ -396,7 +452,12 @@ export class TaskitiTasksService {
       // execute all operations in a transaction
       const txOps: Prisma.PrismaPromise<any>[] = [];
       if (createData.length > 0) {
-        txOps.push(this.prisma.taskiti_tasks.createMany({ data: createData, skipDuplicates: true }));
+        txOps.push(
+          this.prisma.taskiti_tasks.createMany({
+            data: createData,
+            skipDuplicates: true,
+          }),
+        );
       }
       txOps.push(...updateOps);
 
@@ -446,10 +507,7 @@ export class TaskitiTasksService {
         next_cursor: nextCursor,
       };
     } catch (error) {
-      this.logger.error(
-        `Failed to sync tasks: ${error.message}`,
-        error.stack,
-      );
+      this.logger.error(`Failed to sync tasks: ${error.message}`, error.stack);
       throw new InternalServerErrorException('Failed to sync tasks');
     }
   }

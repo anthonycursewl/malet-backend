@@ -1,6 +1,7 @@
 import {
   Inject,
   Injectable,
+  HttpException,
   InternalServerErrorException,
   NotFoundException,
   Logger,
@@ -74,6 +75,9 @@ export class UpdateUserProfileService implements UpdateUserProfileUseCase {
         bannerUrl,
       });
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
       this.logger.error(
         'Error updating user profile: ' +
           (error instanceof Error ? error.message : String(error)),

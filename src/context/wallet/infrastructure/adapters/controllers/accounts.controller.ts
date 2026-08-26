@@ -8,10 +8,7 @@ import {
   Put,
   Query,
   UseGuards,
-  HttpStatus,
-  HttpException,
 } from '@nestjs/common';
-import { IsCurrencyCode } from 'src/common/validators/currency.validator';
 
 import {
   DELETE_ACCOUNT_USECASE,

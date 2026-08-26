@@ -17,9 +17,7 @@ import { TaskitiAnalyticsService } from '../../../application/taskiti-analytics.
 @UseGuards(AuthGuard('taskiti-jwt'), SourceGuard)
 @Source('taskiti')
 export class TaskitiAnalyticsController {
-  constructor(
-    private readonly analyticsService: TaskitiAnalyticsService,
-  ) {}
+  constructor(private readonly analyticsService: TaskitiAnalyticsService) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -38,6 +36,6 @@ export class TaskitiAnalyticsController {
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(@Req() req: any) {
-    return this.analyticsService.refreshNow();
+    return this.analyticsService.refreshNow(req.user.userId);
   }
 }

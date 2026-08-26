@@ -20,7 +20,20 @@ import { ApiKeyGuard } from './guards/api-key.guard';
     }),
     ConfigModule,
   ],
-  providers: [AuthService, JwtStrategy, ConfigService, SourceGuard, ApiKeyGuard],
-  exports: [AuthService, JwtModule, PassportModule, JwtStrategy, SourceGuard, ApiKeyGuard],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    ConfigService,
+    SourceGuard,
+    ApiKeyGuard,
+  ],
+  exports: [
+    AuthService,
+    JwtModule,
+    PassportModule,
+    JwtStrategy,
+    SourceGuard,
+    ApiKeyGuard,
+  ],
 })
 export class AuthModule {}

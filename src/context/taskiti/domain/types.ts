@@ -25,6 +25,7 @@ export interface UpdateTaskInput {
 export interface SyncPayload {
   tasks: any[];
   deleted_ids?: string[];
+  completed_ids?: string[];
   last_sync_at: string;
   device_id?: string;
   take?: number;

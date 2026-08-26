@@ -15,7 +15,12 @@ import { TaskitiDebugController } from './infrastructure/adapters/controllers/ta
 
 @Module({
   imports: [PrismaModule, AuthModule],
-  controllers: [TaskitiAuthController, TaskitiTasksController, TaskitiAnalyticsController, TaskitiDebugController],
+  controllers: [
+    TaskitiAuthController,
+    TaskitiTasksController,
+    TaskitiAnalyticsController,
+    TaskitiDebugController,
+  ],
   providers: [
     TaskitiJwtStrategy,
     TaskitiAuthService,

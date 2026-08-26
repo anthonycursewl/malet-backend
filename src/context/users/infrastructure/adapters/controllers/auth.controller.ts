@@ -6,6 +6,7 @@ import {
   Body,
   Inject,
   Logger,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { AuthUseCase } from 'src/context/users/application/auth.service';
@@ -29,9 +30,7 @@ export class AuthController {
   async verify(@Req() req: Request) {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) {
-      // Handle error or let auth guard handle it if guarded.
-      // But logic says req.headers.authorization
-      return null; // Or throw
+      throw new UnauthorizedException('Missing token');
     }
     return await this.authUseCase.validate(token);
   }

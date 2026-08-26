@@ -27,7 +27,9 @@ export class TaskitiRegisterService {
       banner_url: undefined,
     });
 
-    const saved = await this.prisma.user.create({ data: user.toPrimitives() as any });
+    const saved = await this.prisma.user.create({
+      data: user.toPrimitives() as any,
+    });
 
     const access_token = await this.taskitiAuthService.generateAccessToken({
       sub: saved.id,

@@ -87,19 +87,13 @@ export class TaskitiAnalyticsService {
       (t) => t.created_at >= dayStart && t.created_at <= dayEnd,
     );
     const completedDayTasks = tasks.filter(
-      (t) =>
-        t.completed &&
-        t.updated_at >= dayStart &&
-        t.updated_at <= dayEnd,
+      (t) => t.completed && t.updated_at >= dayStart && t.updated_at <= dayEnd,
     );
 
     const tasks_created = dayTasks.length;
     const tasks_completed = completedDayTasks.length;
     const tasks_deleted = tasks.filter(
-      (t) =>
-        t.deleted_at &&
-        t.deleted_at >= dayStart &&
-        t.deleted_at <= dayEnd,
+      (t) => t.deleted_at && t.deleted_at >= dayStart && t.deleted_at <= dayEnd,
     ).length;
     const tasks_expired = tasks.filter(
       (t) =>
@@ -165,7 +159,9 @@ export class TaskitiAnalyticsService {
   }
 
   private getWeekNumber(date: Date): string {
-    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const d = new Date(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+    );
     const dayNum = d.getUTCDay() || 7;
     d.setUTCDate(d.getUTCDate() + 4 - dayNum);
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
@@ -320,14 +316,19 @@ export class TaskitiAnalyticsService {
 
     const allUserTasks = await this.prisma.taskiti_tasks.findMany({
       where: { user_id: userId },
-      select: { completed: true, deleted_at: true, priority: true, expires_at: true },
+      select: {
+        completed: true,
+        deleted_at: true,
+        priority: true,
+        expires_at: true,
+      },
     });
 
     const now = new Date();
-    const total = allUserTasks.length;
     const completed = allUserTasks.filter((t) => t.completed).length;
     const activeTasks = allUserTasks.filter(
-      (t) => !t.completed && !t.deleted_at && (!t.expires_at || t.expires_at > now),
+      (t) =>
+        !t.completed && !t.deleted_at && (!t.expires_at || t.expires_at > now),
     ).length;
     const deleted = allUserTasks.filter((t) => t.deleted_at).length;
     const overdue = allUserTasks.filter(
@@ -472,8 +473,7 @@ export class TaskitiAnalyticsService {
     const active = rows.filter((t) => !t.completed && !t.deleted_at).length;
     const deleted = rows.filter((t) => t.deleted_at).length;
     const overdue = rows.filter(
-      (t) =>
-        !t.completed && !t.deleted_at && t.expires_at < new Date(),
+      (t) => !t.completed && !t.deleted_at && t.expires_at < new Date(),
     ).length;
 
     const priorityCounts = { low: 0, medium: 0, high: 0, urgent: 0 };
@@ -484,7 +484,8 @@ export class TaskitiAnalyticsService {
       else if (t.priority === 'urgent') priorityCounts.urgent++;
     }
 
-    const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+    const completionRate =
+      total > 0 ? Math.round((completed / total) * 100) : 0;
 
     const streaks = await this.computeStreaks(userId);
 
@@ -518,8 +519,19 @@ export class TaskitiAnalyticsService {
     };
   }
 
-  async refreshNow() {
-    await this.precomputeDaily();
+  async refreshNow(userId: string) {
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    try {
+      await this.computeDay(userId, today.toISOString().slice(0, 10));
+      await this.computeDay(userId, yesterday.toISOString().slice(0, 10));
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to refresh analytics for user ${userId}: ${error.message}`,
+      );
+    }
     return { ok: true };
   }
 }

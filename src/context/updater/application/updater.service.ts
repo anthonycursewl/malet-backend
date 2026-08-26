@@ -1,4 +1,9 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -34,8 +39,12 @@ export class UpdaterService {
   private readonly manifestPath: string;
 
   constructor() {
-    this.updatesDir = path.resolve(process.env.UPDATES_DIR || 'storage/updates');
-    this.releasesDir = path.resolve(process.env.RELEASES_DIR || 'storage/releases');
+    this.updatesDir = path.resolve(
+      process.env.UPDATES_DIR || 'storage/updates',
+    );
+    this.releasesDir = path.resolve(
+      process.env.RELEASES_DIR || 'storage/releases',
+    );
     this.manifestPath = path.join(this.updatesDir, 'updater.json');
   }
 
@@ -45,14 +54,7 @@ export class UpdaterService {
       return JSON.parse(raw) as UpdateManifest;
     } catch (error: any) {
       this.logger.error(`Failed to read updater manifest: ${error.message}`);
-      return {
-        version: '0.1.0',
-        notes: '',
-        pub_date: new Date().toISOString(),
-        platforms: {
-          'windows-x86_64': { signature: '', url: 'https://apimalet.breadriuss.com/releases/.placeholder' },
-        },
-      };
+      throw new NotFoundException('Manifest not found');
     }
   }
 
@@ -90,7 +92,7 @@ export class UpdaterService {
     manifest.notes = notes || '';
     manifest.pub_date = new Date().toISOString();
 
-    const installerUrl = `https://apimalet.breadriuss.com/releases/${installerFilename}`;
+    const installerUrl = `${process.env.UPDATES_BASE_URL || 'https://apimalet.breadriuss.com'}/releases/${installerFilename}`;
 
     const platformKey = platform as keyof UpdateManifest['platforms'];
     manifest.platforms[platformKey] = {
@@ -98,7 +100,11 @@ export class UpdaterService {
       url: installerUrl,
     };
 
-    fs.writeFileSync(this.manifestPath, JSON.stringify(manifest, null, 2), 'utf-8');
+    fs.writeFileSync(
+      this.manifestPath,
+      JSON.stringify(manifest, null, 2),
+      'utf-8',
+    );
 
     this.logger.log(`Update published: ${version} for ${platform}`);
 

@@ -14,7 +14,9 @@ export class ApiKeyGuard implements CanActivate {
     const apiKey = this.configService.get<string>('UPDATER_API_KEY');
 
     if (!apiKey) {
-      throw new UnauthorizedException('Updater API key not configured on server');
+      throw new UnauthorizedException(
+        'Updater API key not configured on server',
+      );
     }
 
     const request = context.switchToHttp().getRequest();

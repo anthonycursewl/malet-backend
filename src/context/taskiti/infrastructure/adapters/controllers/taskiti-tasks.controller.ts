@@ -18,7 +18,7 @@ import { SourceGuard } from '../../../../../auth/guards/source.guard';
 import { Source } from '../../../../../auth/decorators/source.decorator';
 import { TaskitiTasksService } from '../../../application/taskiti-tasks.service';
 import { SyncRequestDto } from '../dtos/sync-request.dto';
-import { CreateTaskInput, UpdateTaskInput, SyncConflict } from '../../../domain/types';
+import { SyncConflict } from '../../../domain/types';
 
 interface AuthenticatedRequest {
   user: { userId: string; email: string; name: string };
@@ -75,11 +75,7 @@ export class TaskitiTasksController {
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  async update(
-    @Req() req: any,
-    @Param('id') id: string,
-    @Body() body: any,
-  ) {
+  async update(@Req() req: any, @Param('id') id: string, @Body() body: any) {
     return this.tasksService.update(req.user.userId, id, body);
   }
 
@@ -130,6 +126,7 @@ export class TaskitiTasksController {
     const payload = {
       tasks: body?.tasks || [],
       deleted_ids: body?.deleted_ids || [],
+      completed_ids: (body as any)?.completed_ids || [],
       last_sync_at: body?.last_sync_at || new Date().toISOString(),
       device_id: body?.device_id,
       take: body?.take,
