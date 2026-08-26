@@ -3,6 +3,15 @@
  * Separated for easy customization and maintenance
  */
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export interface BlockedPageParams {
   statusCode: number;
   reason: string;
@@ -14,8 +23,13 @@ export interface BlockedPageParams {
 }
 
 export function generateBlockedPageHtml(params: BlockedPageParams): string {
-  const { statusCode, reason, ip, path, requestId, timestamp, method } = params;
-  const truncatedPath = path.length > 40 ? `${path.substring(0, 40)}...` : path;
+  const { statusCode, ip, path, requestId, timestamp, method } = params;
+  const safeReason = escapeHtml(params.reason);
+  const safeIp = escapeHtml(ip);
+  const safePath = escapeHtml(path.length > 40 ? `${path.substring(0, 40)}...` : path);
+  const safeMethod = method ? escapeHtml(method) : '';
+  const safeRequestId = escapeHtml(requestId);
+  const safeTimestamp = escapeHtml(timestamp);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -59,18 +73,18 @@ export function generateBlockedPageHtml(params: BlockedPageParams): string {
         <div class="ct">
             <div class="rb">
                 <h3>Block Reason</h3>
-                <p>${reason}</p>
+                <p>${safeReason}</p>
             </div>
             <div class="ig">
-                <div class="ii"><span class="l">Your IP</span><span class="v">${ip}</span></div>
-                <div class="ii"><span class="l">Request ID</span><span class="v">${requestId}</span></div>
-                ${method ? `<div class="ii"><span class="l">Method</span><span class="v">${method}</span></div>` : ''}
-                <div class="ii"><span class="l">Timestamp</span><span class="v">${timestamp}</span></div>
-                <div class="ii"><span class="l">Blocked Path</span><span class="v">${truncatedPath}</span></div>
+                <div class="ii"><span class="l">Your IP</span><span class="v">${safeIp}</span></div>
+                <div class="ii"><span class="l">Request ID</span><span class="v">${safeRequestId}</span></div>
+                ${safeMethod ? `<div class="ii"><span class="l">Method</span><span class="v">${safeMethod}</span></div>` : ''}
+                <div class="ii"><span class="l">Timestamp</span><span class="v">${safeTimestamp}</span></div>
+                <div class="ii"><span class="l">Blocked Path</span><span class="v">${safePath}</span></div>
             </div>
         </div>
         <div class="f">
-            <p>Protected by Malet Security • ${requestId}</p>
+            <p>Protected by Malet Security</p>
         </div>
     </div>
 </body>

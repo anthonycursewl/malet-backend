@@ -1,6 +1,30 @@
 import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 
+const SENSITIVE_FIELDS = [
+  'password',
+  'token',
+  'access_token',
+  'refresh_token',
+  'idToken',
+  'secret',
+  'api_key',
+  'apiKey',
+  'smtp_password',
+  'SMTP_PASSWORD',
+];
+
+function sanitizeBody(body: any): any {
+  if (!body || typeof body !== 'object') return body;
+  const sanitized = { ...body };
+  for (const key of Object.keys(sanitized)) {
+    if (SENSITIVE_FIELDS.some((f) => key.toLowerCase().includes(f.toLowerCase()))) {
+      sanitized[key] = '[REDACTED]';
+    }
+  }
+  return sanitized;
+}
+
 @Injectable()
 export class LoggingMiddleware implements NestMiddleware {
   private logger = new Logger('HTTP');
@@ -18,7 +42,7 @@ export class LoggingMiddleware implements NestMiddleware {
       ['POST', 'PUT', 'PATCH'].includes(method) &&
       Object.keys(req.body).length > 0
     ) {
-      this.logger.debug('Request Body: ' + JSON.stringify(req.body, null, 2));
+      this.logger.debug('Request Body: ' + JSON.stringify(sanitizeBody(req.body), null, 2));
     }
 
     if (Object.keys(req.query).length > 0) {

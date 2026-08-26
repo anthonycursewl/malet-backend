@@ -1,13 +1,14 @@
-import { Controller, Inject, Post } from '@nestjs/common';
+import { Controller, Inject, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { CreateUserUseCase } from 'src/context/users/domain/ports/in/create-user.usecase';
 import {
   User,
   UserPrimitives,
 } from 'src/context/users/domain/entities/user.entity';
-import { Body } from '@nestjs/common';
 import { CREATE_USER_USECASE } from 'src/context/users/domain/ports/in/create-user.usecase';
 import { LoginUserUseCase } from 'src/context/users/domain/ports/in/login-user.usecase';
 import { LOGIN_USER_USECASE } from 'src/context/users/domain/ports/in/login-user.usecase';
+import { RegisterUserDto, LoginUserDto } from '../dtos/auth.dto';
 
 @Controller('users')
 export class UsersController {
@@ -19,15 +20,20 @@ export class UsersController {
   ) {}
 
   @Post('save')
+  @HttpCode(HttpStatus.CREATED)
   async createUser(
-    @Body()
-    user: Omit<UserPrimitives, 'id' | 'created_at'> & { password: string },
+    @Body() user: RegisterUserDto,
   ): Promise<User> {
-    return this.createUserService.execute(user);
+    return this.createUserService.execute({
+      ...user,
+      verified: user.verified ?? false,
+    });
   }
 
   @Post('login')
-  async login(@Body() credentials: { email: string; password: string }) {
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @HttpCode(HttpStatus.OK)
+  async login(@Body() credentials: LoginUserDto) {
     return this.loginUserService.execute(credentials);
   }
 }

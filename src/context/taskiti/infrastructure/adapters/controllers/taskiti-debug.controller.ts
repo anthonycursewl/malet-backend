@@ -1,7 +1,7 @@
 import {
   Controller,
   Get,
-  Param,
+  Req,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -18,9 +18,10 @@ import { PrismaService } from '../../../../../prisma.service';
 export class TaskitiDebugController {
   constructor(private readonly prisma: PrismaService) {}
 
-  @Get(':userId')
+  @Get()
   @HttpCode(HttpStatus.OK)
-  async getSyncState(@Param('userId') userId: string) {
+  async getSyncState(@Req() req: any) {
+    const userId = req.user.userId;
     const tasks = await this.prisma.taskiti_tasks.findMany({
       where: { user_id: userId },
       select: {

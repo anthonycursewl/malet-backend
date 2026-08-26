@@ -16,16 +16,14 @@ export class GoogleAuthService implements IGoogleAuthService {
 
   async validateGoogleToken(token: string): Promise<GoogleUser> {
     try {
-      this.logger.debug(
-        `Validating Google token: ${token.substring(0, 10)}...`,
-      );
+      this.logger.debug('Validating Google token');
       const ticket = await this.client.verifyIdToken({
         idToken: token,
         audience: process.env.GOOGLE_CLIENT_ID,
       });
 
       const payload = ticket.getPayload();
-      this.logger.debug(`Google payload received: ${JSON.stringify(payload)}`);
+      this.logger.debug('Google payload received');
 
       if (!payload) {
         this.logger.error('Invalid Google token: No payload found');

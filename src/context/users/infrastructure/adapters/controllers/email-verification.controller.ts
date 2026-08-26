@@ -1,5 +1,6 @@
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   VERIFY_EMAIL_USECASE,
   VerifyEmailUseCase,
@@ -26,15 +27,10 @@ export class EmailVerificationController {
 
   /**
    * Verifica el email de un usuario con el código de verificación.
-   *
-   * @param params - Email y código de 6 dígitos
-   * @returns Resultado de la verificación
-   *
-   * @example
-   * POST /email/verify
-   * { "email": "user@example.com", "token": "123456" }
+   * Limitado a 5 intentos por minuto por IP.
    */
   @Post('verify')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   async verifyEmail(@Body() params: VerifyEmailParams) {
     return this.verifyEmailUseCase.execute(params);
@@ -42,16 +38,10 @@ export class EmailVerificationController {
 
   /**
    * Reenvía el código de verificación al email del usuario.
-   * Tiene rate limiting de 60 segundos entre reenvíos.
-   *
-   * @param params - Email del usuario
-   * @returns Confirmación del envío
-   *
-   * @example
-   * POST /email/resend-verification
-   * { "email": "user@example.com" }
+   * Limitado a 1 reenvío cada 60 segundos.
    */
   @Post('resend-verification')
+  @Throttle({ default: { limit: 1, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   async resendVerification(@Body() params: ResendVerificationParams) {
     return this.resendVerificationUseCase.execute(params);

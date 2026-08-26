@@ -9,6 +9,7 @@ import {
   HttpStatus,
   NotFoundException,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthGuard } from '@nestjs/passport';
 import { SourceGuard } from '../../../../../auth/guards/source.guard';
 import { Source } from '../../../../../auth/decorators/source.decorator';
@@ -16,6 +17,7 @@ import { PrismaService } from '../../../../../prisma.service';
 import { TaskitiLoginService } from '../../../application/taskiti-login.service';
 import { TaskitiRegisterService } from '../../../application/taskiti-register.service';
 import { TaskitiRefreshService } from '../../../application/taskiti-refresh.service';
+import { TaskitiLoginDto, TaskitiRegisterDto, TaskitiRefreshDto } from '../dtos/taskiti-auth.dto';
 
 @Controller('auth/taskiti')
 export class TaskitiAuthController {
@@ -29,8 +31,9 @@ export class TaskitiAuthController {
   @Post('login')
   @UseGuards(SourceGuard)
   @Source('taskiti')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
-  async login(@Body() body: { email: string; password: string }) {
+  async login(@Body() body: TaskitiLoginDto) {
     return this.loginService.execute(body.email, body.password);
   }
 
@@ -38,9 +41,7 @@ export class TaskitiAuthController {
   @UseGuards(SourceGuard)
   @Source('taskiti')
   @HttpCode(HttpStatus.CREATED)
-  async register(
-    @Body() body: { name: string; email: string; password: string },
-  ) {
+  async register(@Body() body: TaskitiRegisterDto) {
     return this.registerService.execute(body.name, body.email, body.password);
   }
 
@@ -48,7 +49,7 @@ export class TaskitiAuthController {
   @UseGuards(SourceGuard)
   @Source('taskiti')
   @HttpCode(HttpStatus.OK)
-  async refresh(@Body() body: { refresh_token: string }) {
+  async refresh(@Body() body: TaskitiRefreshDto) {
     return this.refreshService.execute(body.refresh_token);
   }
 

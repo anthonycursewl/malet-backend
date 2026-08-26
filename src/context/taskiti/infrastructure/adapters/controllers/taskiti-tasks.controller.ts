@@ -18,6 +18,7 @@ import { SourceGuard } from '../../../../../auth/guards/source.guard';
 import { Source } from '../../../../../auth/decorators/source.decorator';
 import { TaskitiTasksService } from '../../../application/taskiti-tasks.service';
 import { SyncRequestDto } from '../dtos/sync-request.dto';
+import { CreateTaskDto, UpdateTaskDto } from '../dtos/task.dto';
 import { SyncConflict } from '../../../domain/types';
 
 interface AuthenticatedRequest {
@@ -69,14 +70,14 @@ export class TaskitiTasksController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Req() req: any, @Body() body: any) {
-    return this.tasksService.create(req.user.userId, body);
+  async create(@Req() req: any, @Body() body: CreateTaskDto) {
+    return this.tasksService.create(req.user.userId, body as any);
   }
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  async update(@Req() req: any, @Param('id') id: string, @Body() body: any) {
-    return this.tasksService.update(req.user.userId, id, body);
+  async update(@Req() req: any, @Param('id') id: string, @Body() body: UpdateTaskDto) {
+    return this.tasksService.update(req.user.userId, id, body as any);
   }
 
   @Delete(':id')

@@ -1,4 +1,4 @@
-import { Inject, Injectable, ForbiddenException } from '@nestjs/common';
+import { Inject, Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { CompleteTransactionUseCase } from '../domain/ports/in/complete-transaction.usecase';
 import {
   TRANSACTION_REPOSITORY_PORT,
@@ -19,7 +19,17 @@ export class CompleteTransactionService implements CompleteTransactionUseCase {
     private readonly accountRepository: AccountRepository,
   ) {}
 
-  async execute(id: string, newType: string): Promise<Transaction> {
+  async execute(userId: string, id: string, newType: string): Promise<Transaction> {
+    const tx = await this.transactionRepository.findById(id);
+    if (!tx) {
+      throw new NotFoundException('Transaction not found');
+    }
+
+    const account = await this.accountRepository.findById(tx.getAccountId());
+    if (!account || account.getUserId() !== userId) {
+      throw new ForbiddenException('You do not own this transaction');
+    }
+
     return this.transactionRepository.complete(id, newType);
   }
 }

@@ -148,8 +148,13 @@ export class TransactionController {
   }
 
   @Put('complete/:id')
-  async complete(@Param('id') id: string, @Body() dto: CompleteTransactionDto) {
+  async complete(
+    @CurrentUser() user: { userId: string; email: string },
+    @Param('id') id: string,
+    @Body() dto: CompleteTransactionDto,
+  ) {
     const updatedTransaction = await this.completeTransactionUseCase.execute(
+      user.userId,
       id,
       dto.type,
     );

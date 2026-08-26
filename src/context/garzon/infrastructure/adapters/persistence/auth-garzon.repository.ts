@@ -2,6 +2,7 @@ import {
   Injectable,
   InternalServerErrorException,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
@@ -15,6 +16,7 @@ import { SimpleCookieJar } from '../../utils/SimpleCookieJar';
 @Injectable()
 export class LaravelAuthAdapter implements AuthGarzonRepository {
   private readonly baseUrl = 'http://45.189.38.14:8881';
+  private readonly logger = new Logger(LaravelAuthAdapter.name);
 
   constructor(private readonly httpService: HttpService) {}
 
@@ -22,7 +24,7 @@ export class LaravelAuthAdapter implements AuthGarzonRepository {
     const jar = new SimpleCookieJar();
 
     try {
-      console.log('[LaravelAdapter] 1. Obteniendo página de login...');
+      this.logger.log('1. Obteniendo página de login...');
       const initResponse = await lastValueFrom(
         this.httpService.get(`${this.baseUrl}/login`, {
           headers: {
@@ -57,7 +59,7 @@ export class LaravelAuthAdapter implements AuthGarzonRepository {
 
       const xsrfHeaderToken = decodeURIComponent(rawXsrfCookie);
 
-      console.log('[LaravelAdapter] 2. Enviando credenciales...');
+      this.logger.log('2. Enviando credenciales...');
 
       const payload = {
         username: credentials.username,
@@ -96,7 +98,7 @@ export class LaravelAuthAdapter implements AuthGarzonRepository {
         user: loginResponse.data,
       };
     } catch (error) {
-      console.error('Error en LaravelAuthAdapter:', error);
+      this.logger.error('Error en LaravelAuthAdapter:', error);
       throw new UnauthorizedException('Error conectando con sistema interno');
     }
   }

@@ -9,6 +9,8 @@ import {
   Query,
   Inject,
   UseGuards,
+  ForbiddenException,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
@@ -60,6 +62,24 @@ export class SharedAccountsController {
     private readonly hardDeleteSharedAccountUseCase: HardDeleteSharedAccountUseCase,
   ) {}
 
+  private async assertOwnership(
+    id: string,
+    userId: string,
+  ): Promise<SharedAccount> {
+    const accounts = await this.getSharedAccountsUseCase.execute({
+      user_id: userId,
+      take: 1,
+    });
+    const account = accounts.find((a) => a.getId() === id);
+    if (!account) {
+      throw new NotFoundException('Shared account not found');
+    }
+    if (account.getUserId() !== userId) {
+      throw new ForbiddenException('You do not own this shared account');
+    }
+    return account;
+  }
+
   @Post()
   async create(
     @CurrentUser() user: { userId: string },
@@ -99,25 +119,42 @@ export class SharedAccountsController {
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdateSharedAccountDto) {
+  async update(
+    @CurrentUser() user: { userId: string },
+    @Param('id') id: string,
+    @Body() dto: UpdateSharedAccountDto,
+  ) {
+    await this.assertOwnership(id, user.userId);
     const updated = await this.updateSharedAccountUseCase.execute(id, dto);
     return updated.toPrimitives();
   }
 
   @Delete(':id')
-  async softDelete(@Param('id') id: string) {
+  async softDelete(
+    @CurrentUser() user: { userId: string },
+    @Param('id') id: string,
+  ) {
+    await this.assertOwnership(id, user.userId);
     const deleted = await this.deleteSharedAccountUseCase.execute(id);
     return deleted.toPrimitives();
   }
 
   @Put(':id/restore')
-  async restore(@Param('id') id: string) {
+  async restore(
+    @CurrentUser() user: { userId: string },
+    @Param('id') id: string,
+  ) {
+    await this.assertOwnership(id, user.userId);
     const restored = await this.restoreSharedAccountUseCase.execute(id);
     return restored.toPrimitives();
   }
 
   @Delete(':id/hard')
-  async hardDelete(@Param('id') id: string) {
+  async hardDelete(
+    @CurrentUser() user: { userId: string },
+    @Param('id') id: string,
+  ) {
+    await this.assertOwnership(id, user.userId);
     await this.hardDeleteSharedAccountUseCase.execute(id);
     return { success: true };
   }
