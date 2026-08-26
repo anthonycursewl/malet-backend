@@ -13,7 +13,7 @@ RUN npx prisma generate
 
 COPY . .
 
-RUN npm run build
+RUN npm run build && ls -la dist/
 
 # ---- Production stage ----
 FROM node:22-alpine AS runner
