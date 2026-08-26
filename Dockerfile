@@ -32,4 +32,4 @@ COPY --from=builder /app/package.json ./
 
 EXPOSE 4100
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main"]
