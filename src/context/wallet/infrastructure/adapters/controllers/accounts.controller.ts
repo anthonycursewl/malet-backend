@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Inject,
+  Patch,
   Post,
   Put,
   Query,
@@ -180,6 +181,26 @@ export class AccountsController {
     return this.restoreAccountUseCase.execute(
       account.getUserId(),
       account.getId(),
+    );
+  }
+
+  /**
+   * Actualiza el saldo de una cuenta.
+   */
+  @Patch(':account_id/balance')
+  @CanUpdate('account', 'account_id')
+  async updateBalance(
+    @ResolvedResource() account: Account,
+    @Body('balance') balance: number,
+  ) {
+    return this.updateAccountUseCase.execute(
+      account.getUserId(),
+      account.getId(),
+      {
+        name: account.getName(),
+        balance,
+        currency: account.getCurrency(),
+      },
     );
   }
 

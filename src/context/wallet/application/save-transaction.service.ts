@@ -1,8 +1,10 @@
 import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
-import { SaveTransactionUseCase } from '../domain/ports/in/save-transaction.usecase';
+import {
+  SaveTransactionUseCase,
+  SaveTransactionData,
+} from '../domain/ports/in/save-transaction.usecase';
 import {
   Transaction,
-  TransactionPrimitives,
 } from '../domain/entities/transaction.entity';
 import {
   TRANSACTION_REPOSITORY_PORT,
@@ -18,13 +20,6 @@ import {
 } from '../domain/ports/out/transaction-tag.repository';
 import { SnowflakeService } from 'src/shared/infrastructure/services/snowflake-id.service';
 
-export interface TransactionWithTags extends Omit<
-  TransactionPrimitives,
-  'id' | 'issued_at'
-> {
-  tag_ids?: string[];
-}
-
 @Injectable()
 export class SaveTransactionService implements SaveTransactionUseCase {
   constructor(
@@ -37,7 +32,7 @@ export class SaveTransactionService implements SaveTransactionUseCase {
     private readonly snowflakeService: SnowflakeService,
   ) {}
 
-  async execute(userId: string, tx: TransactionWithTags): Promise<Transaction> {
+  async execute(userId: string, tx: SaveTransactionData): Promise<Transaction> {
     const account = await this.accountRepository.findById(tx.account_id);
 
     if (!account) {
@@ -54,7 +49,7 @@ export class SaveTransactionService implements SaveTransactionUseCase {
     delete (tx as any).tag_ids;
 
     const index_id = this.snowflakeService.generate();
-    const created = Transaction.create({ ...tx, index_id });
+    const created = Transaction.create({ ...tx, index_id, type: tx.type || 'expense' });
     const saved = await this.transactionRepository.save(created);
 
     if (tagIds.length > 0) {

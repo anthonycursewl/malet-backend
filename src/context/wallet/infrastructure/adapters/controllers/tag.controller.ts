@@ -50,6 +50,9 @@ class UpdateTagDto {
 }
 
 class AssignTagsDto {
+  @IsArray()
+  @IsString({ each: true })
+  @ArrayMaxSize(20)
   tagIds: string[];
 }
 

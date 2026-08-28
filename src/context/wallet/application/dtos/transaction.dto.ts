@@ -20,12 +20,12 @@ export class TransactionDto {
   @IsNotEmpty()
   amount: number;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @IsEnum(['saving', 'expense', 'pending_payment'], {
     message: 'Type must be saving, expense or pending_payment',
   })
-  type: string;
+  type?: string;
 
   @IsString()
   @IsNotEmpty()
