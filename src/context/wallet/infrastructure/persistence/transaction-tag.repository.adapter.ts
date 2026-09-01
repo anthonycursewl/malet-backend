@@ -94,6 +94,35 @@ export class TransactionTagRepositoryAdapter implements TransactionTagRepository
     );
   }
 
+  async findByUserIdPaginated(
+    userId: string,
+    take: number,
+    cursor?: string,
+  ): Promise<{ data: TransactionTag[]; nextCursor: string | null }> {
+    const tags = await this.prisma.transaction_tag.findMany({
+      where: { user_id: userId, deleted_at: null },
+      orderBy: { created_at: 'desc' },
+      take: take + 1,
+      ...(cursor
+        ? {
+            cursor: { id: cursor },
+            skip: 1,
+          }
+        : {}),
+    });
+
+    const hasMore = tags.length > take;
+    const data = hasMore ? tags.slice(0, take) : tags;
+    const nextCursor = hasMore ? data[data.length - 1].id : null;
+
+    return {
+      data: data.map((tag) =>
+        TransactionTag.fromPrimitives(this.mapToPrimitives(tag)),
+      ),
+      nextCursor,
+    };
+  }
+
   async delete(id: string): Promise<void> {
     await this.prisma.transaction_tag.update({
       where: { id },

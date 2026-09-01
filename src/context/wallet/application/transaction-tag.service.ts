@@ -117,6 +117,14 @@ export class TransactionTagService {
     return this.tagRepository.findByUserId(userId);
   }
 
+  async getUserTagsPaginated(
+    userId: string,
+    take: number,
+    cursor?: string,
+  ): Promise<{ data: TransactionTag[]; nextCursor: string | null }> {
+    return this.tagRepository.findByUserIdPaginated(userId, take, cursor);
+  }
+
   async getTagById(id: string, userId: string): Promise<TransactionTag | null> {
     const tag = await this.tagRepository.findById(id);
     if (!tag || tag.getUserId() !== userId) {

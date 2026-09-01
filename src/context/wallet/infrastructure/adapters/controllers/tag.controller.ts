@@ -9,6 +9,7 @@ import {
   Put,
   Delete,
   BadRequestException,
+  Query,
 } from '@nestjs/common';
 import { TransactionTagService } from '../../../application/transaction-tag.service';
 import {
@@ -118,7 +119,24 @@ export class TransactionTagController {
   }
 
   @Get()
-  async getAll(@CurrentUser() user: { userId: string; email: string }) {
+  async getAll(
+    @CurrentUser() user: { userId: string; email: string },
+    @Query('take') take?: string,
+    @Query('cursor') cursor?: string,
+  ) {
+    if (take) {
+      const takeNum = Math.min(parseInt(take, 10) || 20, 50);
+      const result = await this.tagService.getUserTagsPaginated(
+        user.userId,
+        takeNum,
+        cursor,
+      );
+      return {
+        data: result.data.map((tag) => tag.toPrimitives()),
+        nextCursor: result.nextCursor,
+      };
+    }
+
     const tags = await this.tagService.getUserTags(user.userId);
     return tags.map((tag) => tag.toPrimitives());
   }

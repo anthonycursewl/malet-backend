@@ -10,6 +10,7 @@ import {
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { IsCurrencyCode } from 'src/shared/common/validators/currency.validator';
+import { TRANSACTION_TYPES } from '../../domain/constants';
 
 export class TransactionDto {
   @IsString()
@@ -22,8 +23,8 @@ export class TransactionDto {
 
   @IsOptional()
   @IsString()
-  @IsEnum(['saving', 'expense', 'pending_payment'], {
-    message: 'Type must be saving, expense or pending_payment',
+  @IsEnum(TRANSACTION_TYPES, {
+    message: `Type must be one of: ${TRANSACTION_TYPES.join(', ')}`,
   })
   type?: string;
 

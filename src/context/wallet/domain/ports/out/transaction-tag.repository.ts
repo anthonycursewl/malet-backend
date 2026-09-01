@@ -8,6 +8,11 @@ export interface TransactionTagRepository {
   findById(id: string): Promise<TransactionTag | null>;
   findBySlug(userId: string, slug: string): Promise<TransactionTag | null>;
   findByUserId(userId: string): Promise<TransactionTag[]>;
+  findByUserIdPaginated(
+    userId: string,
+    take: number,
+    cursor?: string,
+  ): Promise<{ data: TransactionTag[]; nextCursor: string | null }>;
   delete(id: string): Promise<void>;
   assignToTransaction(transactionId: string, tagIds: string[]): Promise<void>;
   removeFromTransaction(transactionId: string, tagId: string): Promise<void>;

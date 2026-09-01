@@ -30,6 +30,14 @@ export interface TRANSACTION_TAG_USE_CASE_PORT {
   getUserTags(
     userId: string,
   ): Promise<import('../../entities/transaction-tag.entity').TransactionTag[]>;
+  getUserTagsPaginated(
+    userId: string,
+    take: number,
+    cursor?: string,
+  ): Promise<{
+    data: import('../../entities/transaction-tag.entity').TransactionTag[];
+    nextCursor: string | null;
+  }>;
   getTagById(
     id: string,
     userId: string,
@@ -38,8 +46,8 @@ export interface TRANSACTION_TAG_USE_CASE_PORT {
   >;
   assignTagsToTransaction(params: AssignTagsParams): Promise<void>;
   removeTagFromTransaction(
-    transactionId: string,
     tagId: string,
+    transactionId: string,
     userId: string,
   ): Promise<void>;
   getTransactionTags(

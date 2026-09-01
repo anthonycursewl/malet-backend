@@ -2,13 +2,16 @@ import { Module } from '@nestjs/common';
 import { AccountsController } from './infrastructure/adapters/controllers/accounts.controller';
 import { TransactionController } from './infrastructure/adapters/controllers/transaction.controller';
 import { TransactionTagController } from './infrastructure/adapters/controllers/tag.controller';
+import { WalletAnalyticsController } from './infrastructure/adapters/controllers/analytics.controller';
 import { CreateAccountService } from './application/create-account.service';
 import { SaveTransactionService } from './application/save-transaction.service';
+import { WalletAnalyticsService } from './application/analytics.service';
 import { CREATE_ACCOUNT_USECASE } from './domain/ports/in/create-account.usecase';
 import { SAVE_TRANSACTION_USECASE } from './domain/ports/in/save-transaction.usecase';
 import { TRANSACTION_REPOSITORY_PORT } from './domain/ports/out/transaction.repository';
 import { TransactionRepositoryAdapter } from './infrastructure/persistence/transaction.repositoy.adapter';
 import { AccountRepositoryAdapter } from './infrastructure/persistence/account.repository.adapter';
+import { WalletAnalyticsRepository } from './infrastructure/persistence/analytics.repository.adapter';
 import { ACCOUNT_REPOSITORY_PORT } from './domain/ports/out/account.repository';
 import { PrismaModule } from 'src/prisma.module';
 import { GET_ALL_ACCOUNTS_USECASE } from './domain/ports/in/get-all-acounts.usecase';
@@ -44,6 +47,7 @@ import { SnowflakeService } from 'src/shared/infrastructure/services/snowflake-i
     AccountsController,
     TransactionController,
     TransactionTagController,
+    WalletAnalyticsController,
   ],
   providers: [
     {
@@ -104,6 +108,8 @@ import { SnowflakeService } from 'src/shared/infrastructure/services/snowflake-i
       useClass: TransactionTagRepositoryAdapter,
     },
     TransactionTagService,
+    WalletAnalyticsRepository,
+    WalletAnalyticsService,
 
     AccountCleanupTask,
     TransactionCleanupTask,
