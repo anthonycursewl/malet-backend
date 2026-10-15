@@ -1,14 +1,17 @@
 import {
   IsOptional,
   IsString,
-  IsNumberString,
   IsIn,
   IsDateString,
   Max,
   Min,
 } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
-import { TRANSACTION_TYPES, SORT_FIELDS, SORT_ORDERS } from '../../../domain/constants';
+import { Transform } from 'class-transformer';
+import {
+  TRANSACTION_TYPES,
+  SORT_FIELDS,
+  SORT_ORDERS,
+} from '../../../domain/constants';
 
 export class AnalyticsQueryDto {
   @IsOptional()

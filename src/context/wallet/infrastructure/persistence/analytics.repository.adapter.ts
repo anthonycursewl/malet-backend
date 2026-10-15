@@ -41,7 +41,9 @@ export class WalletAnalyticsRepository {
     }
 
     if (filters?.to) {
-      conditions.push(Prisma.sql`t.issued_at < (${filters.to}::date + INTERVAL '1 day')`);
+      conditions.push(
+        Prisma.sql`t.issued_at < (${filters.to}::date + INTERVAL '1 day')`,
+      );
     }
 
     return Prisma.join(conditions, ' AND ');
@@ -62,7 +64,9 @@ export class WalletAnalyticsRepository {
         Prisma.sql`EXTRACT(YEAR FROM t.issued_at) = ${year} AND EXTRACT(MONTH FROM t.issued_at) = ${month}`,
       );
     } else {
-      extraConditions.push(Prisma.sql`EXTRACT(YEAR FROM t.issued_at) = ${year}`);
+      extraConditions.push(
+        Prisma.sql`EXTRACT(YEAR FROM t.issued_at) = ${year}`,
+      );
     }
 
     if (extraConditions.length > 0) {
@@ -73,7 +77,10 @@ export class WalletAnalyticsRepository {
     return { where: baseWhere, year, month };
   }
 
-  private buildOrderClause(options?: AnalyticsQueryOptions, defaultSort = 'date'): Prisma.Sql {
+  private buildOrderClause(
+    options?: AnalyticsQueryOptions,
+    defaultSort = 'date',
+  ): Prisma.Sql {
     const sortField = options?.sort_by ?? defaultSort;
     const sortOrder = options?.order ?? 'desc';
 
@@ -111,9 +118,7 @@ export class WalletAnalyticsRepository {
         JOIN accounts a ON t.account_id = a.id
         WHERE ${where}
       `,
-      this.prisma.$queryRaw<
-        { type: string; total: number; count: number }[]
-      >`
+      this.prisma.$queryRaw<{ type: string; total: number; count: number }[]>`
         SELECT
           t.type,
           SUM(t.amount::numeric)::float AS total,

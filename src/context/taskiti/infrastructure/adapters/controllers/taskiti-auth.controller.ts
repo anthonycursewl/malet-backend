@@ -17,7 +17,11 @@ import { PrismaService } from '../../../../../prisma.service';
 import { TaskitiLoginService } from '../../../application/taskiti-login.service';
 import { TaskitiRegisterService } from '../../../application/taskiti-register.service';
 import { TaskitiRefreshService } from '../../../application/taskiti-refresh.service';
-import { TaskitiLoginDto, TaskitiRegisterDto, TaskitiRefreshDto } from '../dtos/taskiti-auth.dto';
+import {
+  TaskitiLoginDto,
+  TaskitiRegisterDto,
+  TaskitiRefreshDto,
+} from '../dtos/taskiti-auth.dto';
 
 @Controller('auth/taskiti')
 export class TaskitiAuthController {

@@ -196,7 +196,7 @@ export class TransactionTagService {
 
   async getTransactionTags(
     transactionId: string,
-    userId: string,
+    _userId: string,
   ): Promise<TransactionTag[]> {
     return this.tagRepository.findByTransactionId(transactionId);
   }

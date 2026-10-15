@@ -26,7 +26,9 @@ export function generateBlockedPageHtml(params: BlockedPageParams): string {
   const { statusCode, ip, path, requestId, timestamp, method } = params;
   const safeReason = escapeHtml(params.reason);
   const safeIp = escapeHtml(ip);
-  const safePath = escapeHtml(path.length > 40 ? `${path.substring(0, 40)}...` : path);
+  const safePath = escapeHtml(
+    path.length > 40 ? `${path.substring(0, 40)}...` : path,
+  );
   const safeMethod = method ? escapeHtml(method) : '';
   const safeRequestId = escapeHtml(requestId);
   const safeTimestamp = escapeHtml(timestamp);

@@ -75,16 +75,51 @@ export interface AnalyticsSummary {
   transaction_count: number;
   by_type: TypeBreakdown[];
   average_per_transaction: number;
-  most_active_account: { account_id: string; name: string; total: number } | null;
+  most_active_account: {
+    account_id: string;
+    name: string;
+    total: number;
+  } | null;
 }
 
 export interface WalletAnalyticsUseCase {
-  getSummary(userId: string, filters?: DateRangeFilters): Promise<AnalyticsSummary>;
-  getDaily(userId: string, filters?: PeriodicFilters, options?: AnalyticsQueryOptions): Promise<DailyPoint[]>;
-  getWeekly(userId: string, filters?: PeriodicFilters, options?: AnalyticsQueryOptions): Promise<WeeklyPoint[]>;
-  getMonthly(userId: string, filters?: PeriodicFilters, options?: AnalyticsQueryOptions): Promise<MonthlyPoint[]>;
-  getQuarterly(userId: string, filters?: PeriodicFilters, options?: AnalyticsQueryOptions): Promise<QuarterlyPoint[]>;
-  getYearly(userId: string, filters?: AnalyticsFilters, options?: AnalyticsQueryOptions): Promise<YearlyPoint[]>;
-  getByRange(userId: string, filters: DateRangeFilters, options?: AnalyticsQueryOptions): Promise<DailyPoint[]>;
-  getByTags(userId: string, filters?: DateRangeFilters, options?: AnalyticsQueryOptions): Promise<TagBreakdown[]>;
+  getSummary(
+    userId: string,
+    filters?: DateRangeFilters,
+  ): Promise<AnalyticsSummary>;
+  getDaily(
+    userId: string,
+    filters?: PeriodicFilters,
+    options?: AnalyticsQueryOptions,
+  ): Promise<DailyPoint[]>;
+  getWeekly(
+    userId: string,
+    filters?: PeriodicFilters,
+    options?: AnalyticsQueryOptions,
+  ): Promise<WeeklyPoint[]>;
+  getMonthly(
+    userId: string,
+    filters?: PeriodicFilters,
+    options?: AnalyticsQueryOptions,
+  ): Promise<MonthlyPoint[]>;
+  getQuarterly(
+    userId: string,
+    filters?: PeriodicFilters,
+    options?: AnalyticsQueryOptions,
+  ): Promise<QuarterlyPoint[]>;
+  getYearly(
+    userId: string,
+    filters?: AnalyticsFilters,
+    options?: AnalyticsQueryOptions,
+  ): Promise<YearlyPoint[]>;
+  getByRange(
+    userId: string,
+    filters: DateRangeFilters,
+    options?: AnalyticsQueryOptions,
+  ): Promise<DailyPoint[]>;
+  getByTags(
+    userId: string,
+    filters?: DateRangeFilters,
+    options?: AnalyticsQueryOptions,
+  ): Promise<TagBreakdown[]>;
 }

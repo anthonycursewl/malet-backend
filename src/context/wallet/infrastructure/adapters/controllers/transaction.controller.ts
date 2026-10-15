@@ -36,7 +36,6 @@ import {
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
-import { Transaction } from 'src/context/wallet/domain/entities/transaction.entity';
 import {
   TransactionTagRepository,
   TRANSACTION_TAG_REPOSITORY_PORT,

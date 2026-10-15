@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { RestoreSharedAccountUseCase } from '../domain/ports/in/restore-shared-account.usecase';
 import { SharedAccount } from '../domain/entities/shared-account.entity';
 import {

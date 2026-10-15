@@ -14,7 +14,7 @@ export class TransactionTagRepositoryAdapter implements TransactionTagRepository
     const primitives = tag.toPrimitives();
 
     // Construir payload de creación sin palette para evitar problemas de types en Prisma
-    const createPayload: any = {
+    const _createPayload: any = {
       id: primitives.id,
       name: primitives.name,
       slug: primitives.slug,

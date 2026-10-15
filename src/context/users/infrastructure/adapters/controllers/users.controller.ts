@@ -1,10 +1,14 @@
-import { Controller, Inject, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Inject,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { CreateUserUseCase } from 'src/context/users/domain/ports/in/create-user.usecase';
-import {
-  User,
-  UserPrimitives,
-} from 'src/context/users/domain/entities/user.entity';
+import { User } from 'src/context/users/domain/entities/user.entity';
 import { CREATE_USER_USECASE } from 'src/context/users/domain/ports/in/create-user.usecase';
 import { LoginUserUseCase } from 'src/context/users/domain/ports/in/login-user.usecase';
 import { LOGIN_USER_USECASE } from 'src/context/users/domain/ports/in/login-user.usecase';
@@ -21,9 +25,7 @@ export class UsersController {
 
   @Post('save')
   @HttpCode(HttpStatus.CREATED)
-  async createUser(
-    @Body() user: RegisterUserDto,
-  ): Promise<User> {
+  async createUser(@Body() user: RegisterUserDto): Promise<User> {
     return this.createUserService.execute({
       ...user,
       verified: user.verified ?? false,

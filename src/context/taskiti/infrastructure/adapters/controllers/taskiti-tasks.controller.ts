@@ -76,7 +76,11 @@ export class TaskitiTasksController {
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  async update(@Req() req: any, @Param('id') id: string, @Body() body: UpdateTaskDto) {
+  async update(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() body: UpdateTaskDto,
+  ) {
     return this.tasksService.update(req.user.userId, id, body as any);
   }
 

@@ -4,7 +4,6 @@ import {
   IsString,
   IsNotEmpty,
   MaxLength,
-  MinLength,
   IsOptional,
   IsUrl,
   Validate,

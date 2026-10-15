@@ -1,4 +1,3 @@
-import { SnowflakeService } from 'src/shared/infrastructure/services/snowflake-id.service';
 import {
   TransactionTag,
   TransactionTagPrimitives,

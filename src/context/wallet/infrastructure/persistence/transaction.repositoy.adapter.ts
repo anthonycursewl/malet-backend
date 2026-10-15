@@ -11,7 +11,7 @@ export class TransactionRepositoryAdapter implements TransactionRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async save(tx: Transaction): Promise<Transaction> {
-    const { tags, amount, ...txPrimitives } = tx.toPrimitives();
+    const { tags: _tags, amount, ...txPrimitives } = tx.toPrimitives();
     const created = await this.prisma.transactions.create({
       data: {
         ...txPrimitives,

@@ -6,7 +6,6 @@ import {
   IsOptional,
   IsArray,
   Validate,
-  MaxLength,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { IsCurrencyCode } from 'src/shared/common/validators/currency.validator';

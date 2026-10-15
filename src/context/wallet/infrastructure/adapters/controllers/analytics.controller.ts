@@ -1,15 +1,14 @@
-import {
-  Controller,
-  Get,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { WalletAnalyticsService } from '../../../application/analytics.service';
 import { AnalyticsQueryDto } from '../dtos/analytics.dto';
 import { ANALYTICS_DEFAULT_RANGE_DAYS } from '../../../domain/constants';
-import { TransactionType, SortField, SortOrder } from '../../../domain/constants';
+import {
+  TransactionType,
+  SortField,
+  SortOrder,
+} from '../../../domain/constants';
 
 @Controller('wallet/analytics')
 @UseGuards(JwtAuthGuard)

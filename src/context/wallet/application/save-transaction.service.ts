@@ -3,9 +3,7 @@ import {
   SaveTransactionUseCase,
   SaveTransactionData,
 } from '../domain/ports/in/save-transaction.usecase';
-import {
-  Transaction,
-} from '../domain/entities/transaction.entity';
+import { Transaction } from '../domain/entities/transaction.entity';
 import {
   TRANSACTION_REPOSITORY_PORT,
   TransactionRepository,
@@ -49,7 +47,11 @@ export class SaveTransactionService implements SaveTransactionUseCase {
     delete (tx as any).tag_ids;
 
     const index_id = this.snowflakeService.generate();
-    const created = Transaction.create({ ...tx, index_id, type: tx.type || 'expense' });
+    const created = Transaction.create({
+      ...tx,
+      index_id,
+      type: tx.type || 'expense',
+    });
     const saved = await this.transactionRepository.save(created);
 
     if (tagIds.length > 0) {

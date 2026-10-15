@@ -1,4 +1,8 @@
-export const TRANSACTION_TYPES = ['expense', 'saving', 'pending_payment'] as const;
+export const TRANSACTION_TYPES = [
+  'expense',
+  'saving',
+  'pending_payment',
+] as const;
 export type TransactionType = (typeof TRANSACTION_TYPES)[number];
 
 export const ANALYTICS_DEFAULT_RANGE_DAYS = 30;
