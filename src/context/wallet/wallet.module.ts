@@ -118,6 +118,10 @@ import { SnowflakeService } from 'src/shared/infrastructure/services/snowflake-i
     SnowflakeService,
   ],
 
-  exports: [ACCOUNT_REPOSITORY_PORT],
+  exports: [
+    ACCOUNT_REPOSITORY_PORT,
+    SAVE_TRANSACTION_USECASE,
+    DELETE_TRANSACTION_USECASE,
+  ],
 })
 export class WalletModule {}
