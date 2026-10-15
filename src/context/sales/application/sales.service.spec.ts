@@ -142,7 +142,12 @@ describe('SalesService', () => {
       const soldAt = new Date('2026-09-01T10:00:00.000Z');
       const { sale } = await service.create('store-1', 'seller-1', {
         items: [
-          { product_id: product.getId(), quantity: 3, unit_price: 6, unit_cost: 2.5 },
+          {
+            product_id: product.getId(),
+            quantity: 3,
+            unit_price: 6,
+            unit_cost: 2.5,
+          },
         ],
         sold_at: soldAt.toISOString(),
       });
@@ -290,7 +295,12 @@ describe('SalesService', () => {
       const sale = Sale.create({
         store_id: 'store-1',
         items: [
-          { product_id: product.getId(), quantity: 1, unit_price: 5, unit_cost: 2 },
+          {
+            product_id: product.getId(),
+            quantity: 1,
+            unit_price: 5,
+            unit_cost: 2,
+          },
         ],
         sold_at: new Date(),
         created_by: 'seller-1',
@@ -316,7 +326,12 @@ describe('SalesService', () => {
       const sale = Sale.create({
         store_id: 'store-1',
         items: [
-          { product_id: product.getId(), quantity: 1, unit_price: 5, unit_cost: 2 },
+          {
+            product_id: product.getId(),
+            quantity: 1,
+            unit_price: 5,
+            unit_cost: 2,
+          },
         ],
         sold_at: new Date(),
         created_by: 'seller-1',
@@ -333,13 +348,20 @@ describe('SalesService', () => {
       const sale = Sale.create({
         store_id: 'store-1',
         items: [
-          { product_id: product.getId(), quantity: 1, unit_price: 5, unit_cost: 2 },
+          {
+            product_id: product.getId(),
+            quantity: 1,
+            unit_price: 5,
+            unit_cost: 2,
+          },
         ],
         sold_at: new Date(),
         created_by: 'seller-1',
       });
       saleRepository.findById.mockResolvedValue(sale);
-      saleRepository.update.mockImplementation(async (updated: Sale) => updated);
+      saleRepository.update.mockImplementation(
+        async (updated: Sale) => updated,
+      );
 
       const updated = await service.update('store-1', sale.getId(), {
         items: [{ product_id: product.getId(), quantity: 4 }],
@@ -425,7 +447,12 @@ describe('SalesService', () => {
         store_id: 'store-1',
         payment_method_id: cashMethod.getId(),
         items: [
-          { product_id: product.getId(), quantity: 1, unit_price: 5, unit_cost: 2 },
+          {
+            product_id: product.getId(),
+            quantity: 1,
+            unit_price: 5,
+            unit_cost: 2,
+          },
         ],
         sold_at: new Date(),
         created_by: 'seller-1',
@@ -443,7 +470,12 @@ describe('SalesService', () => {
         store_id: 'store-1',
         payment_method_id: cashMethod.getId(),
         items: [
-          { product_id: product.getId(), quantity: 1, unit_price: 5, unit_cost: 2 },
+          {
+            product_id: product.getId(),
+            quantity: 1,
+            unit_price: 5,
+            unit_cost: 2,
+          },
         ],
         sold_at: new Date(),
         created_by: 'seller-1',

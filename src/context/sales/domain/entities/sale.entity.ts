@@ -1,5 +1,9 @@
 import { randomUUID } from 'crypto';
-import { SaleItem, SaleItemInput, SaleItemPrimitives } from './sale-item.entity';
+import {
+  SaleItem,
+  SaleItemInput,
+  SaleItemPrimitives,
+} from './sale-item.entity';
 
 export interface SalePrimitives {
   id: string;

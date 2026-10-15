@@ -13,10 +13,7 @@ import {
   SALE_REPOSITORY_PORT,
   SaleRepository,
 } from '../domain/ports/out/sale.repository';
-import {
-  STORE_REPOSITORY_PORT,
-  StoreRepository,
-} from '../domain/ports/out/store.repository';
+import { STORE_REPOSITORY_PORT } from '../domain/ports/out/store.repository';
 import {
   PRODUCT_REPOSITORY_PORT,
   ProductRepository,
@@ -85,11 +82,15 @@ describe('ReceiptsService', () => {
         },
         {
           provide: PRODUCT_REPOSITORY_PORT,
-          useValue: { findById: jest.fn().mockResolvedValue(product) } as unknown as ProductRepository,
+          useValue: {
+            findById: jest.fn().mockResolvedValue(product),
+          } as unknown as ProductRepository,
         },
         {
           provide: PAYMENT_METHOD_REPOSITORY_PORT,
-          useValue: { findById: jest.fn().mockResolvedValue(null) } as unknown as PaymentMethodRepository,
+          useValue: {
+            findById: jest.fn().mockResolvedValue(null),
+          } as unknown as PaymentMethodRepository,
         },
       ],
     }).compile();
@@ -112,7 +113,11 @@ describe('ReceiptsService', () => {
       });
       receiptRepository.findBySaleId.mockResolvedValue(existing);
 
-      const result = await service.issue(store.getId(), sale.getId(), 'seller-1');
+      const result = await service.issue(
+        store.getId(),
+        sale.getId(),
+        'seller-1',
+      );
 
       expect(result.getNumber()).toBe(existing.getNumber());
       expect(receiptRepository.reserveNextSequence).not.toHaveBeenCalled();
@@ -182,7 +187,10 @@ describe('ReceiptsService', () => {
         created_by: 'seller-1',
       });
       receiptRepository.findById.mockResolvedValue(
-        Receipt.fromPrimitives({ ...deleted.toPrimitives(), deleted_at: new Date() }),
+        Receipt.fromPrimitives({
+          ...deleted.toPrimitives(),
+          deleted_at: new Date(),
+        }),
       );
 
       await expect(
@@ -228,7 +236,9 @@ describe('ReceiptsService', () => {
 
       await service.hardDelete(store.getId(), receipt.getId(), 'seller-1');
 
-      expect(receiptRepository.hardDelete).toHaveBeenCalledWith(receipt.getId());
+      expect(receiptRepository.hardDelete).toHaveBeenCalledWith(
+        receipt.getId(),
+      );
     });
   });
 });

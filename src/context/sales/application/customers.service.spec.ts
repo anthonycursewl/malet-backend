@@ -25,7 +25,9 @@ describe('CustomersService', () => {
       link: jest.fn(),
       unlink: jest.fn(),
       findMany: jest.fn().mockResolvedValue([]),
-      update: jest.fn().mockImplementation(async (customer: Customer) => customer),
+      update: jest
+        .fn()
+        .mockImplementation(async (customer: Customer) => customer),
       countActiveLinks: jest.fn().mockResolvedValue(1),
       hardDelete: jest.fn(),
       getStats: jest.fn(),
@@ -43,9 +45,13 @@ describe('CustomersService', () => {
 
   describe('create', () => {
     it('creates the customer and links it to the store', async () => {
-      repository.save.mockImplementation(async (customer: Customer) => customer);
+      repository.save.mockImplementation(
+        async (customer: Customer) => customer,
+      );
 
-      const result = await service.create('store-1', 'user-1', { name: ' Ana ' });
+      const result = await service.create('store-1', 'user-1', {
+        name: ' Ana ',
+      });
 
       expect(result.linked_existing).toBe(false);
       expect(result.customer.getName()).toBe('Ana');
@@ -67,7 +73,11 @@ describe('CustomersService', () => {
 
       expect(result.linked_existing).toBe(true);
       expect(result.customer.getId()).toBe(existing.getId());
-      expect(repository.link).toHaveBeenCalledWith('store-2', existing.getId(), 'user-1');
+      expect(repository.link).toHaveBeenCalledWith(
+        'store-2',
+        existing.getId(),
+        'user-1',
+      );
       expect(repository.save).not.toHaveBeenCalled();
     });
   });
@@ -80,7 +90,11 @@ describe('CustomersService', () => {
       const linked = await service.link('store-2', 'user-1', customer.getId());
 
       expect(linked.getId()).toBe(customer.getId());
-      expect(repository.link).toHaveBeenCalledWith('store-2', customer.getId(), 'user-1');
+      expect(repository.link).toHaveBeenCalledWith(
+        'store-2',
+        customer.getId(),
+        'user-1',
+      );
     });
 
     it('throws ConflictException when it is already linked', async () => {
@@ -107,9 +121,9 @@ describe('CustomersService', () => {
     it('throws NotFoundException when the customer is not linked to the store', async () => {
       repository.findLinkedCustomer.mockResolvedValue(null);
 
-      await expect(service.getById('store-1', 'customer-1')).rejects.toBeInstanceOf(
-        NotFoundException,
-      );
+      await expect(
+        service.getById('store-1', 'customer-1'),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 
@@ -151,7 +165,10 @@ describe('CustomersService', () => {
 
       await service.unlink('store-1', customer.getId());
 
-      expect(repository.unlink).toHaveBeenCalledWith('store-1', customer.getId());
+      expect(repository.unlink).toHaveBeenCalledWith(
+        'store-1',
+        customer.getId(),
+      );
     });
   });
 
@@ -159,9 +176,9 @@ describe('CustomersService', () => {
     it('requires the customer to be linked before aggregating', async () => {
       repository.findLinkedCustomer.mockResolvedValue(null);
 
-      await expect(service.stats('store-1', 'customer-1')).rejects.toBeInstanceOf(
-        NotFoundException,
-      );
+      await expect(
+        service.stats('store-1', 'customer-1'),
+      ).rejects.toBeInstanceOf(NotFoundException);
       expect(repository.getStats).not.toHaveBeenCalled();
     });
   });

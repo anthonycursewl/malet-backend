@@ -124,7 +124,8 @@ export class ReceiptsController {
   }
 
   @Delete(':id')
-  async softDelete(    @CurrentUser() user: { userId: string },
+  async softDelete(
+    @CurrentUser() user: { userId: string },
     @Param('store_id') store_id: string,
     @Param('id') id: string,
   ) {

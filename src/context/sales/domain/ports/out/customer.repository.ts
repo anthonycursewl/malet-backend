@@ -65,10 +65,17 @@ export interface CustomerRepository {
   findById(id: string): Promise<Customer | null>;
   /** Existing customer with that phone, visible to the user (dedupe on create). */
   findByPhoneForUser(phone: string, user_id: string): Promise<Customer | null>;
-  findLinkedCustomer(store_id: string, customer_id: string): Promise<Customer | null>;
+  findLinkedCustomer(
+    store_id: string,
+    customer_id: string,
+  ): Promise<Customer | null>;
   isLinked(store_id: string, customer_id: string): Promise<boolean>;
   /** Idempotent: restores the link when it already existed. */
-  link(store_id: string, customer_id: string, created_by: string): Promise<void>;
+  link(
+    store_id: string,
+    customer_id: string,
+    created_by: string,
+  ): Promise<void>;
   unlink(store_id: string, customer_id: string): Promise<void>;
   findMany(options: ListCustomersOptions): Promise<StoreCustomerLink[]>;
   update(customer: Customer): Promise<Customer>;

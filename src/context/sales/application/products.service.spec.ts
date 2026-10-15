@@ -45,9 +45,9 @@ describe('ProductsService', () => {
     it('throws NotFoundException when the product does not exist in the store', async () => {
       repository.findById.mockResolvedValue(null);
 
-      await expect(service.getById('store-1', 'missing')).rejects.toBeInstanceOf(
-        NotFoundException,
-      );
+      await expect(
+        service.getById('store-1', 'missing'),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
 
     it('looks the product up scoped to the store', async () => {

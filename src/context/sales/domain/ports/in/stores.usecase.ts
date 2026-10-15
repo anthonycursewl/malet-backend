@@ -21,7 +21,11 @@ export interface StoresUseCase {
   /** Returns the store only if it exists (not soft-deleted) and the user is an active member. */
   getMemberStore(store_id: string, user_id: string): Promise<Store>;
   detail(store_id: string, user_id: string): Promise<StoreDetail>;
-  update(store_id: string, user_id: string, dto: UpdateStoreDto): Promise<Store>;
+  update(
+    store_id: string,
+    user_id: string,
+    dto: UpdateStoreDto,
+  ): Promise<Store>;
   softDelete(store_id: string): Promise<Store>;
   /** Works on soft-deleted stores; requires an active membership. */
   restore(store_id: string, user_id: string): Promise<Store>;

@@ -92,7 +92,9 @@ export class SaleItem {
       quantity: this.quantity,
       unit_price: this.unit_price,
       unit_cost: this.unit_cost,
-      ...(this.product_name !== undefined && { product_name: this.product_name }),
+      ...(this.product_name !== undefined && {
+        product_name: this.product_name,
+      }),
       created_at: this.created_at,
       updated_at: this.updated_at,
       deleted_at: this.deleted_at,

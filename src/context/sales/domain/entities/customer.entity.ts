@@ -126,7 +126,11 @@ export class Customer {
     return this.deleted_at != null;
   }
 
-  update(data: { name?: string; phone?: string | null; email?: string | null }): Customer {
+  update(data: {
+    name?: string;
+    phone?: string | null;
+    email?: string | null;
+  }): Customer {
     return new Customer(
       this.id,
       data.name !== undefined ? data.name.trim() : this.name,

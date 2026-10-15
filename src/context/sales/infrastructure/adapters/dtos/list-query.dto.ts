@@ -9,7 +9,9 @@ import { MAX_LIST_TAKE } from '../../../domain/constants';
 export class ListQueryDto {
   @IsOptional()
   @Transform(({ value }) =>
-    value === undefined || value === null || value === '' ? undefined : Number(value),
+    value === undefined || value === null || value === ''
+      ? undefined
+      : Number(value),
   )
   @IsInt({ message: 'take must be an integer' })
   @Min(1)

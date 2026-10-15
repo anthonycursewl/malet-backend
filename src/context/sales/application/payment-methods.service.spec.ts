@@ -39,7 +39,9 @@ describe('PaymentMethodsService', () => {
   });
 
   it('creates the method active by default for the store', async () => {
-    const created = await service.create('store-1', 'user-1', { name: 'Zelle' });
+    const created = await service.create('store-1', 'user-1', {
+      name: 'Zelle',
+    });
 
     expect(created.getName()).toBe('Zelle');
     expect(created.isActive()).toBe(true);

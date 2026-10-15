@@ -47,7 +47,11 @@ describe('StoreMembersService', () => {
 
   describe('list', () => {
     it('passes the keyset options down to the repository', async () => {
-      await service.list('store-1', { store_id: 'store-1', take: 20, cursor: 5 });
+      await service.list('store-1', {
+        store_id: 'store-1',
+        take: 20,
+        cursor: 5,
+      });
 
       expect(repository.findMemberSummaries).toHaveBeenCalledWith({
         store_id: 'store-1',

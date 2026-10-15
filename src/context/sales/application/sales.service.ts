@@ -129,7 +129,9 @@ export class SalesService implements SalesUseCase {
     } catch (error) {
       // Compensación: si el recibo no se pudo emitir, se revierte la venta para
       // que la petición sea todo-o-nada (el cliente puede reintentar limpio).
-      await this.saleRepository.hardDelete(saved.getId()).catch(() => undefined);
+      await this.saleRepository
+        .hardDelete(saved.getId())
+        .catch(() => undefined);
       throw error;
     }
   }
@@ -184,7 +186,9 @@ export class SalesService implements SalesUseCase {
 
     if (dto.customer_id !== undefined) {
       patch.customer_id = dto.customer_id
-        ? (await this.customersUseCase.assertLinked(store_id, dto.customer_id)).getId()
+        ? (
+            await this.customersUseCase.assertLinked(store_id, dto.customer_id)
+          ).getId()
         : null;
     }
 

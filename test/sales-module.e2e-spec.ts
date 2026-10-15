@@ -111,7 +111,9 @@ describe('SalesModule (e2e)', () => {
       if (customerId) {
         await prisma.customers.deleteMany({ where: { id: customerId } });
       }
-      await prisma.user.deleteMany({ where: { id: { in: [ownerId, intruderId] } } });
+      await prisma.user.deleteMany({
+        where: { id: { in: [ownerId, intruderId] } },
+      });
     } finally {
       await app.close();
     }
@@ -292,7 +294,9 @@ describe('SalesModule (e2e)', () => {
     // Ordenado por unidades: Pan (4) por encima de Café (2).
     expect(res.body.top_products[0].product_name).toBe('Pan');
     expect(
-      res.body.top_products.map((p: { product_name: string }) => p.product_name),
+      res.body.top_products.map(
+        (p: { product_name: string }) => p.product_name,
+      ),
     ).toEqual(expect.arrayContaining(['Café', 'Pan']));
   });
 
@@ -311,7 +315,9 @@ describe('SalesModule (e2e)', () => {
 
   it('verifica públicamente el folio con su token', async () => {
     const ok = await request(app.getHttpServer())
-      .get(`/public/receipts/${receiptNumber}?token=${encodeURIComponent(verifyToken)}`)
+      .get(
+        `/public/receipts/${receiptNumber}?token=${encodeURIComponent(verifyToken)}`,
+      )
       .expect(200);
 
     expect(ok.body.status).toBe('valid');

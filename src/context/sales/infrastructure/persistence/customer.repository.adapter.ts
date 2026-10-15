@@ -68,7 +68,10 @@ export class CustomerRepositoryAdapter implements CustomerRepository {
    * Dedupe on create: same phone already linked to a store where this user is an
    * active member. That way the same person is never duplicated for a user.
    */
-  async findByPhoneForUser(phone: string, user_id: string): Promise<Customer | null> {
+  async findByPhoneForUser(
+    phone: string,
+    user_id: string,
+  ): Promise<Customer | null> {
     const rows = await this.prisma.$queryRaw<any[]>`
       SELECT c.*
       FROM customers c
@@ -193,7 +196,10 @@ export class CustomerRepositoryAdapter implements CustomerRepository {
     await this.prisma.customers.delete({ where: { id } });
   }
 
-  async getStats(store_id: string, customer_id: string): Promise<CustomerStats> {
+  async getStats(
+    store_id: string,
+    customer_id: string,
+  ): Promise<CustomerStats> {
     const [summary] = await this.prisma.$queryRaw<any[]>`
       SELECT
         COUNT(DISTINCT s.id)::int AS purchase_count,
@@ -294,7 +300,9 @@ export class CustomerRepositoryAdapter implements CustomerRepository {
       units_bought: Number(summary?.units_bought ?? 0),
       total_spent,
       average_ticket:
-        purchase_count > 0 ? Number((total_spent / purchase_count).toFixed(2)) : 0,
+        purchase_count > 0
+          ? Number((total_spent / purchase_count).toFixed(2))
+          : 0,
       first_purchase_at: first ? first.toISOString() : null,
       last_purchase_at: last ? last.toISOString() : null,
       average_days_between,

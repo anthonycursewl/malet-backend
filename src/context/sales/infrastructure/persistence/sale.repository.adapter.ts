@@ -129,7 +129,9 @@ export class SaleRepositoryAdapter implements SaleRepository {
         deleted_at: null,
         ...(payment_method_id && { payment_method_id }),
         // A product filter matches sales that contain that product.
-        ...(product_id && { items: { some: { product_id, deleted_at: null } } }),
+        ...(product_id && {
+          items: { some: { product_id, deleted_at: null } },
+        }),
         ...(range && {
           sold_at: range.inclusive
             ? { gte: range.from, lte: range.to }

@@ -74,7 +74,11 @@ export class StoresService implements StoresUseCase {
     return { store, member_count };
   }
 
-  async update(store_id: string, user_id: string, dto: UpdateStoreDto): Promise<Store> {
+  async update(
+    store_id: string,
+    user_id: string,
+    dto: UpdateStoreDto,
+  ): Promise<Store> {
     const store = await this.storeRepository.findById(store_id);
     if (!store) {
       throw new NotFoundException('Store not found');

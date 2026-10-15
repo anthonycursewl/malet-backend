@@ -1,8 +1,5 @@
 import { Customer } from '../../entities/customer.entity';
-import {
-  CustomerStats,
-  StoreCustomerLink,
-} from '../out/customer.repository';
+import { CustomerStats, StoreCustomerLink } from '../out/customer.repository';
 
 export const CUSTOMERS_USECASE = Symbol('CUSTOMERS_USECASE');
 
@@ -29,7 +26,11 @@ export interface CustomersUseCase {
     dto: { name: string; phone?: string; email?: string },
   ): Promise<CreateCustomerResult>;
   /** Links an existing customer to the store (sharing it between stores). */
-  link(store_id: string, user_id: string, customer_id: string): Promise<Customer>;
+  link(
+    store_id: string,
+    user_id: string,
+    customer_id: string,
+  ): Promise<Customer>;
   update(
     store_id: string,
     customer_id: string,
@@ -38,7 +39,11 @@ export interface CustomersUseCase {
   /** Removes the link of this store (the identity survives in other stores). */
   unlink(store_id: string, customer_id: string): Promise<void>;
   /** Permanent delete: only the creator, and only when no store uses it. */
-  hardDelete(store_id: string, customer_id: string, user_id: string): Promise<void>;
+  hardDelete(
+    store_id: string,
+    customer_id: string,
+    user_id: string,
+  ): Promise<void>;
   stats(store_id: string, customer_id: string): Promise<CustomerStats>;
   /** Validates that the customer can be used by this store (sales). */
   assertLinked(store_id: string, customer_id: string): Promise<Customer>;
