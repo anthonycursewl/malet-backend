@@ -4,7 +4,7 @@ Backend Application for the **Malet** platform, built with [NestJS](https://nest
 
 ## 🚀 Overview
 
-This repository contains the server-side logic for the Malet platform. It is a robust, scalable backend handling user identities, financial wallets, task management (Taskiti), and integrations with external systems like Garzon.
+This repository contains the server-side logic for the Malet platform. It is a robust, scalable backend handling user identities, financial wallets, task management (Taskiti), store sales, credit tracking, and integrations with external systems like Garzon.
 
 The architecture follows **Domain-Driven Design (DDD)** principles, organizing the codebase into distinct Bounded Contexts to ensure maintainability and scalability.
 
@@ -29,6 +29,10 @@ The source code is structured around functional domains located in `src/context/
 *   **`shared-accounts`**: Shared accounts management.
 *   **`sync`**: Generic entity sync engine (push/pull) for offline-first clients.
 *   **`taskiti`**: Task app context: auth, tasks CRUD + offline sync, and analytics.
+*   **`sales`**: Store notebook: products, payment methods, sales, receipts and QR invites, with a currency per store.
+*   **`credit`**: Accounts receivable/payable with a monthly calendar and wallet settlement.
+*   **`modules`**: Opt-in module activation per user (`user_modules`); the feature gate used by optional modules.
+*   **`gym`**: **Opt-in** gym module: weekly routine (Monday to Sunday), workout logging, body metrics and performance analytics.
 *   **`updater`**: Desktop app updater (manifest + release upload).
 *   **`garzon`**: Adapters for integration with the external "Garzon" system.
 
@@ -118,8 +122,12 @@ npm run test:e2e
 ## 📚 Documentation & Resources
 
 *   **Security Audit**: Refer to `.security-audit-report.md` for security details.
-*   **API Contract (Taskiti)**: See `taskiti-api-contract.md` for the task app contract.
-*   **Endpoints**: See `endpoints.md` for the wallet/shared-accounts endpoint reference.
+*   **API contracts** (Markdown, in the repository root):
+    *   `taskiti-api-contract.md` — task app (auth, tasks, sync, analytics).
+    *   `sales-api-contract.md` — store notebook (stores, products, payment methods, sales, reports, receipts, invites).
+    *   `credit-api-contract.md` — accounts receivable/payable and calendar.
+    *   `gym-api-contract.md` — opt-in gym module (routine, sessions, metrics, body tracking).
+*   **Wallet / shared accounts**: see `.api-usage-guide.md`.
 
 ## 📄 License
 
