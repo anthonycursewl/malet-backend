@@ -27,9 +27,17 @@ model user {
   email_verification_tokens email_verification_token[]
   transaction_tags          transaction_tag[]
   sharedAccounts            shared_accounts[]
-   taskiti_tasks             taskiti_tasks[]
-   taskiti_refresh_tokens    taskiti_refresh_tokens[]
-   taskiti_analytics         taskiti_analytics[]
+  taskiti_tasks             taskiti_tasks[]
+  taskiti_refresh_tokens    taskiti_refresh_tokens[]
+  taskiti_analytics         taskiti_analytics[]
+  stores                    stores[]
+  store_members             store_members[]
+  credit_entries            credit_entries[]
+  user_modules              user_modules[]
+  gym_exercises             gym_exercises[]
+  gym_routines              gym_routines[]
+  gym_sessions              gym_sessions[]
+  gym_body_metrics          gym_body_metrics[]
 }
 
 model verification_type {
@@ -54,17 +62,18 @@ model email_verification_token {
 }
 
 model accounts {
-  id           String         @id @db.VarChar(255)
-  name         String         @db.VarChar(255)
-  currency     String         @db.VarChar(10)
-  icon         String?        @db.VarChar(255)
-  user_id      String         @db.VarChar(255)
-  created_at   DateTime       @db.Timestamptz(6)
-  updated_at   DateTime       @db.Timestamptz(6)
-  deleted_at   DateTime?      @db.Timestamptz(6)
-  balance      Decimal        @db.Decimal(10, 2)
-  user         user           @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "user_id")
-  transactions transactions[]
+  id             String           @id @db.VarChar(255)
+  name           String           @db.VarChar(255)
+  currency       String           @db.VarChar(10)
+  icon           String?          @db.VarChar(255)
+  user_id        String           @db.VarChar(255)
+  created_at     DateTime         @db.Timestamptz(6)
+  updated_at     DateTime         @db.Timestamptz(6)
+  deleted_at     DateTime?        @db.Timestamptz(6)
+  balance        Decimal          @db.Decimal(10, 2)
+  user           user             @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "user_id")
+  transactions   transactions[]
+  credit_entries credit_entries[]
 }
 
 model transactions {
@@ -152,20 +161,20 @@ model client_ops {
 }
 
 model taskiti_tasks {
-  id          String    @id @db.Uuid
-  user_id     String    @db.VarChar(255)
-  title       String    @db.VarChar(500)
-  description String    @default("") @db.Text
-  completed   Boolean   @default(false)
+  id           String    @id @db.Uuid
+  user_id      String    @db.VarChar(255)
+  title        String    @db.VarChar(500)
+  description  String    @default("") @db.Text
+  completed    Boolean   @default(false)
   completed_at DateTime? @db.Timestamptz(6)
-  priority    String    @default("medium") @db.VarChar(20)
-  tags        String[]
-  notes       String    @default("") @db.VarChar(2000)
-  created_at  DateTime  @db.Timestamptz(6)
-  expires_at  DateTime  @db.Timestamptz(6)
-  updated_at  DateTime  @default(now()) @db.Timestamptz(6)
-  deleted_at  DateTime? @db.Timestamptz(6)
-  version     Int       @default(1)
+  priority     String    @default("medium") @db.VarChar(20)
+  tags         String[]
+  notes        String    @default("") @db.VarChar(2000)
+  created_at   DateTime  @db.Timestamptz(6)
+  expires_at   DateTime  @db.Timestamptz(6)
+  updated_at   DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at   DateTime? @db.Timestamptz(6)
+  version      Int       @default(1)
 
   user user @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -189,22 +198,484 @@ model taskiti_refresh_tokens {
 }
 
 model taskiti_analytics {
-    id                String    @id @default(uuid()) @db.Uuid
-    user_id           String    @db.VarChar(255)
-    date              DateTime  @db.Date
-    tasks_created     Int       @default(0)
-    tasks_completed   Int       @default(0)
-    tasks_deleted     Int       @default(0)
-    tasks_expired     Int       @default(0)
-    priority_low      Int       @default(0)
-    priority_medium   Int       @default(0)
-    priority_high     Int       @default(0)
-    priority_urgent   Int       @default(0)
-    avg_completion_hours Float?
-    created_at        DateTime  @default(now()) @db.Timestamptz(6)
+  id                   String   @id @default(uuid()) @db.Uuid
+  user_id              String   @db.VarChar(255)
+  date                 DateTime @db.Date
+  tasks_created        Int      @default(0)
+  tasks_completed      Int      @default(0)
+  tasks_deleted        Int      @default(0)
+  tasks_expired        Int      @default(0)
+  priority_low         Int      @default(0)
+  priority_medium      Int      @default(0)
+  priority_high        Int      @default(0)
+  priority_urgent      Int      @default(0)
+  avg_completion_hours Float?
+  created_at           DateTime @default(now()) @db.Timestamptz(6)
 
-    user user @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user user @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-    @@unique([user_id, date])
-    @@index([user_id, date])
+  @@unique([user_id, date])
+  @@index([user_id, date])
+}
+
+// ---------------------------------------------------------------------------
+// Sales notebook (cuaderno de ventas)
+// ---------------------------------------------------------------------------
+
+model stores {
+  id           String    @id @db.VarChar(255)
+  name         String    @db.VarChar(255)
+  user_id      String    @db.VarChar(255)
+  currency     String    @default("Bs") @db.VarChar(10)
+  /// Contact info printed on the receipts (issuer data).
+  phone        String?   @db.VarChar(50)
+  email        String?   @db.VarChar(255)
+  address      String?   @db.VarChar(255)
+  /// Receipt policy of the store: ask | always | never (owner only).
+  receipt_mode String    @default("ask") @db.VarChar(10)
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at   DateTime? @db.Timestamptz(6)
+
+  user            user                    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  members         store_members[]
+  products        store_products[]
+  payment_methods store_payment_methods[]
+  sales           store_sales[]
+  invites         store_invites[]
+  receipts        store_receipts[]
+  customers       store_customers[]
+
+  @@index([user_id])
+  @@index([deleted_at])
+}
+
+model store_invites {
+  id         String    @id @db.VarChar(255)
+  store_id   String    @db.VarChar(255)
+  created_by String    @db.VarChar(255)
+  token_hash String    @unique @db.VarChar(64)
+  expires_at DateTime  @db.Timestamptz(6)
+  used_at    DateTime? @db.Timestamptz(6)
+  revoked_at DateTime? @db.Timestamptz(6)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+
+  store stores @relation(fields: [store_id], references: [id], onDelete: Cascade)
+
+  @@index([store_id])
+  @@index([expires_at])
+}
+
+model store_members {
+  id         String    @id @db.VarChar(255)
+  store_id   String    @db.VarChar(255)
+  user_id    String    @db.VarChar(255)
+  created_by String    @db.VarChar(255)
+  /// Auto-increment cursor used for keyset pagination of the members list.
+  seq        BigInt    @default(autoincrement())
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at DateTime? @db.Timestamptz(6)
+
+  store stores @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  user  user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([store_id, user_id])
+  @@index([store_id])
+  @@index([user_id])
+  @@index([store_id, seq])
+  @@index([deleted_at])
+}
+
+model credit_entries {
+  id                        String    @id @db.VarChar(255)
+  user_id                   String    @db.VarChar(255)
+  type                      String    @db.VarChar(20)
+  concept                   String    @db.VarChar(255)
+  party                     String?   @db.VarChar(255)
+  amount                    Decimal   @db.Decimal(12, 2)
+  due_date                  DateTime  @db.Date
+  account_id                String?   @db.VarChar(255)
+  status                    String    @db.VarChar(20)
+  settled_at                DateTime? @db.Timestamptz(6)
+  settled_transaction_id    String?   @db.VarChar(255)
+  settled_transaction_index String?   @db.VarChar(255)
+  notes                     String?   @db.VarChar(2000)
+  created_at                DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at                DateTime? @db.Timestamptz(6)
+
+  user    user      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  account accounts? @relation(fields: [account_id], references: [id], onDelete: SetNull)
+
+  @@index([user_id, due_date])
+  @@index([user_id, status])
+  @@index([type])
+  @@index([account_id])
+  @@index([deleted_at])
+}
+
+model store_products {
+  id         String    @id @db.VarChar(255)
+  store_id   String    @db.VarChar(255)
+  name       String    @db.VarChar(255)
+  cost       Decimal   @db.Decimal(12, 2)
+  pvp        Decimal   @db.Decimal(12, 2)
+  created_by String    @db.VarChar(255)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at DateTime? @db.Timestamptz(6)
+
+  store      stores             @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  sale_items store_sale_items[]
+
+  @@index([store_id])
+  @@index([deleted_at])
+}
+
+model store_payment_methods {
+  id         String    @id @db.VarChar(255)
+  store_id   String    @db.VarChar(255)
+  name       String    @db.VarChar(255)
+  active     Boolean   @default(true)
+  created_by String    @db.VarChar(255)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at DateTime? @db.Timestamptz(6)
+
+  store stores        @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  sales store_sales[]
+
+  @@index([store_id])
+  @@index([deleted_at])
+}
+
+model store_sales {
+  id                 String    @id @db.VarChar(255)
+  store_id           String    @db.VarChar(255)
+  payment_method_id  String?   @db.VarChar(255)
+  customer_id        String?   @db.VarChar(255)
+  reference_currency String?   @db.VarChar(10)
+  reference_amount   Decimal?  @db.Decimal(12, 2)
+  sold_at            DateTime  @db.Timestamptz(6)
+  created_by         String    @db.VarChar(255)
+  created_at         DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at         DateTime? @db.Timestamptz(6)
+
+  store          stores                 @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  payment_method store_payment_methods? @relation(fields: [payment_method_id], references: [id], onDelete: NoAction)
+  customer       customers?             @relation(fields: [customer_id], references: [id], onDelete: SetNull)
+  receipt        store_receipts?
+  items          store_sale_items[]
+
+  @@index([store_id, sold_at])
+  @@index([payment_method_id])
+  @@index([customer_id])
+  @@index([store_id, customer_id])
+  @@index([deleted_at])
+}
+
+/// Line item of a sale: one row per product sold (price snapshot).
+model store_sale_items {
+  id         String    @id @db.VarChar(255)
+  sale_id    String    @db.VarChar(255)
+  product_id String    @db.VarChar(255)
+  quantity   Int       @default(1)
+  unit_price Decimal   @db.Decimal(12, 2)
+  unit_cost  Decimal   @db.Decimal(12, 2)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at DateTime? @db.Timestamptz(6)
+
+  sale    store_sales    @relation(fields: [sale_id], references: [id], onDelete: Cascade)
+  product store_products @relation(fields: [product_id], references: [id], onDelete: NoAction)
+
+  @@index([sale_id])
+  @@index([product_id])
+  @@index([deleted_at])
+}
+
+/// Global customer identity. A single record can be linked to several stores
+/// through `store_customers`, so the same customer is never duplicated.
+model customers {
+  id         String    @id @db.VarChar(255)
+  name       String    @db.VarChar(255)
+  phone      String?   @db.VarChar(50)
+  email      String?   @db.VarChar(255)
+  created_by String    @db.VarChar(255)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at DateTime? @db.Timestamptz(6)
+
+  store_links store_customers[]
+  sales       store_sales[]
+
+  @@index([name])
+  @@index([phone])
+  @@index([deleted_at])
+}
+
+/// Link between a store and a customer. `seq` is an auto-increment key used for
+/// cursor-based (keyset) pagination: fast and stable even with same timestamps.
+model store_customers {
+  id          String    @id @db.VarChar(255)
+  store_id    String    @db.VarChar(255)
+  customer_id String    @db.VarChar(255)
+  seq         BigInt    @default(autoincrement())
+  created_by  String    @db.VarChar(255)
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at  DateTime? @db.Timestamptz(6)
+
+  store    stores    @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  customer customers @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+
+  @@unique([store_id, customer_id])
+  @@index([store_id, seq])
+  @@index([customer_id])
+}
+
+/// Receipt issued for a sale. Every amount is a snapshot taken at issue time,
+/// so later changes to the sale/product never alter an issued receipt.
+model store_receipts {
+  id                       String    @id @db.VarChar(255)
+  store_id                 String    @db.VarChar(255)
+  /// One receipt per sale.
+  sale_id                  String    @unique @db.VarChar(255)
+  /// Global yearly sequence shared by every store (Breadriuss folio).
+  sequence                 Int
+  year                     Int
+  /// Full folio, e.g. `R-BRD-2026-000123`.
+  number                   String    @unique @db.VarChar(32)
+  customer_name            String?   @db.VarChar(255)
+  currency                 String    @db.VarChar(10)
+  /// Datos del emisor congelados al emitir (inmutables).
+  store_name               String?   @db.VarChar(255)
+  store_phone              String?   @db.VarChar(50)
+  store_email              String?   @db.VarChar(255)
+  store_address            String?   @db.VarChar(255)
+  subtotal                 Decimal   @db.Decimal(12, 2)
+  total                    Decimal   @db.Decimal(12, 2)
+  paid_amount              Decimal   @db.Decimal(12, 2)
+  /// Snapshot of the printable lines: product name, quantity, prices.
+  lines                    Json
+  /// Snapshot of the payment history shown on the receipt.
+  payments                 Json
+  issued_at                DateTime  @db.Timestamptz(6)
+  /// Audit of the "Facturar a" correction (amounts stay immutable).
+  customer_name_updated_at DateTime? @db.Timestamptz(6)
+  customer_name_updated_by String?   @db.VarChar(255)
+  created_by               String    @db.VarChar(255)
+  created_at               DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at               DateTime? @db.Timestamptz(6)
+
+  store stores      @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  sale  store_sales @relation(fields: [sale_id], references: [id], onDelete: Cascade)
+
+  @@unique([year, sequence])
+  @@index([store_id, issued_at])
+  @@index([deleted_at])
+}
+
+// ---------------------------------------------------------------------------
+// Opt-in modules (features the user turns on; hidden until then)
+// ---------------------------------------------------------------------------
+
+model user_modules {
+  id         String    @id @db.VarChar(255)
+  user_id    String    @db.VarChar(255)
+  /// Key of the optional module, e.g. `gym`.
+  module_key String    @db.VarChar(50)
+  enabled    Boolean   @default(false)
+  enabled_at DateTime? @db.Timestamptz(6)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime  @default(now()) @db.Timestamptz(6)
+
+  user user @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, module_key])
+  @@index([user_id])
+  @@index([module_key])
+}
+
+// ---------------------------------------------------------------------------
+// Gym (opt-in module): weekly routine + workout logging
+// ---------------------------------------------------------------------------
+
+model gym_exercises {
+  id           String    @id @db.VarChar(255)
+  /// `null` => system catalog shared by every user; set => user-created exercise.
+  user_id      String?   @db.VarChar(255)
+  name         String    @db.VarChar(255)
+  muscle_group String    @db.VarChar(50)
+  equipment    String?   @db.VarChar(50)
+  type         String    @default("strength") @db.VarChar(20)
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at   DateTime? @db.Timestamptz(6)
+
+  user              user?                   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  routine_exercises gym_routine_exercises[]
+  session_exercises gym_session_exercises[]
+
+  @@index([user_id])
+  @@index([muscle_group])
+  @@index([type])
+  @@index([deleted_at])
+}
+
+model gym_routines {
+  id          String    @id @db.VarChar(255)
+  user_id     String    @db.VarChar(255)
+  name        String    @db.VarChar(255)
+  description String?   @db.VarChar(1000)
+  /// Only one active routine per user (enforced by the service).
+  is_active   Boolean   @default(false)
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at  DateTime? @db.Timestamptz(6)
+
+  user     user               @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  days     gym_routine_days[]
+  sessions gym_sessions[]
+
+  @@index([user_id])
+  @@index([is_active])
+  @@index([deleted_at])
+}
+
+model gym_routine_days {
+  id          String   @id @db.VarChar(255)
+  routine_id  String   @db.VarChar(255)
+  /// ISO day of week: 1 = Monday ... 7 = Sunday.
+  day_of_week Int
+  title       String?  @db.VarChar(255)
+  is_rest     Boolean  @default(false)
+  notes       String?  @db.VarChar(1000)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  routine   gym_routines            @relation(fields: [routine_id], references: [id], onDelete: Cascade)
+  exercises gym_routine_exercises[]
+  sessions  gym_sessions[]
+
+  @@unique([routine_id, day_of_week])
+  @@index([routine_id])
+}
+
+model gym_routine_exercises {
+  id             String   @id @db.VarChar(255)
+  routine_day_id String   @db.VarChar(255)
+  exercise_id    String   @db.VarChar(255)
+  position       Int
+  sets           Int      @default(3)
+  reps_min       Int?
+  reps_max       Int?
+  target_weight  Decimal? @db.Decimal(7, 2)
+  rest_seconds   Int?
+  superset_group String?  @db.VarChar(10)
+  notes          String?  @db.VarChar(500)
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+
+  routine_day gym_routine_days @relation(fields: [routine_day_id], references: [id], onDelete: Cascade)
+  exercise    gym_exercises    @relation(fields: [exercise_id], references: [id], onDelete: Restrict)
+
+  @@index([routine_day_id])
+  @@index([exercise_id])
+}
+
+model gym_sessions {
+  id               String    @id @db.VarChar(255)
+  user_id          String    @db.VarChar(255)
+  routine_id       String?   @db.VarChar(255)
+  routine_day_id   String?   @db.VarChar(255)
+  /// Workout day (UTC date, no time).
+  date             DateTime  @db.Date
+  /// `in_progress` | `completed` | `skipped`.
+  status           String    @default("completed") @db.VarChar(20)
+  started_at       DateTime? @db.Timestamptz(6)
+  finished_at      DateTime? @db.Timestamptz(6)
+  duration_minutes Int?
+  /// Perceived exertion 1-10.
+  rpe              Int?
+  notes            String?   @db.VarChar(2000)
+  created_at       DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at       DateTime? @db.Timestamptz(6)
+
+  user        user                    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  routine     gym_routines?           @relation(fields: [routine_id], references: [id], onDelete: SetNull)
+  routine_day gym_routine_days?       @relation(fields: [routine_day_id], references: [id], onDelete: SetNull)
+  exercises   gym_session_exercises[]
+
+  @@index([user_id, date])
+  @@index([routine_id])
+  @@index([routine_day_id])
+  @@index([status])
+  @@index([deleted_at])
+}
+
+model gym_session_exercises {
+  id            String   @id @db.VarChar(255)
+  session_id    String   @db.VarChar(255)
+  /// Kept nullable so the history survives catalog changes.
+  exercise_id   String?  @db.VarChar(255)
+  /// Snapshot of the exercise name at logging time.
+  exercise_name String   @db.VarChar(255)
+  /// Snapshot of the muscle group (for volume-by-muscle metrics).
+  muscle_group  String?  @db.VarChar(50)
+  position      Int
+  notes         String?  @db.VarChar(500)
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime @default(now()) @db.Timestamptz(6)
+
+  session  gym_sessions   @relation(fields: [session_id], references: [id], onDelete: Cascade)
+  exercise gym_exercises? @relation(fields: [exercise_id], references: [id], onDelete: SetNull)
+  sets     gym_sets[]
+
+  @@index([session_id])
+  @@index([exercise_id])
+}
+
+model gym_sets {
+  id                  String   @id @db.VarChar(255)
+  session_exercise_id String   @db.VarChar(255)
+  set_number          Int
+  reps                Int?
+  weight              Decimal? @db.Decimal(7, 2)
+  rpe                 Int?
+  is_warmup           Boolean  @default(false)
+  completed           Boolean  @default(true)
+  /// Cardio support: when set, `reps`/`weight` stay null.
+  duration_seconds    Int?
+  distance_meters     Decimal? @db.Decimal(9, 2)
+  created_at          DateTime @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime @default(now()) @db.Timestamptz(6)
+
+  session_exercise gym_session_exercises @relation(fields: [session_exercise_id], references: [id], onDelete: Cascade)
+
+  @@index([session_exercise_id])
+}
+
+/// Body tracking: one entry per day, so the client can upsert by date.
+model gym_body_metrics {
+  id             String    @id @db.VarChar(255)
+  user_id        String    @db.VarChar(255)
+  date           DateTime  @db.Date
+  weight_kg      Decimal?  @db.Decimal(6, 2)
+  body_fat_pct   Decimal?  @db.Decimal(5, 2)
+  muscle_mass_kg Decimal?  @db.Decimal(6, 2)
+  height_cm      Decimal?  @db.Decimal(5, 2)
+  /// Tape measurements in cm, e.g. `{ "chest": 102, "waist": 84 }`.
+  measurements   Json?
+  notes          String?   @db.VarChar(1000)
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at     DateTime? @db.Timestamptz(6)
+
+  user user @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, date])
+  @@index([deleted_at])
 }
