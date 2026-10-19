@@ -130,7 +130,11 @@ export class ReceiptsController {
     @Param('id') id: string,
   ) {
     await this.assertMember(store_id, user);
-    const receipt = await this.receiptsUseCase.softDelete(store_id, id);
+    const receipt = await this.receiptsUseCase.softDelete(
+      store_id,
+      id,
+      user.userId,
+    );
     return receipt.toPrimitives();
   }
 
@@ -141,7 +145,11 @@ export class ReceiptsController {
     @Param('id') id: string,
   ) {
     await this.assertMember(store_id, user);
-    const receipt = await this.receiptsUseCase.restore(store_id, id);
+    const receipt = await this.receiptsUseCase.restore(
+      store_id,
+      id,
+      user.userId,
+    );
     return receipt.toPrimitives();
   }
 

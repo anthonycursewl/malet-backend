@@ -26,9 +26,14 @@ export interface ReceiptsUseCase {
   ): Promise<Receipt>;
   /** Receipt of a given sale. */
   getBySaleId(store_id: string, sale_id: string): Promise<Receipt>;
-  softDelete(store_id: string, id: string): Promise<Receipt>;
-  restore(store_id: string, id: string): Promise<Receipt>;
-  /** Permanent delete: only the creator of the record can do it. */
+  /**
+   * Borrado lógico del recibo. **Solo el dueño de la tienda** puede hacerlo
+   * (el folio queda auditado y la verificación pública lo marca como eliminado).
+   */
+  softDelete(store_id: string, id: string, user_id: string): Promise<Receipt>;
+  /** Restaura un recibo eliminado. **Solo el dueño de la tienda.** */
+  restore(store_id: string, id: string, user_id: string): Promise<Receipt>;
+  /** Borrado definitivo del recibo. **Solo el dueño de la tienda.** */
   hardDelete(store_id: string, id: string, user_id: string): Promise<void>;
   /** Audited correction of the "Facturar a" (amounts stay immutable). */
   updateCustomerName(

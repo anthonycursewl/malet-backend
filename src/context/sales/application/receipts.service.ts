@@ -43,6 +43,10 @@ import {
   STORE_REPOSITORY_PORT,
   StoreRepository,
 } from '../domain/ports/out/store.repository';
+import {
+  STORE_NOTIFICATIONS_USECASE,
+  StoreNotificationsUseCase,
+} from '../domain/ports/in/store-notifications.usecase';
 
 @Injectable()
 export class ReceiptsService implements ReceiptsUseCase {
@@ -57,6 +61,8 @@ export class ReceiptsService implements ReceiptsUseCase {
     private readonly productRepository: ProductRepository,
     @Inject(PAYMENT_METHOD_REPOSITORY_PORT)
     private readonly paymentMethodRepository: PaymentMethodRepository,
+    @Inject(STORE_NOTIFICATIONS_USECASE)
+    private readonly notifications: StoreNotificationsUseCase,
   ) {}
 
   async issue(
@@ -82,9 +88,13 @@ export class ReceiptsService implements ReceiptsUseCase {
     const store = await this.storeRepository.findById(store_id);
     const issued_at = new Date();
 
-    return this.receiptRepository.save(
+    const receipt = await this.receiptRepository.save(
       await this.buildReceipt(store_id, sale, store, user_id, issued_at, dto),
     );
+
+    this.notifyReceipt('receipt_issued', store, receipt, user_id);
+
+    return receipt;
   }
 
   /**
@@ -169,15 +179,57 @@ export class ReceiptsService implements ReceiptsUseCase {
     return receipt;
   }
 
-  async softDelete(store_id: string, id: string): Promise<Receipt> {
-    const receipt = await this.getById(store_id, id);
+  /**
+   * Los recibos son documentos con folio (los verifica cualquiera con el QR):
+   * **solo el dueño de la tienda** puede borrarlos o restaurarlos. Cualquier
+   * otro miembro recibe 403, aunque haya emitido el recibo.
+   */
+  private async assertStoreOwner(
+    store_id: string,
+    user_id: string,
+  ): Promise<void> {
+    const store = await this.storeRepository.findById(store_id);
+    if (!store) {
+      throw new NotFoundException('Store not found');
+    }
+    if (store.getUserId() !== user_id) {
+      throw new ForbiddenException(
+        'Only the store owner can delete or restore receipts',
+      );
+    }
+  }
+
+  async softDelete(
+    store_id: string,
+    id: string,
+    user_id: string,
+  ): Promise<Receipt> {
+    await this.assertStoreOwner(store_id, user_id);
+
+    // Incluye los ya borrados para poder responder 409 en vez de 404.
+    const receipt = await this.getById(store_id, id, true);
     if (receipt.isDeleted()) {
       throw new ConflictException('Receipt is already deleted');
     }
-    return this.receiptRepository.delete(receipt.getId());
+
+    const deleted = await this.receiptRepository.delete(receipt.getId());
+    this.notifyReceipt(
+      'receipt_deleted',
+      await this.storeRepository.findById(store_id),
+      deleted,
+      user_id,
+    );
+
+    return deleted;
   }
 
-  async restore(store_id: string, id: string): Promise<Receipt> {
+  async restore(
+    store_id: string,
+    id: string,
+    user_id: string,
+  ): Promise<Receipt> {
+    await this.assertStoreOwner(store_id, user_id);
+
     const receipt = await this.getById(store_id, id, true);
     return this.receiptRepository.restore(receipt.getId());
   }
@@ -187,13 +239,9 @@ export class ReceiptsService implements ReceiptsUseCase {
     id: string,
     user_id: string,
   ): Promise<void> {
-    const receipt = await this.getById(store_id, id, true);
-    if (receipt.getCreatedBy() !== user_id) {
-      throw new ForbiddenException(
-        'Only the creator of this record can permanently delete it',
-      );
-    }
+    await this.assertStoreOwner(store_id, user_id);
 
+    const receipt = await this.getById(store_id, id, true);
     return this.receiptRepository.hardDelete(receipt.getId());
   }
 
@@ -209,9 +257,59 @@ export class ReceiptsService implements ReceiptsUseCase {
       throw new ConflictException('The receipt is deleted');
     }
 
-    return this.receiptRepository.update(
+    const updated = await this.receiptRepository.update(
       receipt.updateCustomerName(dto.customer_name ?? null, user_id),
     );
+
+    this.notifyReceipt(
+      'receipt_updated',
+      await this.storeRepository.findById(store_id),
+      updated,
+      user_id,
+    );
+
+    return updated;
+  }
+
+  /**
+   * Aviso por email de un recibo. Se dispara sin esperar (`void`): el SMTP no
+   * puede frenar ni romper la emisión, corrección o borrado del recibo.
+   */
+  private notifyReceipt(
+    event: 'receipt_issued' | 'receipt_updated' | 'receipt_deleted',
+    store: Store | null,
+    receipt: Receipt,
+    actor_id: string | null,
+  ): void {
+    const storeName = store?.getName() ?? 'tu tienda';
+
+    const titles: Record<
+      'receipt_issued' | 'receipt_updated' | 'receipt_deleted',
+      string
+    > = {
+      receipt_issued: 'Recibo emitido',
+      receipt_updated: 'Recibo corregido',
+      receipt_deleted: 'Recibo eliminado',
+    };
+
+    const customer = receipt.getCustomerName();
+
+    void this.notifications.notify(receipt.getStoreId(), event, {
+      subject: `${storeName} · ${titles[event]}`,
+      title: `${titles[event]} ${receipt.getNumber()}`,
+      intro: `${titles[event]} en "${storeName}".`,
+      actor_id,
+      rows: [
+        { label: 'Folio', value: receipt.getNumber() },
+        {
+          label: 'Total',
+          value: `${receipt.getTotal().toFixed(2)} ${receipt.getCurrency()}`,
+        },
+        ...(customer ? [{ label: 'Facturado a', value: customer }] : []),
+      ],
+      footerNote:
+        'Recibes este aviso porque el dueño de la tienda te añadió a los avisos por correo.',
+    });
   }
 
   /** HMAC token of the folio: viaja en el QR para la verificación pública. */

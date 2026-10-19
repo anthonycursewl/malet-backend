@@ -14,6 +14,7 @@ import {
   SaleRepository,
 } from '../domain/ports/out/sale.repository';
 import { STORE_REPOSITORY_PORT } from '../domain/ports/out/store.repository';
+import { STORE_NOTIFICATIONS_USECASE } from '../domain/ports/in/store-notifications.usecase';
 import {
   PRODUCT_REPOSITORY_PORT,
   ProductRepository,
@@ -76,6 +77,10 @@ describe('ReceiptsService', () => {
         ReceiptsService,
         { provide: RECEIPT_REPOSITORY_PORT, useValue: receiptRepository },
         { provide: SALE_REPOSITORY_PORT, useValue: saleRepository },
+        {
+          provide: STORE_NOTIFICATIONS_USECASE,
+          useValue: { notify: jest.fn().mockResolvedValue(undefined) },
+        },
         {
           provide: STORE_REPOSITORY_PORT,
           useValue: { findById: jest.fn().mockResolvedValue(store) },
@@ -165,27 +170,41 @@ describe('ReceiptsService', () => {
     });
   });
 
+  /** Recibo de prueba (el creador suele ser un empleado, no el dueño). */
+  const buildReceipt = () =>
+    Receipt.create({
+      store_id: store.getId(),
+      sale_id: sale.getId(),
+      sequence: 1,
+      year: 2026,
+      currency: 'Bs',
+      lines: [],
+      payments: [],
+      issued_at: new Date(),
+      created_by: 'seller-1',
+    });
+
   describe('softDelete', () => {
     it('throws NotFoundException when the receipt does not exist', async () => {
       receiptRepository.findById.mockResolvedValue(null);
 
       await expect(
-        service.softDelete(store.getId(), 'missing'),
+        service.softDelete(store.getId(), 'missing', 'owner-1'),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
 
+    it('throws ForbiddenException when the user is not the store owner', async () => {
+      const receipt = buildReceipt();
+      receiptRepository.findById.mockResolvedValue(receipt);
+
+      await expect(
+        service.softDelete(store.getId(), receipt.getId(), 'seller-1'),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(receiptRepository.delete).not.toHaveBeenCalled();
+    });
+
     it('throws ConflictException when it is already deleted', async () => {
-      const deleted = Receipt.create({
-        store_id: store.getId(),
-        sale_id: sale.getId(),
-        sequence: 1,
-        year: 2026,
-        currency: 'Bs',
-        lines: [],
-        payments: [],
-        issued_at: new Date(),
-        created_by: 'seller-1',
-      });
+      const deleted = buildReceipt();
       receiptRepository.findById.mockResolvedValue(
         Receipt.fromPrimitives({
           ...deleted.toPrimitives(),
@@ -194,47 +213,59 @@ describe('ReceiptsService', () => {
       );
 
       await expect(
-        service.softDelete(store.getId(), deleted.getId()),
+        service.softDelete(store.getId(), deleted.getId(), 'owner-1'),
       ).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it('deletes logically when the owner asks', async () => {
+      const receipt = buildReceipt();
+      receiptRepository.findById.mockResolvedValue(receipt);
+      receiptRepository.delete.mockResolvedValue(receipt);
+
+      await service.softDelete(store.getId(), receipt.getId(), 'owner-1');
+
+      expect(receiptRepository.delete).toHaveBeenCalledWith(receipt.getId());
+    });
+  });
+
+  describe('restore', () => {
+    it('throws ForbiddenException when the user is not the store owner', async () => {
+      const receipt = buildReceipt();
+      receiptRepository.findById.mockResolvedValue(receipt);
+
+      await expect(
+        service.restore(store.getId(), receipt.getId(), 'seller-1'),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(receiptRepository.restore).not.toHaveBeenCalled();
+    });
+
+    it('restores the receipt when the owner asks', async () => {
+      const receipt = buildReceipt();
+      receiptRepository.findById.mockResolvedValue(receipt);
+      receiptRepository.restore.mockResolvedValue(receipt);
+
+      await service.restore(store.getId(), receipt.getId(), 'owner-1');
+
+      expect(receiptRepository.restore).toHaveBeenCalledWith(receipt.getId());
     });
   });
 
   describe('hardDelete', () => {
-    it('throws ForbiddenException when the user is not the creator', async () => {
-      const receipt = Receipt.create({
-        store_id: store.getId(),
-        sale_id: sale.getId(),
-        sequence: 1,
-        year: 2026,
-        currency: 'Bs',
-        lines: [],
-        payments: [],
-        issued_at: new Date(),
-        created_by: 'seller-1',
-      });
+    it('throws ForbiddenException when the user is not the store owner', async () => {
+      const receipt = buildReceipt();
       receiptRepository.findById.mockResolvedValue(receipt);
 
       await expect(
-        service.hardDelete(store.getId(), receipt.getId(), 'other-user'),
+        service.hardDelete(store.getId(), receipt.getId(), 'seller-1'),
       ).rejects.toBeInstanceOf(ForbiddenException);
       expect(receiptRepository.hardDelete).not.toHaveBeenCalled();
     });
 
-    it('deletes permanently when the creator asks', async () => {
-      const receipt = Receipt.create({
-        store_id: store.getId(),
-        sale_id: sale.getId(),
-        sequence: 1,
-        year: 2026,
-        currency: 'Bs',
-        lines: [],
-        payments: [],
-        issued_at: new Date(),
-        created_by: 'seller-1',
-      });
+    it('deletes permanently when the owner asks', async () => {
+      const receipt = buildReceipt();
       receiptRepository.findById.mockResolvedValue(receipt);
 
-      await service.hardDelete(store.getId(), receipt.getId(), 'seller-1');
+      await service.hardDelete(store.getId(), receipt.getId(), 'owner-1');
 
       expect(receiptRepository.hardDelete).toHaveBeenCalledWith(
         receipt.getId(),
