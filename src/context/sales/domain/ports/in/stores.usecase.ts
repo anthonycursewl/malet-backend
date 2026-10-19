@@ -26,6 +26,13 @@ export interface StoresUseCase {
     user_id: string,
     dto: UpdateStoreDto,
   ): Promise<Store>;
+  /** Foto de tienda: recibe una imagen y el servidor genera las resoluciones. */
+  updatePhotos(
+    store_id: string,
+    user_id: string,
+    kind: 'avatar' | 'banner',
+    file: Express.Multer.File,
+  ): Promise<Store>;
   softDelete(store_id: string): Promise<Store>;
   /** Works on soft-deleted stores; requires an active membership. */
   restore(store_id: string, user_id: string): Promise<Store>;

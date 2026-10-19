@@ -10,6 +10,12 @@
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
+    "paths": {
+      // sharp publica sus tipos modernos como ESM (no llamables) y este proyecto
+      // no usa `esModuleInterop`; apuntamos a su declaración CommonJS para poder
+      // usar `import * as sharp from 'sharp'` como con bcrypt/nodemailer.
+      "sharp": ["./node_modules/sharp/lib/index.d.ts"]
+    },
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": false,

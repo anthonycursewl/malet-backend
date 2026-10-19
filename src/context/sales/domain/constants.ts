@@ -28,6 +28,52 @@ export type StoreReceiptMode = (typeof STORE_RECEIPT_MODES)[number];
 export const DEFAULT_LIST_TAKE = 10;
 export const MAX_LIST_TAKE = 100;
 
+/**
+ * Avisos por email de la tienda.
+ *
+ * El dueño elige **a qué miembros** llegan (flag `notify` del miembro) y **qué
+ * grupos** de eventos se avisan (JSON en la tienda).
+ */
+export const NOTIFICATION_GROUPS = [
+  'sales',
+  'receipts',
+  'store',
+  'members',
+] as const;
+export type NotificationGroup = (typeof NOTIFICATION_GROUPS)[number];
+
+/** Todos los grupos apagados hasta que el dueño los active. */
+export const DEFAULT_NOTIFICATION_EVENTS: Record<NotificationGroup, boolean> = {
+  sales: false,
+  receipts: false,
+  store: false,
+  members: false,
+};
+
+/** Evento concreto que puede generar un aviso. */
+export type StoreNotificationEvent =
+  | 'sale_created'
+  | 'sale_updated'
+  | 'sale_deleted'
+  | 'receipt_issued'
+  | 'receipt_updated'
+  | 'receipt_deleted'
+  | 'store_updated'
+  | 'member_added'
+  | 'member_removed';
+
+/** Grupo al que pertenece cada evento (define si se avisa o no). */
+export const EVENT_GROUP: Record<StoreNotificationEvent, NotificationGroup> = {  sale_created: 'sales',
+  sale_updated: 'sales',
+  sale_deleted: 'sales',
+  receipt_issued: 'receipts',
+  receipt_updated: 'receipts',
+  receipt_deleted: 'receipts',
+  store_updated: 'store',
+  member_added: 'members',
+  member_removed: 'members',
+};
+
 /** QR invitation tokens live this long (short like WhatsApp Web codes). */
 export const STORE_INVITE_TTL_MS = 60_000;
 

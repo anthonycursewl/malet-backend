@@ -31,6 +31,17 @@ export interface MemberSummary {
   verification_type: string | null;
 }
 
+/** Miembro destinatario de los avisos por email de la tienda. */
+export interface NotificationRecipient {
+  user_id: string;
+  name: string | null;
+  /** Foto de perfil del miembro. */
+  avatar_url: string | null;
+  email: string;
+  /** Recibe los avisos (lo selecciona el dueño). */
+  notify: boolean;
+}
+
 export interface StoreRepository {
   /** Saves the store and its owner membership atomically. */
   saveWithOwnerMember(store: Store, ownerMember: StoreMember): Promise<Store>;
@@ -74,4 +85,14 @@ export interface StoreRepository {
   hasSales(store_id: string): Promise<boolean>;
   userExists(user_id: string): Promise<boolean>;
   findUserSummary(user_id: string): Promise<UserSummary | null>;
+
+  /**
+   * Miembros activos de la tienda con su email y si reciben avisos (el dueño
+   * los selecciona). Incluye al dueño si es miembro.
+   */
+  findNotificationRecipients(store_id: string): Promise<NotificationRecipient[]>;
+  /** Marca exactamente a qué miembros llegan los avisos de la tienda. */
+  setMemberNotify(store_id: string, user_ids: string[]): Promise<void>;
+  /** Tiendas con el resumen diario de ventas activado (para el cron). */
+  findStoresWithDigest(): Promise<Store[]>;
 }

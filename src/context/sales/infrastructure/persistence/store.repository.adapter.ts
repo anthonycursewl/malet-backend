@@ -4,6 +4,7 @@ import {
   ListMemberSummariesOptions,
   ListStoresForMemberOptions,
   MemberSummary,
+  NotificationRecipient,
   StoreRepository,
 } from '../../domain/ports/out/store.repository';
 import { Store } from '../../domain/entities/store.entity';
@@ -116,6 +117,15 @@ export class StoreRepositoryAdapter implements StoreRepository {
         email: data.email ?? null,
         address: data.address ?? null,
         receipt_mode: data.receipt_mode ?? 'ask',
+        notification_events: data.notification_events ?? null,
+        notification_digest: data.notification_digest ?? false,
+        // Fotos en sus 3 resoluciones (null cuando no hay).
+        avatar_small_url: data.avatar_small_url ?? null,
+        avatar_medium_url: data.avatar_medium_url ?? null,
+        avatar_large_url: data.avatar_large_url ?? null,
+        banner_small_url: data.banner_small_url ?? null,
+        banner_medium_url: data.banner_medium_url ?? null,
+        banner_large_url: data.banner_large_url ?? null,
         updated_at: data.updated_at,
       },
     });
@@ -155,6 +165,7 @@ export class StoreRepositoryAdapter implements StoreRepository {
       this.prisma.store_payment_methods.deleteMany({ where: { store_id } }),
       this.prisma.store_products.deleteMany({ where: { store_id } }),
       this.prisma.store_invites.deleteMany({ where: { store_id } }),
+      this.prisma.store_notification_logs.deleteMany({ where: { store_id } }),
       this.prisma.store_members.deleteMany({ where: { store_id } }),
       this.prisma.stores.delete({ where: { id: store_id } }),
     ]);
@@ -246,11 +257,67 @@ export class StoreRepositoryAdapter implements StoreRepository {
     }));
   }
 
+  /**
+   * Miembros activos con su email y su flag de avisos: lo que necesita el dueño
+   * para decidir quién recibe los correos de la tienda.
+   */
+  async findNotificationRecipients(
+    store_id: string,
+  ): Promise<NotificationRecipient[]> {
+    const rows = await this.prisma.store_members.findMany({
+      where: { store_id, deleted_at: null },
+      select: {
+        user_id: true,
+        notify: true,
+        user: { select: { name: true, email: true, avatar_url: true } },
+      },
+      orderBy: { seq: 'asc' },
+    });
+
+    return rows.map((row) => ({
+      user_id: row.user_id,
+      name: row.user?.name ?? null,
+      avatar_url: row.user?.avatar_url ?? null,
+      email: row.user?.email ?? '',
+      notify: row.notify,
+    }));
+  }
+
+  /** Deja marcados exactamente los miembros indicados (y desmarca el resto). */  async setMemberNotify(store_id: string, user_ids: string[]): Promise<void> {
+    await this.prisma.$transaction([
+      this.prisma.store_members.updateMany({
+        where: {
+          store_id,
+          deleted_at: null,
+          user_id: { notIn: user_ids },
+        },
+        data: { notify: false },
+      }),
+      this.prisma.store_members.updateMany({
+        where: {
+          store_id,
+          deleted_at: null,
+          user_id: { in: user_ids },
+        },
+        data: { notify: true },
+      }),
+    ]);
+  }
+
+  /** Tiendas activas con el resumen diario de ventas activado. */
+  async findStoresWithDigest(): Promise<Store[]> {
+    const rows = await this.prisma.stores.findMany({
+      where: { deleted_at: null, notification_digest: true },
+      orderBy: { created_at: 'asc' },
+    });
+
+    return rows.map((row) => this.toStore(row));
+  }
+
   async findMembership(
     store_id: string,
     user_id: string,
-  ): Promise<StoreMember | null> {
-    const result = await this.prisma.store_members.findFirst({
+  ): Promise<StoreMember | null> {    const result = await this.prisma.store_members.findFirst({
       where: { store_id, user_id, deleted_at: null },
     });
 
