@@ -114,6 +114,11 @@ export class SmtpEmailAdapter implements EmailServicePort {
         html: params.html,
         text: params.text,
         replyTo: params.replyTo,
+        attachments: params.attachments?.map((file) => ({
+          filename: file.filename,
+          content: file.content,
+          cid: file.cid,
+        })),
       });
 
       this.logger.log(`📧 Email sent successfully to: ${params.to}`);

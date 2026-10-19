@@ -18,6 +18,20 @@ export interface SendEmailParams {
   fromName?: string;
   /** Responder a */
   replyTo?: string;
+  /**
+   * Adjuntos del correo. Un adjunto con `cid` se muestra dentro del HTML
+   * (`<img src="cid:...">`), lo que evita que el cliente tenga que cargar una
+   * imagen remota para verla.
+   */
+  attachments?: EmailAttachment[];
+}
+
+/** Archivo adjunto de un correo. */
+export interface EmailAttachment {
+  filename: string;
+  content: Buffer;
+  /** Identificador para referenciarlo como `cid:<id>` en el HTML. */
+  cid?: string;
 }
 
 export interface VerificationEmailParams {

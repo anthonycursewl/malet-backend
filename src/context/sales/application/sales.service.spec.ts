@@ -22,6 +22,7 @@ import {
   STORE_REPOSITORY_PORT,
   StoreRepository,
 } from '../domain/ports/out/store.repository';
+import { STORE_NOTIFICATIONS_USECASE } from '../domain/ports/in/store-notifications.usecase';
 import {
   RECEIPT_REPOSITORY_PORT,
   ReceiptRepository,
@@ -115,6 +116,10 @@ describe('SalesService', () => {
         },
         { provide: STORE_REPOSITORY_PORT, useValue: storeRepository },
         { provide: RECEIPT_REPOSITORY_PORT, useValue: receiptRepository },
+        {
+          provide: STORE_NOTIFICATIONS_USECASE,
+          useValue: { notify: jest.fn().mockResolvedValue(undefined) },
+        },
         { provide: CUSTOMERS_USECASE, useValue: customersUseCase },
       ],
     }).compile();

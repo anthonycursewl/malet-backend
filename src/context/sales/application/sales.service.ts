@@ -10,6 +10,7 @@ import { SalesUseCase } from '../domain/ports/in/sales.usecase';
 import { CreateSaleDto, CreateSaleItemDto } from './dtos/create-sale.dto';
 import { UpdateSaleDto } from './dtos/update-sale.dto';
 import { Sale } from '../domain/entities/sale.entity';
+import { Store } from '../domain/entities/store.entity';
 import { SaleItemInput } from '../domain/entities/sale-item.entity';
 import { Product } from '../domain/entities/product.entity';
 import { Receipt } from '../domain/entities/receipt.entity';
@@ -39,10 +40,13 @@ import {
   CUSTOMERS_USECASE,
   CustomersUseCase,
 } from '../domain/ports/in/customers.usecase';
+import {
+  STORE_NOTIFICATIONS_USECASE,
+  StoreNotificationsUseCase,
+} from '../domain/ports/in/store-notifications.usecase';
 import { ReceiptsService } from './receipts.service';
 
-/** Result of creating a sale, optionally with its receipt. */
-export interface CreateSaleResult {
+/** Result of creating a sale, optionally with its receipt. */export interface CreateSaleResult {
   sale: Sale;
   receipt: Receipt | null;
 }
@@ -62,8 +66,56 @@ export class SalesService implements SalesUseCase {
     private readonly receiptRepository: ReceiptRepository,
     @Inject(CUSTOMERS_USECASE)
     private readonly customersUseCase: CustomersUseCase,
+    @Inject(STORE_NOTIFICATIONS_USECASE)
+    private readonly notifications: StoreNotificationsUseCase,
     private readonly receiptsService: ReceiptsService,
   ) {}
+
+  /**
+   * Aviso por email de una venta. Se dispara sin esperar (`void`): el SMTP no
+   * puede frenar ni romper la operación de venta.
+   */
+  private notifySale(
+    event: 'sale_created' | 'sale_updated' | 'sale_deleted',
+    store_id: string,
+    actor_id: string | null,
+    sale: Sale,
+    store: Store | null,
+    receipt: Receipt | null,
+  ): void {
+    const storeName = store?.getName() ?? 'tu tienda';
+    const currency = store?.getCurrency() ?? 'Bs';
+
+    const titles: Record<
+      'sale_created' | 'sale_updated' | 'sale_deleted',
+      string
+    > = {
+      sale_created: 'Nueva venta registrada',
+      sale_updated: 'Venta actualizada',
+      sale_deleted: 'Venta eliminada',
+    };
+
+    void this.notifications.notify(store_id, event, {
+      subject: `${storeName} · ${titles[event]}`,
+      title: titles[event],
+      intro: `${titles[event]} en "${storeName}".`,
+      actor_id,
+      rows: [
+        {
+          label: 'Total',
+          value: `${sale.getTotal().toFixed(2)} ${currency}`,
+        },
+        { label: 'Unidades', value: String(sale.getUnits()) },
+        ...(receipt ? [{ label: 'Recibo', value: receipt.getNumber() }] : []),
+        {
+          label: 'Fecha',
+          value: sale.getSoldAt().toISOString().slice(0, 16).replace('T', ' '),
+        },
+      ],
+      footerNote:
+        'Recibes este aviso porque el dueño de la tienda te añadió a los avisos por correo.',
+    });
+  }
 
   async create(
     store_id: string,
@@ -109,6 +161,7 @@ export class SalesService implements SalesUseCase {
           : dto.receipt?.enabled === true;
 
     if (!shouldIssueReceipt) {
+      this.notifySale('sale_created', store_id, user_id, saved, store, null);
       return { sale: saved, receipt: null };
     }
 
@@ -124,6 +177,7 @@ export class SalesService implements SalesUseCase {
       );
 
       await this.receiptRepository.save(receipt);
+      this.notifySale('sale_created', store_id, user_id, saved, store, receipt);
 
       return { sale: saved, receipt };
     } catch (error) {
@@ -200,12 +254,32 @@ export class SalesService implements SalesUseCase {
       patch.reference_amount = reference.reference_amount;
     }
 
-    return this.saleRepository.update(sale.update(patch));
+    const updated = await this.saleRepository.update(sale.update(patch));
+    this.notifySale(
+      'sale_updated',
+      store_id,
+      null,
+      updated,
+      await this.storeRepository.findById(store_id),
+      null,
+    );
+    return updated;
   }
 
   async softDelete(store_id: string, id: string): Promise<Sale> {
     const sale = await this.getById(store_id, id);
-    return this.saleRepository.delete(sale.getId());
+    const deleted = await this.saleRepository.delete(sale.getId());
+
+    this.notifySale(
+      'sale_deleted',
+      store_id,
+      null,
+      deleted,
+      await this.storeRepository.findById(store_id),
+      null,
+    );
+
+    return deleted;
   }
 
   async restore(store_id: string, id: string): Promise<Sale> {

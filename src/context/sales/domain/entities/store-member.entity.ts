@@ -5,6 +5,8 @@ export interface StoreMemberPrimitives {
   store_id: string;
   user_id: string;
   created_by: string;
+  /** Recibe los avisos por email de la tienda (lo selecciona el dueño). */
+  notify?: boolean;
   created_at: Date;
   deleted_at?: Date | null;
 }
@@ -14,49 +16,39 @@ export class StoreMember {
   private readonly store_id: string;
   private readonly user_id: string;
   private readonly created_by: string;
+  private readonly notify: boolean;
   private readonly created_at: Date;
   private readonly deleted_at?: Date | null;
 
-  constructor(
-    id: string,
-    store_id: string,
-    user_id: string,
-    created_by: string,
-    created_at: Date,
-    deleted_at?: Date | null,
-  ) {
-    this.id = id;
-    this.store_id = store_id;
-    this.user_id = user_id;
-    this.created_by = created_by;
-    this.created_at = created_at;
-    this.deleted_at = deleted_at;
+  constructor(primitives: StoreMemberPrimitives) {
+    this.id = primitives.id;
+    this.store_id = primitives.store_id;
+    this.user_id = primitives.user_id;
+    this.created_by = primitives.created_by;
+    this.notify = primitives.notify === true;
+    this.created_at = primitives.created_at;
+    this.deleted_at = primitives.deleted_at ?? null;
   }
 
   static create(data: {
     store_id: string;
     user_id: string;
     created_by: string;
+    notify?: boolean;
   }): StoreMember {
-    return new StoreMember(
-      randomUUID(),
-      data.store_id,
-      data.user_id,
-      data.created_by,
-      new Date(),
-      null,
-    );
+    return new StoreMember({
+      id: randomUUID(),
+      store_id: data.store_id,
+      user_id: data.user_id,
+      created_by: data.created_by,
+      notify: data.notify === true,
+      created_at: new Date(),
+      deleted_at: null,
+    });
   }
 
   static fromPrimitives(primitives: StoreMemberPrimitives): StoreMember {
-    return new StoreMember(
-      primitives.id,
-      primitives.store_id,
-      primitives.user_id,
-      primitives.created_by,
-      primitives.created_at,
-      primitives.deleted_at,
-    );
+    return new StoreMember(primitives);
   }
 
   toPrimitives(): StoreMemberPrimitives {
@@ -65,6 +57,7 @@ export class StoreMember {
       store_id: this.store_id,
       user_id: this.user_id,
       created_by: this.created_by,
+      notify: this.notify,
       created_at: this.created_at,
       deleted_at: this.deleted_at,
     };
@@ -87,6 +80,11 @@ export class StoreMember {
     return this.created_by;
   }
 
+  /** ¿Este miembro recibe los avisos por email de la tienda? */
+  notifies(): boolean {
+    return this.notify;
+  }
+
   getCreatedAt(): Date {
     return this.created_at;
   }
@@ -97,5 +95,10 @@ export class StoreMember {
 
   isDeleted(): boolean {
     return this.deleted_at != null;
+  }
+
+  /** Marca si el miembro recibe los avisos por email. */
+  withNotify(notify: boolean): StoreMember {
+    return new StoreMember({ ...this.toPrimitives(), notify });
   }
 }

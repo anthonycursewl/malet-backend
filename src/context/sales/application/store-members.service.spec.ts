@@ -9,6 +9,7 @@ import {
   STORE_REPOSITORY_PORT,
   StoreRepository,
 } from '../domain/ports/out/store.repository';
+import { STORE_NOTIFICATIONS_USECASE } from '../domain/ports/in/store-notifications.usecase';
 import { StoreMember } from '../domain/entities/store-member.entity';
 import { Store } from '../domain/entities/store.entity';
 
@@ -39,6 +40,10 @@ describe('StoreMembersService', () => {
       providers: [
         StoreMembersService,
         { provide: STORE_REPOSITORY_PORT, useValue: repository },
+        {
+          provide: STORE_NOTIFICATIONS_USECASE,
+          useValue: { notify: jest.fn().mockResolvedValue(undefined) },
+        },
       ],
     }).compile();
 

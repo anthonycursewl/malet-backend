@@ -22,9 +22,17 @@ export class EmailTemplates {
   private static readonly APP_NAME = 'Malet';
 
   /**
-   * Wrapper base para todos los emails
+   * Wrapper base para todos los emails.
+   *
+   * `brand: false` quita la marca de Malet (cabecera y pie): lo usan los avisos
+   * de una tienda, que se presentan solo con su foto y su nombre.
    */
-  private static baseTemplate(content: string): string {
+  private static baseTemplate(
+    content: string,
+    options: { brand?: boolean } = {},
+  ): string {
+    const brand = options.brand !== false;
+
     return `
 <!DOCTYPE html>
 <html lang="es">
@@ -124,17 +132,30 @@ export class EmailTemplates {
 <body>
     <div class="container">
         <div class="card">
-            <div class="logo">
+            ${
+              brand
+                ? `<div class="logo">
                 <span class="logo-text">💳 ${this.APP_NAME}</span>
-            </div>
+            </div>`
+                : ''
+            }
             ${content}
-            <div class="footer">
+            ${
+              brand
+                ? `<div class="footer">
                 <p>— El equipo de ${this.APP_NAME}</p>
                 <p style="font-size: 12px; margin-top: 16px;">
                     Este email fue enviado por ${this.APP_NAME}. 
                     Si no esperabas este correo, puedes ignorarlo.
                 </p>
-            </div>
+            </div>`
+                : `<div class="footer">
+                <p style="font-size: 12px;">
+                    Este aviso lo envía tu tienda desde la app. Si no esperabas este
+                    correo, puedes ignorarlo.
+                </p>
+            </div>`
+            }
         </div>
     </div>
 </body>
@@ -142,10 +163,81 @@ export class EmailTemplates {
   }
 
   /**
+   * Aviso de un evento de una tienda (venta, recibo, cambios de la tienda o de
+   * sus miembros). `rows` es el detalle en pares etiqueta/valor.
+   */
+  static storeEvent(params: {
+    subject: string;
+    storeName: string;
+    /** Foto de la tienda: se muestra como encabezado del correo. */
+    storeLogoUrl?: string | null;
+    title: string;
+    intro: string;
+    rows?: { label: string; value: string }[];
+    footerNote?: string;
+  }): EmailTemplateData {
+    const escape = (value: string) =>
+      value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    const rows = params.rows ?? [];
+
+    const rowsHtml = rows
+      .map(
+        (row) => `<tr>
+                    <td style="padding: 6px 0; color: ${this.TEXT_SECONDARY}; font-size: 14px;">${escape(row.label)}</td>
+                    <td style="padding: 6px 0; text-align: right; font-weight: 600; font-size: 14px;">${escape(row.value)}</td>
+                </tr>`,
+      )
+      .join('');
+
+    const html = this.baseTemplate(
+      `
+            <div style="text-align: center; margin-bottom: 24px;">
+                ${
+                  params.storeLogoUrl
+                    ? `<img src="${escape(params.storeLogoUrl)}" alt="${escape(params.storeName)}" width="76" height="76" style="display: block; margin: 0 auto; width: 76px; height: 76px; border: 0; border-radius: 20px;" />`
+                    : ''
+                }
+                <div style="margin-top: 10px; font-weight: 700; font-size: 16px; color: ${this.TEXT_COLOR};">${escape(params.storeName)}</div>
+            </div>
+            <h1>${escape(params.title)}</h1>
+            <p>${escape(params.intro)}</p>
+            ${
+              rowsHtml
+                ? `<table style="width: 100%; margin-top: 20px; border-collapse: collapse;">${rowsHtml}</table>`
+                : ''
+            }
+            ${params.footerNote ? `<div class="warning">${escape(params.footerNote)}</div>` : ''}
+        `,
+      { brand: false },
+    );
+
+    const text = [
+      params.title,
+      '',
+      params.intro,
+      ...rows.map((row) => `${row.label}: ${row.value}`),
+      '',
+      params.footerNote ?? '',
+      `— El equipo de ${this.APP_NAME}`,
+    ]
+      .join('\n')
+      .trim();
+
+    return {
+      subject: params.subject,
+      html,
+      text,
+    };
+  }
+
+  /**
    * Template para verificación de email
    */
-  static verification(username: string, code: string): EmailTemplateData {
-    const html = this.baseTemplate(`
+  static verification(username: string, code: string): EmailTemplateData {    const html = this.baseTemplate(`
             <h1>¡Hola ${username}! 👋</h1>
             <p>Gracias por registrarte en ${this.APP_NAME}. Para completar tu registro, usa el siguiente código de verificación:</p>
             
