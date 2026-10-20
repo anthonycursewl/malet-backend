@@ -37,8 +37,16 @@ export function parseWorkoutDate(value: string): Date {
   return date;
 }
 
+/**
+ * Convierte a medianoche UTC usando las **partes UTC** de la fecha: la columna
+ * `date` guarda una fecha sin hora y todo el módulo trabaja en UTC, así que usar
+ * las partes locales desplazaba el día en zonas UTC−X (las sesiones nocturnas
+ * quedaban en "mañana" y los reportes las excluían).
+ */
 const toUtcMidnight = (date: Date): Date =>
-  new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
+  );
 
 /**
  * Resolves the shared `preset`/`from`/`to` filters into UTC midnights, so they
