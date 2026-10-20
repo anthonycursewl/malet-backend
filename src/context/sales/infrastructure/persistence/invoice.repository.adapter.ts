@@ -102,7 +102,9 @@ export class InvoiceRepositoryAdapter implements InvoiceRepository {
         skip: 1,
         cursor: { id: cursor },
       }),
-      orderBy: { issued_at: 'desc' },
+      // `id` desempata emisiones con el mismo instante: paginación estable
+      // (sin filas repetidas ni saltadas entre páginas).
+      orderBy: [{ issued_at: 'desc' }, { id: 'desc' }],
     });
 
     return results.map((result) => this.toEntity(result));
