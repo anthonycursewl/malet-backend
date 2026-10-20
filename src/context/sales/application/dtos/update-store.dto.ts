@@ -8,8 +8,10 @@ import {
 } from 'class-validator';
 import {
   STORE_CURRENCIES,
+  STORE_PHOTO_EDIT_MODES,
   STORE_RECEIPT_MODES,
   StoreCurrency,
+  StorePhotoEditMode,
   StoreReceiptMode,
 } from '../../domain/constants';
 
@@ -52,4 +54,24 @@ export class UpdateStoreDto {
     message: `receipt_mode must be one of: ${STORE_RECEIPT_MODES.join(', ')}`,
   })
   receipt_mode?: StoreReceiptMode;
+
+  /**
+   * Quién puede cambiar la foto de perfil: `owner` (solo el dueño) o `members`
+   * (cualquier miembro). Solo el dueño puede cambiarlo.
+   */
+  @IsOptional()
+  @IsIn([...STORE_PHOTO_EDIT_MODES], {
+    message: `avatar_edit_mode must be one of: ${STORE_PHOTO_EDIT_MODES.join(', ')}`,
+  })
+  avatar_edit_mode?: StorePhotoEditMode;
+
+  /**
+   * Quién puede cambiar el banner: `owner` o `members`.
+   * Solo el dueño puede cambiarlo.
+   */
+  @IsOptional()
+  @IsIn([...STORE_PHOTO_EDIT_MODES], {
+    message: `banner_edit_mode must be one of: ${STORE_PHOTO_EDIT_MODES.join(', ')}`,
+  })
+  banner_edit_mode?: StorePhotoEditMode;
 }

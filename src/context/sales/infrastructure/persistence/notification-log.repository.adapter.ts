@@ -9,9 +9,7 @@ import {
 } from '../../domain/ports/out/notification-log.repository';
 
 @Injectable()
-export class NotificationLogRepositoryAdapter
-  implements NotificationLogRepository
-{
+export class NotificationLogRepositoryAdapter implements NotificationLogRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async save(entry: NotificationLogEntry): Promise<void> {

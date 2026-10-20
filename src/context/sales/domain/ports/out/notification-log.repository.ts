@@ -43,7 +43,10 @@ export interface NotificationLogRepository {
   /** Envíos correctos de la tienda desde una fecha (control de volumen). */
   countSentSince(store_id: string, since: Date): Promise<number>;
   /** Fallidos reintentables: pocos intentos y con datos guardados. */
-  findRetryable(since: Date, maxAttempts: number): Promise<NotificationLogEntry[]>;
+  findRetryable(
+    since: Date,
+    maxAttempts: number,
+  ): Promise<NotificationLogEntry[]>;
   /** Registra el resultado de un reintento. */
   updateResult(
     id: string,

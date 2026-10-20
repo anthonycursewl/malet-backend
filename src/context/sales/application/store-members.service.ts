@@ -79,7 +79,12 @@ export class StoreMembersService implements StoreMembersUseCase {
       created_by: user_id,
     });
     const saved = await this.storeRepository.saveMember(member);
-    await this.notifyMemberChange('member_added', store, saved.getUserId(), user_id);
+    await this.notifyMemberChange(
+      'member_added',
+      store,
+      saved.getUserId(),
+      user_id,
+    );
 
     return saved;
   }

@@ -113,13 +113,16 @@ export class StoresService implements StoresUseCase {
       throw new NotFoundException('Store not found');
     }
 
-    // La información de contacto y la política de recibos son **solo del dueño**
-    // (el nombre y la moneda los puede cambiar cualquier miembro, como antes).
+    // La información de contacto, la política de recibos y quién puede cambiar
+    // las fotos son **solo del dueño** (el nombre y la moneda los puede cambiar
+    // cualquier miembro, como antes).
     const ownerOnlyChange =
       dto.phone !== undefined ||
       dto.email !== undefined ||
       dto.address !== undefined ||
-      dto.receipt_mode !== undefined;
+      dto.receipt_mode !== undefined ||
+      dto.avatar_edit_mode !== undefined ||
+      dto.banner_edit_mode !== undefined;
 
     if (ownerOnlyChange && store.getUserId() !== user_id) {
       throw new ForbiddenException(
@@ -172,7 +175,8 @@ export class StoresService implements StoresUseCase {
   /**
    * Fotos de la tienda (avatar o banner): recibe **una** imagen ya acotada por
    * el cliente y el servidor genera las 3 resoluciones con `sharp`.
-   * **Solo el dueño** puede cambiarlas; los archivos anteriores se borran.
+   * El dueño decide quién puede cambiar cada foto (`owner` | `members`); los
+   * archivos anteriores se borran al reemplazarlos.
    */
   async updatePhotos(
     store_id: string,
@@ -184,9 +188,11 @@ export class StoresService implements StoresUseCase {
     if (!store) {
       throw new NotFoundException('Store not found');
     }
-    if (store.getUserId() !== user_id) {
+
+    // El dueño siempre puede; los demás solo si la tienda lo permite.
+    if (store.getUserId() !== user_id && !store.membersCanEditPhoto(kind)) {
       throw new ForbiddenException(
-        'Only the store owner can change the store photos',
+        'Only the store owner can change this photo',
       );
     }
 

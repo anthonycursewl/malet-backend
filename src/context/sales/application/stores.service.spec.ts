@@ -220,6 +220,50 @@ describe('StoresService', () => {
       expect(fileStorage.uploadFile).not.toHaveBeenCalled();
     });
 
+    it('allows a member to change the avatar when the store allows it', async () => {
+      const store = ownerStore.withPhotoEditModes({ avatar: 'members' });
+      repository.findById.mockResolvedValue(store);
+      repository.update.mockImplementation(async (s: Store) => s);
+
+      const result = await service.updatePhotos(
+        store.getId(),
+        'member-1',
+        'avatar',
+        file('photo.jpg'),
+      );
+
+      expect(result.getPhotos('avatar').small).toBe(
+        'https://cdn.test/photo.jpg',
+      );
+    });
+
+    it('keeps the permissions independent (banner for members, avatar owner)', async () => {
+      const store = ownerStore.withPhotoEditModes({
+        avatar: 'owner',
+        banner: 'members',
+      });
+      repository.findById.mockResolvedValue(store);
+      repository.update.mockImplementation(async (s: Store) => s);
+
+      await expect(
+        service.updatePhotos(
+          store.getId(),
+          'member-1',
+          'avatar',
+          file('photo.jpg'),
+        ),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+
+      await expect(
+        service.updatePhotos(
+          store.getId(),
+          'member-1',
+          'banner',
+          file('photo.jpg'),
+        ),
+      ).resolves.toBeDefined();
+    });
+
     it('generates the avatar resolutions, uploads them and deletes the previous ones', async () => {
       const store = ownerStore.withPhotos('avatar', {
         small: 'old-s.jpg',

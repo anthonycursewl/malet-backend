@@ -238,7 +238,7 @@ export class CustomerRepositoryAdapter implements CustomerRepository {
     const topProducts = await this.prisma.$queryRaw<any[]>`
       SELECT
         i.product_id,
-        COALESCE(MAX(p.name), 'Producto') AS product_name,
+        COALESCE(MAX(p.name), MAX(i.name), 'Producto') AS product_name,
         SUM(i.quantity)::int AS units,
         SUM(i.unit_price * i.quantity)::text AS revenue
       FROM store_sales s
@@ -247,7 +247,7 @@ export class CustomerRepositoryAdapter implements CustomerRepository {
       WHERE s.store_id = ${store_id}
         AND s.customer_id = ${customer_id}
         AND s.deleted_at IS NULL
-      GROUP BY i.product_id
+      GROUP BY i.product_id, i.name
       ORDER BY units DESC
       LIMIT 5
     `;

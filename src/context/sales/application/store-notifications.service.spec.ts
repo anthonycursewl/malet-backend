@@ -1,8 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  BadRequestException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { StoreNotificationsService } from './store-notifications.service';
 import {
   STORE_REPOSITORY_PORT,
@@ -215,7 +212,8 @@ describe('StoreNotificationsService', () => {
       );
     });
 
-    it('no envía si se alcanzó el tope por hora (anti-flood)', async () => {      storeRepository.findById.mockResolvedValue(
+    it('no envía si se alcanzó el tope por hora (anti-flood)', async () => {
+      storeRepository.findById.mockResolvedValue(
         store.withNotificationEvents({ sales: true }),
       );
       logRepository.countSentSince.mockResolvedValue(100);

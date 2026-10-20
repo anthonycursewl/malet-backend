@@ -13,7 +13,12 @@ import {
   EmailServicePort,
 } from 'src/shared/infrastructure/email/email-service.port';
 import { EmailTemplates } from 'src/shared/infrastructure/email/email-templates';
-import { EVENT_GROUP, NOTIFICATION_GROUPS, NotificationGroup, StoreNotificationEvent } from '../domain/constants';
+import {
+  EVENT_GROUP,
+  NOTIFICATION_GROUPS,
+  NotificationGroup,
+  StoreNotificationEvent,
+} from '../domain/constants';
 import { Store } from '../domain/entities/store.entity';
 import {
   SALES_REPORTS_USECASE,
@@ -188,28 +193,33 @@ export class StoreNotificationsService implements StoreNotificationsUseCase {
 
         const currency = store.getCurrency();
 
-        await this.deliver(store, DIGEST_EVENT, {
-          subject: `${store.getName()} · Resumen del día`,
-          title: 'Resumen de ventas del día',
-          intro: `Estas son las ventas de hoy en "${store.getName()}".`,
-          rows: [
-            { label: 'Ventas', value: String(summary.sales_count) },
-            { label: 'Unidades', value: String(summary.units_sold) },
-            {
-              label: 'Ingresos',
-              value: `${summary.revenue.toFixed(2)} ${currency}`,
-            },
-            {
-              label: 'Ganancia',
-              value: `${summary.profit.toFixed(2)} ${currency}`,
-            },
-            {
-              label: 'Ticket medio',
-              value: `${summary.average_ticket.toFixed(2)} ${currency}`,
-            },
-          ],
-          footerNote: 'Resumen diario activado por el dueño de la tienda.',
-        }, recipients);
+        await this.deliver(
+          store,
+          DIGEST_EVENT,
+          {
+            subject: `${store.getName()} · Resumen del día`,
+            title: 'Resumen de ventas del día',
+            intro: `Estas son las ventas de hoy en "${store.getName()}".`,
+            rows: [
+              { label: 'Ventas', value: String(summary.sales_count) },
+              { label: 'Unidades', value: String(summary.units_sold) },
+              {
+                label: 'Ingresos',
+                value: `${summary.revenue.toFixed(2)} ${currency}`,
+              },
+              {
+                label: 'Ganancia',
+                value: `${summary.profit.toFixed(2)} ${currency}`,
+              },
+              {
+                label: 'Ticket medio',
+                value: `${summary.average_ticket.toFixed(2)} ${currency}`,
+              },
+            ],
+            footerNote: 'Resumen diario activado por el dueño de la tienda.',
+          },
+          recipients,
+        );
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         this.logger.error(
@@ -221,9 +231,7 @@ export class StoreNotificationsService implements StoreNotificationsUseCase {
 
   /** Reintenta los avisos que fallaron (máximo 3 intentos por aviso). */
   async retryFailed(): Promise<void> {
-    const since = new Date(
-      Date.now() - RETRY_WINDOW_HOURS * 60 * 60 * 1000,
-    );
+    const since = new Date(Date.now() - RETRY_WINDOW_HOURS * 60 * 60 * 1000);
     const entries = await this.logRepository.findRetryable(since, MAX_ATTEMPTS);
 
     for (const entry of entries) {
@@ -267,7 +275,9 @@ export class StoreNotificationsService implements StoreNotificationsUseCase {
         );
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        this.logger.error(`Reintento fallido del aviso ${entry.id}: ${message}`);
+        this.logger.error(
+          `Reintento fallido del aviso ${entry.id}: ${message}`,
+        );
       }
     }
   }

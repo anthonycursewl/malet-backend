@@ -25,11 +25,10 @@ interface SeriesRow extends AggregateRow {
   bucket: Date | string;
 }
 
-/** Line items are always loaded with their product name for display. */
+/** Line items are always loaded (the name snapshot lives on the line). */
 const SALE_INCLUDE = {
   items: {
     where: { deleted_at: null },
-    include: { product: { select: { name: true } } },
   },
 } as const;
 
@@ -48,11 +47,12 @@ export class SaleRepositoryAdapter implements SaleRepository {
       deleted_at: row.deleted_at ?? null,
       items: (row.items ?? []).map((item: any) => ({
         id: item.id,
-        product_id: item.product_id,
+        product_id: item.product_id ?? null,
+        name: item.name,
+        item_type: item.item_type,
         quantity: item.quantity,
         unit_price: Number(item.unit_price),
         unit_cost: Number(item.unit_cost),
-        product_name: item.product?.name,
         created_at: item.created_at,
         updated_at: item.updated_at,
         deleted_at: item.deleted_at ?? null,
@@ -86,7 +86,9 @@ export class SaleRepositoryAdapter implements SaleRepository {
         items: {
           create: data.items.map((item) => ({
             id: item.id,
-            product_id: item.product_id,
+            product_id: item.product_id ?? null,
+            name: item.name,
+            item_type: item.item_type ?? 'product',
             quantity: item.quantity,
             unit_price: item.unit_price,
             unit_cost: item.unit_cost,
@@ -168,7 +170,9 @@ export class SaleRepositoryAdapter implements SaleRepository {
         data: data.items.map((item) => ({
           id: item.id,
           sale_id: data.id,
-          product_id: item.product_id,
+          product_id: item.product_id ?? null,
+          name: item.name,
+          item_type: item.item_type ?? 'product',
           quantity: item.quantity,
           unit_price: item.unit_price,
           unit_cost: item.unit_cost,

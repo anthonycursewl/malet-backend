@@ -15,13 +15,37 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { STORE_CURRENCIES, StoreCurrency } from '../../domain/constants';
+import {
+  STORE_CURRENCIES,
+  SALE_ITEM_TYPES,
+  SaleItemType,
+  StoreCurrency,
+} from '../../domain/constants';
 
-/** One product line of a sale. Prices default to the product PVP/cost. */
+/** One line of a sale: a catalog product **or** a free concept (service). */
 export class CreateSaleItemDto {
+  /** Catalog product. Omit it to charge a free concept (service). */
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
-  product_id: string;
+  product_id?: string;
+
+  /** Concept name. Required when `product_id` is omitted. */
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255, { message: 'name must be 255 characters or fewer' })
+  name?: string;
+
+  /**
+   * `product` | `service`. Defaults to `product` when a product is sent and to
+   * `service` when it is a free concept.
+   */
+  @IsOptional()
+  @IsIn([...SALE_ITEM_TYPES], {
+    message: `item_type must be one of: ${SALE_ITEM_TYPES.join(', ')}`,
+  })
+  item_type?: SaleItemType;
 
   @IsOptional()
   @Type(() => Number)
@@ -29,14 +53,14 @@ export class CreateSaleItemDto {
   @Min(1, { message: 'quantity must be at least 1' })
   quantity?: number;
 
-  /** Defaults to the product PVP when omitted. */
+  /** Defaults to the product PVP (required for free concepts). */
   @IsOptional()
   @Type(() => Number)
   @IsNumber({}, { message: 'unit_price must be a number' })
   @Min(0, { message: 'unit_price must be greater than or equal to 0' })
   unit_price?: number;
 
-  /** Defaults to the product cost when omitted. */
+  /** Defaults to the product cost (0 for free concepts). */
   @IsOptional()
   @Type(() => Number)
   @IsNumber({}, { message: 'unit_cost must be a number' })

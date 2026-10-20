@@ -302,6 +302,7 @@ describe('SalesService', () => {
         items: [
           {
             product_id: product.getId(),
+            name: product.getName(),
             quantity: 1,
             unit_price: 5,
             unit_cost: 2,
@@ -333,6 +334,7 @@ describe('SalesService', () => {
         items: [
           {
             product_id: product.getId(),
+            name: product.getName(),
             quantity: 1,
             unit_price: 5,
             unit_cost: 2,
@@ -355,6 +357,7 @@ describe('SalesService', () => {
         items: [
           {
             product_id: product.getId(),
+            name: product.getName(),
             quantity: 1,
             unit_price: 5,
             unit_cost: 2,
@@ -454,6 +457,7 @@ describe('SalesService', () => {
         items: [
           {
             product_id: product.getId(),
+            name: product.getName(),
             quantity: 1,
             unit_price: 5,
             unit_cost: 2,
@@ -477,6 +481,7 @@ describe('SalesService', () => {
         items: [
           {
             product_id: product.getId(),
+            name: product.getName(),
             quantity: 1,
             unit_price: 5,
             unit_cost: 2,

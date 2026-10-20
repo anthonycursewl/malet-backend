@@ -90,7 +90,9 @@ export interface StoreRepository {
    * Miembros activos de la tienda con su email y si reciben avisos (el dueño
    * los selecciona). Incluye al dueño si es miembro.
    */
-  findNotificationRecipients(store_id: string): Promise<NotificationRecipient[]>;
+  findNotificationRecipients(
+    store_id: string,
+  ): Promise<NotificationRecipient[]>;
   /** Marca exactamente a qué miembros llegan los avisos de la tienda. */
   setMemberNotify(store_id: string, user_ids: string[]): Promise<void>;
   /** Tiendas con el resumen diario de ventas activado (para el cron). */

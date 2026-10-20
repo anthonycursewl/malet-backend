@@ -7,7 +7,8 @@ import {
 
 /** A single printable line of the receipt (immutable snapshot). */
 export interface ReceiptLinePrimitives {
-  product_id: string;
+  /** Null when the line is a free concept (service). */
+  product_id: string | null;
   /** Product name at the moment the receipt was issued. */
   product_name: string;
   quantity: number;

@@ -21,12 +21,7 @@ import {
   isValidReceiptVerifyToken,
 } from '../domain/receipt-verify';
 import { Sale } from '../domain/entities/sale.entity';
-import { Product } from '../domain/entities/product.entity';
 import { Store } from '../domain/entities/store.entity';
-import {
-  PRODUCT_REPOSITORY_PORT,
-  ProductRepository,
-} from '../domain/ports/out/product.repository';
 import {
   PAYMENT_METHOD_REPOSITORY_PORT,
   PaymentMethodRepository,
@@ -57,8 +52,6 @@ export class ReceiptsService implements ReceiptsUseCase {
     private readonly saleRepository: SaleRepository,
     @Inject(STORE_REPOSITORY_PORT)
     private readonly storeRepository: StoreRepository,
-    @Inject(PRODUCT_REPOSITORY_PORT)
-    private readonly productRepository: ProductRepository,
     @Inject(PAYMENT_METHOD_REPOSITORY_PORT)
     private readonly paymentMethodRepository: PaymentMethodRepository,
     @Inject(STORE_NOTIFICATIONS_USECASE)
@@ -109,7 +102,7 @@ export class ReceiptsService implements ReceiptsUseCase {
     issued_at: Date,
     dto?: CreateReceiptDto,
   ): Promise<Receipt> {
-    const lines = await this.buildLines(store_id, sale);
+    const lines = await this.buildLines(sale);
     const payments: ReceiptPaymentPrimitives[] = [
       {
         payment_method_id: sale.getPaymentMethodId(),
@@ -366,28 +359,15 @@ export class ReceiptsService implements ReceiptsUseCase {
   }
 
   /** Snapshot of every printable line of the sale. */
-  private async buildLines(
-    store_id: string,
-    sale: Sale,
-  ): Promise<ReceiptLinePrimitives[]> {
+  private async buildLines(sale: Sale): Promise<ReceiptLinePrimitives[]> {
     const lines: ReceiptLinePrimitives[] = [];
 
     for (const item of sale.getItems()) {
-      // The product name usually comes resolved from the sale join; otherwise
-      // it is looked up in the catalog.
-      let product_name = item.getProductName();
-      if (!product_name) {
-        const product: Product | null = await this.productRepository.findById(
-          store_id,
-          item.getProductId(),
-          true,
-        );
-        product_name = product?.getName() ?? 'Producto eliminado';
-      }
-
+      // Every sale line carries an immutable name snapshot: the product name or
+      // the free service concept name.
       lines.push({
         product_id: item.getProductId(),
-        product_name,
+        product_name: item.getName(),
         quantity: item.getQuantity(),
         unit_price: item.getUnitPrice(),
         unit_cost: item.getUnitCost(),

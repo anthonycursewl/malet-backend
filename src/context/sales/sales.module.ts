@@ -8,6 +8,7 @@ import { StoreMembersController } from './infrastructure/adapters/controllers/st
 import { ProductsController } from './infrastructure/adapters/controllers/products.controller';
 import { PaymentMethodsController } from './infrastructure/adapters/controllers/payment-methods.controller';
 import { SalesController } from './infrastructure/adapters/controllers/sales.controller';
+import { InvoicesController } from './infrastructure/adapters/controllers/invoices.controller';
 import { StoreInviteCodesController } from './infrastructure/adapters/controllers/store-invite-codes.controller';
 import { StoreInvitesController } from './infrastructure/adapters/controllers/store-invites.controller';
 import { ReceiptsController } from './infrastructure/adapters/controllers/receipts.controller';
@@ -19,6 +20,7 @@ import { STORE_REPOSITORY_PORT } from './domain/ports/out/store.repository';
 import { PRODUCT_REPOSITORY_PORT } from './domain/ports/out/product.repository';
 import { PAYMENT_METHOD_REPOSITORY_PORT } from './domain/ports/out/payment-method.repository';
 import { SALE_REPOSITORY_PORT } from './domain/ports/out/sale.repository';
+import { INVOICE_REPOSITORY_PORT } from './domain/ports/out/invoice.repository';
 import { STORE_INVITE_REPOSITORY_PORT } from './domain/ports/out/store-invite.repository';
 import { RECEIPT_REPOSITORY_PORT } from './domain/ports/out/receipt.repository';
 import { CUSTOMER_REPOSITORY_PORT } from './domain/ports/out/customer.repository';
@@ -29,6 +31,7 @@ import { STORE_MEMBERS_USECASE } from './domain/ports/in/store-members.usecase';
 import { PRODUCTS_USECASE } from './domain/ports/in/products.usecase';
 import { PAYMENT_METHODS_USECASE } from './domain/ports/in/payment-methods.usecase';
 import { SALES_USECASE } from './domain/ports/in/sales.usecase';
+import { INVOICES_USECASE } from './domain/ports/in/invoices.usecase';
 import { SALES_REPORTS_USECASE } from './domain/ports/in/sales-reports.usecase';
 import { STORE_INVITES_USECASE } from './domain/ports/in/store-invites.usecase';
 import { RECEIPTS_USECASE } from './domain/ports/in/receipts.usecase';
@@ -39,6 +42,7 @@ import { StoreRepositoryAdapter } from './infrastructure/persistence/store.repos
 import { ProductRepositoryAdapter } from './infrastructure/persistence/product.repository.adapter';
 import { PaymentMethodRepositoryAdapter } from './infrastructure/persistence/payment-method.repository.adapter';
 import { SaleRepositoryAdapter } from './infrastructure/persistence/sale.repository.adapter';
+import { InvoiceRepositoryAdapter } from './infrastructure/persistence/invoice.repository.adapter';
 import { StoreInviteRepositoryAdapter } from './infrastructure/persistence/store-invite.repository.adapter';
 import { ReceiptRepositoryAdapter } from './infrastructure/persistence/receipt.repository.adapter';
 import { CustomerRepositoryAdapter } from './infrastructure/persistence/customer.repository.adapter';
@@ -49,6 +53,7 @@ import { StoreMembersService } from './application/store-members.service';
 import { ProductsService } from './application/products.service';
 import { PaymentMethodsService } from './application/payment-methods.service';
 import { SalesService } from './application/sales.service';
+import { InvoicesService } from './application/invoices.service';
 import { SalesReportsService } from './application/sales-reports.service';
 import { StoreInvitesService } from './application/store-invites.service';
 import { ReceiptsService } from './application/receipts.service';
@@ -64,6 +69,7 @@ import { StoreNotificationsScheduler } from './application/store-notifications.s
     ProductsController,
     PaymentMethodsController,
     SalesController,
+    InvoicesController,
     StoreInviteCodesController,
     StoreInvitesController,
     ReceiptsController,
@@ -89,6 +95,10 @@ import { StoreNotificationsScheduler } from './application/store-notifications.s
       useClass: SaleRepositoryAdapter,
     },
     {
+      provide: INVOICE_REPOSITORY_PORT,
+      useClass: InvoiceRepositoryAdapter,
+    },
+    {
       provide: STORE_INVITE_REPOSITORY_PORT,
       useClass: StoreInviteRepositoryAdapter,
     },
@@ -109,6 +119,7 @@ import { StoreNotificationsScheduler } from './application/store-notifications.s
     { provide: PRODUCTS_USECASE, useClass: ProductsService },
     { provide: PAYMENT_METHODS_USECASE, useClass: PaymentMethodsService },
     { provide: SALES_USECASE, useClass: SalesService },
+    { provide: INVOICES_USECASE, useClass: InvoicesService },
     { provide: SALES_REPORTS_USECASE, useClass: SalesReportsService },
     { provide: STORE_INVITES_USECASE, useClass: StoreInvitesService },
     { provide: RECEIPTS_USECASE, useClass: ReceiptsService },

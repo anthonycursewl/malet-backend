@@ -3,6 +3,7 @@ import {
   DEFAULT_NOTIFICATION_EVENTS,
   NotificationGroup,
   StoreCurrency,
+  StorePhotoEditMode,
   StoreReceiptMode,
 } from '../constants';
 
@@ -31,6 +32,10 @@ export interface StorePrimitives {
   notification_events?: StoreNotificationEvents | null;
   /** Resumen diario de las ventas del día (solo el dueño). */
   notification_digest?: boolean;
+  /** Quién puede cambiar la foto de perfil (lo decide el dueño). */
+  avatar_edit_mode?: StorePhotoEditMode;
+  /** Quién puede cambiar el banner (lo decide el dueño). */
+  banner_edit_mode?: StorePhotoEditMode;
   /** Fotos de la tienda en 3 resoluciones. */
   avatar_small_url?: string | null;
   avatar_medium_url?: string | null;
@@ -54,6 +59,8 @@ export class Store {
   private readonly receipt_mode: StoreReceiptMode;
   private readonly notification_events: StoreNotificationEvents;
   private readonly notification_digest: boolean;
+  private readonly avatar_edit_mode: StorePhotoEditMode;
+  private readonly banner_edit_mode: StorePhotoEditMode;
   private readonly avatar_small_url: string | null;
   private readonly avatar_medium_url: string | null;
   private readonly avatar_large_url: string | null;
@@ -78,6 +85,8 @@ export class Store {
       ...(primitives.notification_events ?? {}),
     };
     this.notification_digest = primitives.notification_digest === true;
+    this.avatar_edit_mode = primitives.avatar_edit_mode ?? 'owner';
+    this.banner_edit_mode = primitives.banner_edit_mode ?? 'owner';
     this.avatar_small_url = primitives.avatar_small_url ?? null;
     this.avatar_medium_url = primitives.avatar_medium_url ?? null;
     this.avatar_large_url = primitives.avatar_large_url ?? null;
@@ -130,6 +139,8 @@ export class Store {
       receipt_mode: this.receipt_mode,
       notification_events: this.notification_events,
       notification_digest: this.notification_digest,
+      avatar_edit_mode: this.avatar_edit_mode,
+      banner_edit_mode: this.banner_edit_mode,
       avatar_small_url: this.avatar_small_url,
       avatar_medium_url: this.avatar_medium_url,
       avatar_large_url: this.avatar_large_url,
@@ -192,6 +203,16 @@ export class Store {
     return this.notification_digest;
   }
 
+  /** Quién puede cambiar la foto de perfil o el banner. */
+  getPhotoEditMode(kind: 'avatar' | 'banner'): StorePhotoEditMode {
+    return kind === 'avatar' ? this.avatar_edit_mode : this.banner_edit_mode;
+  }
+
+  /** ¿Un miembro (que no es el dueño) puede cambiar esta foto? */
+  membersCanEditPhoto(kind: 'avatar' | 'banner'): boolean {
+    return this.getPhotoEditMode(kind) === 'members';
+  }
+
   /** URLs del avatar (o del banner) en sus 3 resoluciones. */
   getPhotos(kind: 'avatar' | 'banner'): StorePhotoVariants {
     return kind === 'avatar'
@@ -227,7 +248,14 @@ export class Store {
     data: Partial<
       Pick<
         StorePrimitives,
-        'name' | 'currency' | 'phone' | 'email' | 'address' | 'receipt_mode'
+        | 'name'
+        | 'currency'
+        | 'phone'
+        | 'email'
+        | 'address'
+        | 'receipt_mode'
+        | 'avatar_edit_mode'
+        | 'banner_edit_mode'
       >
     >,
   ): Store {
@@ -238,14 +266,27 @@ export class Store {
       phone: data.phone !== undefined ? data.phone?.trim() || null : this.phone,
       email: data.email !== undefined ? data.email?.trim() || null : this.email,
       address:
-        data.address !== undefined ? data.address?.trim() || null : this.address,
+        data.address !== undefined
+          ? data.address?.trim() || null
+          : this.address,
       receipt_mode:
         data.receipt_mode !== undefined ? data.receipt_mode : this.receipt_mode,
+      avatar_edit_mode:
+        data.avatar_edit_mode !== undefined
+          ? data.avatar_edit_mode
+          : this.avatar_edit_mode,
+      banner_edit_mode:
+        data.banner_edit_mode !== undefined
+          ? data.banner_edit_mode
+          : this.banner_edit_mode,
       updated_at: new Date(),
     });
   }
 
-  /** Reemplaza las URLs de las fotos (avatar o banner) en sus resoluciones. */  withPhotos(kind: 'avatar' | 'banner', variants: StorePhotoVariants): Store {
+  /** Reemplaza las URLs de las fotos (avatar o banner) en sus resoluciones. */ withPhotos(
+    kind: 'avatar' | 'banner',
+    variants: StorePhotoVariants,
+  ): Store {
     const base = this.toPrimitives();
     const next: StorePrimitives =
       kind === 'avatar'
@@ -282,6 +323,19 @@ export class Store {
     return new Store({
       ...this.toPrimitives(),
       notification_digest: digest,
+      updated_at: new Date(),
+    });
+  }
+
+  /** Cambia quién puede editar las fotos (solo lo usa el dueño). */
+  withPhotoEditModes(modes: {
+    avatar?: StorePhotoEditMode;
+    banner?: StorePhotoEditMode;
+  }): Store {
+    return new Store({
+      ...this.toPrimitives(),
+      avatar_edit_mode: modes.avatar ?? this.avatar_edit_mode,
+      banner_edit_mode: modes.banner ?? this.banner_edit_mode,
       updated_at: new Date(),
     });
   }

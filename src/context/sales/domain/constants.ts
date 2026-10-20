@@ -25,6 +25,14 @@ export type StoreCurrency = (typeof STORE_CURRENCIES)[number];
 export const STORE_RECEIPT_MODES = ['ask', 'always', 'never'] as const;
 export type StoreReceiptMode = (typeof STORE_RECEIPT_MODES)[number];
 
+/**
+ * Quién puede cambiar las fotos de la tienda:
+ * - `owner`: solo el dueño.
+ * - `members`: cualquier miembro activo.
+ */
+export const STORE_PHOTO_EDIT_MODES = ['owner', 'members'] as const;
+export type StorePhotoEditMode = (typeof STORE_PHOTO_EDIT_MODES)[number];
+
 export const DEFAULT_LIST_TAKE = 10;
 export const MAX_LIST_TAKE = 100;
 
@@ -55,6 +63,9 @@ export type StoreNotificationEvent =
   | 'sale_created'
   | 'sale_updated'
   | 'sale_deleted'
+  | 'invoice_created'
+  | 'invoice_paid'
+  | 'invoice_cancelled'
   | 'receipt_issued'
   | 'receipt_updated'
   | 'receipt_deleted'
@@ -63,9 +74,14 @@ export type StoreNotificationEvent =
   | 'member_removed';
 
 /** Grupo al que pertenece cada evento (define si se avisa o no). */
-export const EVENT_GROUP: Record<StoreNotificationEvent, NotificationGroup> = {  sale_created: 'sales',
+export const EVENT_GROUP: Record<StoreNotificationEvent, NotificationGroup> = {
+  sale_created: 'sales',
   sale_updated: 'sales',
   sale_deleted: 'sales',
+  // Las facturas son parte del flujo de ventas del cuaderno.
+  invoice_created: 'sales',
+  invoice_paid: 'sales',
+  invoice_cancelled: 'sales',
   receipt_issued: 'receipts',
   receipt_updated: 'receipts',
   receipt_deleted: 'receipts',
@@ -86,3 +102,18 @@ export const RECEIPT_PREFIX = 'R';
 export const RECEIPT_ISSUER_CODE = 'BRD';
 /** Digits used for the sequence part of the folio. */
 export const RECEIPT_SEQUENCE_PADDING = 6;
+
+/**
+ * Invoice folio: `F-BRD-{year}-{000001}`. Invoices are documents created
+ * **before** payment; the receipt (`R-...`) is only issued when they are paid.
+ */
+export const INVOICE_PREFIX = 'F';
+export const INVOICE_SEQUENCE_PADDING = 6;
+
+/** Invoice lifecycle: pending → paid (or cancelled). */
+export const INVOICE_STATUSES = ['pending', 'paid', 'cancelled'] as const;
+export type InvoiceStatus = (typeof INVOICE_STATUSES)[number];
+
+/** A sale line can be a catalog product or a free service concept. */
+export const SALE_ITEM_TYPES = ['product', 'service'] as const;
+export type SaleItemType = (typeof SALE_ITEM_TYPES)[number];

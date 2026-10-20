@@ -119,6 +119,8 @@ export class StoreRepositoryAdapter implements StoreRepository {
         receipt_mode: data.receipt_mode ?? 'ask',
         notification_events: data.notification_events ?? null,
         notification_digest: data.notification_digest ?? false,
+        avatar_edit_mode: data.avatar_edit_mode ?? 'owner',
+        banner_edit_mode: data.banner_edit_mode ?? 'owner',
         // Fotos en sus 3 resoluciones (null cuando no hay).
         avatar_small_url: data.avatar_small_url ?? null,
         avatar_medium_url: data.avatar_medium_url ?? null,
@@ -156,6 +158,8 @@ export class StoreRepositoryAdapter implements StoreRepository {
     // NO ACTION on purpose, so a product with sales cannot be removed) and
     // receipts/invites/customer links before the store itself.
     await this.prisma.$transaction([
+      // Invoices first: they reference sales and receipts (ON DELETE SET NULL).
+      this.prisma.store_invoices.deleteMany({ where: { store_id } }),
       this.prisma.store_sale_items.deleteMany({
         where: { sale: { store_id } },
       }),
@@ -283,7 +287,10 @@ export class StoreRepositoryAdapter implements StoreRepository {
     }));
   }
 
-  /** Deja marcados exactamente los miembros indicados (y desmarca el resto). */  async setMemberNotify(store_id: string, user_ids: string[]): Promise<void> {
+  /** Deja marcados exactamente los miembros indicados (y desmarca el resto). */ async setMemberNotify(
+    store_id: string,
+    user_ids: string[],
+  ): Promise<void> {
     await this.prisma.$transaction([
       this.prisma.store_members.updateMany({
         where: {
@@ -317,7 +324,8 @@ export class StoreRepositoryAdapter implements StoreRepository {
   async findMembership(
     store_id: string,
     user_id: string,
-  ): Promise<StoreMember | null> {    const result = await this.prisma.store_members.findFirst({
+  ): Promise<StoreMember | null> {
+    const result = await this.prisma.store_members.findFirst({
       where: { store_id, user_id, deleted_at: null },
     });
 

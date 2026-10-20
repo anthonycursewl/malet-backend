@@ -1,14 +1,20 @@
 import { randomUUID } from 'crypto';
+import { SaleItemType } from '../constants';
 
 export interface SaleItemPrimitives {
   id: string;
-  product_id: string;
+  /** Null for free concepts (services not linked to the catalog). */
+  product_id?: string | null;
+  /** Snapshot of the concept name (product name or free service name). */
+  name: string;
+  /** `product` | `service`. */
+  item_type?: SaleItemType;
   quantity: number;
   unit_price: number;
   unit_cost: number;
   /**
-   * Product name resolved from the catalog when reading (never persisted here:
-   * the immutable snapshot lives on the receipt).
+   * Legacy alias of `name` (rows read before the snapshot column existed).
+   * Kept so old callers/tests keep working.
    */
   product_name?: string;
   created_at?: Date;
@@ -17,51 +23,63 @@ export interface SaleItemPrimitives {
 }
 
 export interface SaleItemInput {
-  product_id: string;
+  /** Omitted for free concepts (services). */
+  product_id?: string | null;
+  name: string;
+  item_type?: SaleItemType;
   quantity: number;
   unit_price: number;
   unit_cost: number;
 }
 
-/** A single product line of a sale (prices are snapshots taken at sale time). */
+/**
+ * A single line of a sale: a catalog product **or** a free service concept.
+ * Every amount is a snapshot taken at sale time, so later catalog changes never
+ * alter an already registered sale.
+ */
 export class SaleItem {
   private readonly id: string;
-  private readonly product_id: string;
+  private readonly product_id: string | null;
+  private readonly name: string;
+  private readonly item_type: SaleItemType;
   private readonly quantity: number;
   private readonly unit_price: number;
   private readonly unit_cost: number;
-  private readonly product_name?: string;
   private readonly created_at: Date;
   private readonly updated_at: Date;
   private readonly deleted_at?: Date | null;
 
   constructor(
     id: string,
-    product_id: string,
+    product_id: string | null,
+    name: string,
+    item_type: SaleItemType,
     quantity: number,
     unit_price: number,
     unit_cost: number,
     created_at: Date,
     updated_at: Date,
     deleted_at?: Date | null,
-    product_name?: string,
   ) {
     this.id = id;
     this.product_id = product_id;
+    this.name = name;
+    this.item_type = item_type;
     this.quantity = quantity;
     this.unit_price = unit_price;
     this.unit_cost = unit_cost;
     this.created_at = created_at;
     this.updated_at = updated_at;
     this.deleted_at = deleted_at;
-    this.product_name = product_name;
   }
 
   static create(data: SaleItemInput): SaleItem {
     const now = new Date();
     return new SaleItem(
       randomUUID(),
-      data.product_id,
+      data.product_id ?? null,
+      data.name.trim(),
+      data.item_type ?? (data.product_id ? 'product' : 'service'),
       data.quantity,
       data.unit_price,
       data.unit_cost,
@@ -72,16 +90,19 @@ export class SaleItem {
   }
 
   static fromPrimitives(primitives: SaleItemPrimitives): SaleItem {
+    const name = primitives.name ?? primitives.product_name ?? 'Producto';
+
     return new SaleItem(
       primitives.id,
-      primitives.product_id,
+      primitives.product_id ?? null,
+      name,
+      primitives.item_type ?? (primitives.product_id ? 'product' : 'service'),
       Number(primitives.quantity),
       Number(primitives.unit_price),
       Number(primitives.unit_cost),
       primitives.created_at ?? new Date(),
       primitives.updated_at ?? new Date(),
       primitives.deleted_at ?? null,
-      primitives.product_name,
     );
   }
 
@@ -89,12 +110,11 @@ export class SaleItem {
     return {
       id: this.id,
       product_id: this.product_id,
+      name: this.name,
+      item_type: this.item_type,
       quantity: this.quantity,
       unit_price: this.unit_price,
       unit_cost: this.unit_cost,
-      ...(this.product_name !== undefined && {
-        product_name: this.product_name,
-      }),
       created_at: this.created_at,
       updated_at: this.updated_at,
       deleted_at: this.deleted_at,
@@ -105,8 +125,20 @@ export class SaleItem {
     return this.id;
   }
 
-  getProductId(): string {
+  getProductId(): string | null {
     return this.product_id;
+  }
+
+  getName(): string {
+    return this.name;
+  }
+
+  getItemType(): SaleItemType {
+    return this.item_type;
+  }
+
+  isService(): boolean {
+    return this.item_type === 'service' || this.product_id === null;
   }
 
   getQuantity(): number {
@@ -121,8 +153,9 @@ export class SaleItem {
     return this.unit_cost;
   }
 
-  getProductName(): string | undefined {
-    return this.product_name;
+  /** Snapshot name (kept for the receipt builder's old call sites). */
+  getProductName(): string {
+    return this.name;
   }
 
   isDeleted(): boolean {

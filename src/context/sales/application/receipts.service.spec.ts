@@ -50,7 +50,13 @@ describe('ReceiptsService', () => {
   const sale = Sale.create({
     store_id: store.getId(),
     items: [
-      { product_id: product.getId(), quantity: 2, unit_price: 5, unit_cost: 2 },
+      {
+        product_id: product.getId(),
+        name: product.getName(),
+        quantity: 2,
+        unit_price: 5,
+        unit_cost: 2,
+      },
     ],
     sold_at: new Date('2026-10-15T10:00:00.000Z'),
     created_by: 'seller-1',

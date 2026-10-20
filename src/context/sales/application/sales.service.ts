@@ -45,8 +45,9 @@ import {
   StoreNotificationsUseCase,
 } from '../domain/ports/in/store-notifications.usecase';
 import { ReceiptsService } from './receipts.service';
+import { resolveLineInputs } from './resolve-lines';
 
-/** Result of creating a sale, optionally with its receipt. */export interface CreateSaleResult {
+/** Result of creating a sale, optionally with its receipt. */ export interface CreateSaleResult {
   sale: Sale;
   receipt: Receipt | null;
 }
@@ -303,32 +304,15 @@ export class SalesService implements SalesUseCase {
   }
 
   /**
-   * Validates every product of the cart in a **single query** and snapshots its
+   * Validates every line of the cart in a **single query** and snapshots its
    * prices: later changes to the product never alter an already registered sale.
+   * A line is either a catalog `product_id` or a free concept (`name` + price).
    */
   private async resolveItems(
     store_id: string,
     items: CreateSaleItemDto[],
   ): Promise<SaleItemInput[]> {
-    const ids = [...new Set(items.map((item) => item.product_id))];
-    const products = await this.productRepository.findManyByIds(store_id, ids);
-    const byId = new Map(products.map((product) => [product.getId(), product]));
-
-    return items.map((item) => {
-      const product = byId.get(item.product_id);
-      if (!product) {
-        throw new NotFoundException(
-          'Product not found in this store (it may be deleted)',
-        );
-      }
-
-      return {
-        product_id: product.getId(),
-        quantity: item.quantity ?? 1,
-        unit_price: item.unit_price ?? product.getPvp(),
-        unit_cost: item.unit_cost ?? product.getCost(),
-      };
-    });
+    return resolveLineInputs(this.productRepository, store_id, items);
   }
 
   private async resolveProduct(

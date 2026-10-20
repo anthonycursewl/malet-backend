@@ -50,10 +50,6 @@ export class StoreNotificationsController {
     @Body() dto: UpdateStoreNotificationsDto,
   ) {
     await this.storesUseCase.getMemberStore(store_id, user.userId);
-    return this.notificationsUseCase.updateConfig(
-      store_id,
-      user.userId,
-      dto,
-    );
+    return this.notificationsUseCase.updateConfig(store_id, user.userId, dto);
   }
 }

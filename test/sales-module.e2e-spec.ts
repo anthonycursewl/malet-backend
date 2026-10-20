@@ -659,6 +659,61 @@ describe('SalesModule (e2e)', () => {
       ).expect(403);
     });
 
+    it('el dueño decide quién puede cambiar cada foto', async () => {
+      // Banner para todos, foto de perfil solo para el dueño.
+      await request(app.getHttpServer())
+        .put(`/stores/${storeId}`)
+        .set(ownerAuth())
+        .send({ avatar_edit_mode: 'owner', banner_edit_mode: 'members' })
+        .expect(200);
+
+      const image = await makeImage(1200, 1200);
+
+      // El miembro puede cambiar el banner...
+      const banner = await uploadPhoto(
+        'banner',
+        image,
+        'banner.jpg',
+        memberToken,
+      ).expect(200);
+      expect(banner.body.banner_medium_url).toBeTruthy();
+      uploadedUrls.push(
+        banner.body.banner_small_url,
+        banner.body.banner_medium_url,
+        banner.body.banner_large_url,
+      );
+
+      // ...pero no la foto de perfil.
+      await uploadPhoto('avatar', image, 'avatar.jpg', memberToken).expect(403);
+
+      // Si el dueño lo permite, también puede cambiarla.
+      await request(app.getHttpServer())
+        .put(`/stores/${storeId}`)
+        .set(ownerAuth())
+        .send({ avatar_edit_mode: 'members' })
+        .expect(200);
+
+      const avatar = await uploadPhoto(
+        'avatar',
+        image,
+        'avatar.jpg',
+        memberToken,
+      ).expect(200);
+      expect(avatar.body.avatar_medium_url).toBeTruthy();
+      uploadedUrls.push(
+        avatar.body.avatar_small_url,
+        avatar.body.avatar_medium_url,
+        avatar.body.avatar_large_url,
+      );
+
+      // Se deja como estaba para el resto de la suite.
+      await request(app.getHttpServer())
+        .put(`/stores/${storeId}`)
+        .set(ownerAuth())
+        .send({ avatar_edit_mode: 'owner', banner_edit_mode: 'owner' })
+        .expect(200);
+    });
+
     it('exige el archivo y que sea una imagen', async () => {
       await request(app.getHttpServer())
         .put(`/stores/${storeId}/avatar`)
@@ -834,7 +889,8 @@ describe('SalesModule (e2e)', () => {
         updated.body.members.find((m: any) => m.user_id === ownerId)?.notify,
       ).toBe(true);
       expect(
-        updated.body.members.find((m: any) => m.user_id === ownerId)?.avatar_url,
+        updated.body.members.find((m: any) => m.user_id === ownerId)
+          ?.avatar_url,
       ).toBeDefined();
 
       await request(app.getHttpServer())
