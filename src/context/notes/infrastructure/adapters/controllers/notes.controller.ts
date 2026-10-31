@@ -20,6 +20,7 @@ import {
 import { CreateNoteDto } from '../../../application/dtos/create-note.dto';
 import { UpdateNoteDto } from '../../../application/dtos/update-note.dto';
 import { NotesQueryDto } from '../dtos/notes-query.dto';
+import { LinkTargetsQueryDto } from '../dtos/link-targets-query.dto';
 
 /** Notas personales en Markdown. Aislamiento por `user_id` del JWT. */
 @Controller('notes')
@@ -62,13 +63,36 @@ export class NotesController {
     return note.toPrimitives();
   }
 
+  /** Picker liviano para enlazar notas con `[[`. */
+  @Get('link-targets')
+  async linkTargets(
+    @CurrentUser() user: { userId: string },
+    @Query() query: LinkTargetsQueryDto,
+  ) {
+    const targets = await this.notesUseCase.linkTargets(
+      user.userId,
+      query.search,
+      query.take ?? DEFAULT_NOTES_TAKE,
+      query.exclude_id,
+    );
+    return { data: targets };
+  }
+
   @Get(':id')
   async detail(
     @CurrentUser() user: { userId: string },
     @Param('id') id: string,
   ) {
-    const note = await this.notesUseCase.getById(user.userId, id);
-    return note.toPrimitives();
+    const { note, links, backlinks } = await this.notesUseCase.getDetail(
+      user.userId,
+      id,
+    );
+
+    return {
+      ...note.toPrimitives(),
+      links,
+      backlinks: backlinks.map((backlink) => backlink.toSummary()),
+    };
   }
 
   @Put(':id')

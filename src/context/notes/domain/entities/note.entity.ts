@@ -35,6 +35,14 @@ export interface NoteUpdateInput {
   pinned?: boolean;
 }
 
+/** Enlace saliente de una nota, tal como quedó guardado. */
+export interface NoteLinkPrimitives {
+  source_note_id: string;
+  target_note_id: string | null;
+  raw_title: string;
+  alias: string | null;
+}
+
 /** Quita la sintaxis Markdown para el extracto de la lista. */
 export function noteExcerpt(
   markdown: string,

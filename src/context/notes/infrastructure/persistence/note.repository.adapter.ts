@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { PrismaService } from 'src/prisma.service';
 import {
+  ListLinkTargetsOptions,
   ListNotesOptions,
+  NoteLinkInput,
+  NoteLinkTarget,
   NoteRepository,
 } from '../../domain/ports/out/note.repository';
-import { Note } from '../../domain/entities/note.entity';
+import { Note, NoteLinkPrimitives } from '../../domain/entities/note.entity';
 
 @Injectable()
 export class NoteRepositoryAdapter implements NoteRepository {
@@ -121,5 +125,161 @@ export class NoteRepositoryAdapter implements NoteRepository {
 
   async hardDelete(id: string): Promise<void> {
     await this.prisma.notes.delete({ where: { id } });
+  }
+
+  async findByTitle(
+    user_id: string,
+    title: string,
+    exclude_id?: string,
+  ): Promise<Note | null> {
+    const result = await this.prisma.notes.findFirst({
+      where: {
+        user_id,
+        deleted_at: null,
+        title: { equals: title.trim(), mode: 'insensitive' as const },
+        ...(exclude_id && { id: { not: exclude_id } }),
+      },
+    });
+
+    return result ? this.toEntity(result) : null;
+  }
+
+  async findTitles(user_id: string): Promise<NoteLinkTarget[]> {
+    return this.prisma.notes.findMany({
+      where: { user_id, deleted_at: null },
+      select: { id: true, title: true },
+    });
+  }
+
+  async findLinkTargets(
+    options: ListLinkTargetsOptions,
+  ): Promise<NoteLinkTarget[]> {
+    const { user_id, search, take, exclude_id } = options;
+    return this.prisma.notes.findMany({
+      where: {
+        user_id,
+        deleted_at: null,
+        ...(search && {
+          title: { contains: search, mode: 'insensitive' as const },
+        }),
+        ...(exclude_id && { id: { not: exclude_id } }),
+      },
+      select: { id: true, title: true },
+      take: take ?? 20,
+      orderBy: [{ pinned: 'desc' }, { updated_at: 'desc' }, { id: 'desc' }],
+    });
+  }
+
+  async replaceLinks(
+    user_id: string,
+    source_note_id: string,
+    links: NoteLinkInput[],
+  ): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      await tx.note_links.deleteMany({ where: { source_note_id } });
+      if (links.length === 0) return;
+
+      await tx.note_links.createMany({
+        data: links.map((link) => ({
+          id: randomUUID(),
+          user_id,
+          source_note_id,
+          target_note_id: link.target_note_id,
+          raw_title: link.raw_title,
+          alias: link.alias,
+        })),
+      });
+    });
+  }
+
+  async findLinksBySource(
+    user_id: string,
+    source_note_id: string,
+  ): Promise<NoteLinkPrimitives[]> {
+    const rows = await this.prisma.note_links.findMany({
+      where: { user_id, source_note_id },
+      select: {
+        source_note_id: true,
+        target_note_id: true,
+        raw_title: true,
+        alias: true,
+      },
+    });
+
+    return rows.map((row) => ({
+      source_note_id: row.source_note_id,
+      target_note_id: row.target_note_id ?? null,
+      raw_title: row.raw_title,
+      alias: row.alias ?? null,
+    }));
+  }
+
+  async findBacklinks(
+    user_id: string,
+    target_note_id: string,
+    take = 50,
+  ): Promise<Note[]> {
+    const rows = await this.prisma.notes.findMany({
+      where: {
+        user_id,
+        deleted_at: null,
+        outgoing_links: { some: { target_note_id } },
+      },
+      take,
+      orderBy: [{ pinned: 'desc' }, { updated_at: 'desc' }, { id: 'desc' }],
+    });
+
+    return rows.map((row) => this.toEntity(row));
+  }
+
+  async resolvePendingLinks(
+    user_id: string,
+    title: string,
+    target_note_id: string,
+  ): Promise<number> {
+    const result = await this.prisma.note_links.updateMany({
+      where: {
+        user_id,
+        target_note_id: null,
+        raw_title: { equals: title.trim(), mode: 'insensitive' as const },
+      },
+      data: { target_note_id },
+    });
+
+    return result.count;
+  }
+
+  async findSourceNotesByTarget(
+    user_id: string,
+    target_note_id: string,
+    raw_title?: string,
+  ): Promise<Note[]> {
+    const rows = await this.prisma.notes.findMany({
+      where: {
+        user_id,
+        deleted_at: null,
+        outgoing_links: {
+          some: {
+            OR: [
+              { target_note_id },
+              ...(raw_title
+                ? [
+                    {
+                      raw_title: {
+                        equals: raw_title,
+                        mode: 'insensitive' as const,
+                      },
+                    },
+                  ]
+                : []),
+            ],
+          },
+        },
+      },
+      take: 500,
+      orderBy: [{ updated_at: 'desc' }],
+    });
+
+    return rows.map((row) => this.toEntity(row));
   }
 }

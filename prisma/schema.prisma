@@ -39,6 +39,7 @@ model user {
   gym_sessions              gym_sessions[]
   gym_body_metrics          gym_body_metrics[]
   notes                     notes[]
+  note_links                note_links[]
 }
 
 model verification_type {
@@ -793,6 +794,31 @@ model notes {
 
   user user @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
+  outgoing_links note_links[] @relation("note_link_source")
+  incoming_links note_links[] @relation("note_link_target")
+
   @@index([user_id, pinned, updated_at])
   @@index([deleted_at])
+}
+
+/// Enlaces wiki `[[Título]]` entre notas. Se recalculan al guardar la fuente.
+model note_links {
+  id             String   @id @db.VarChar(255)
+  user_id        String   @db.VarChar(255)
+  source_note_id String   @db.VarChar(255)
+  /// Null = enlace pendiente (la nota destino aún no existe).
+  target_note_id String?  @db.VarChar(255)
+  /// Título tal como se escribió dentro de `[[...]]`.
+  raw_title      String   @db.VarChar(255)
+  /// Texto visible opcional: `[[Título|alias]]`.
+  alias          String?  @db.VarChar(255)
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+
+  user   user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  source notes  @relation("note_link_source", fields: [source_note_id], references: [id], onDelete: Cascade)
+  target notes? @relation("note_link_target", fields: [target_note_id], references: [id], onDelete: SetNull)
+
+  @@unique([source_note_id, raw_title])
+  @@index([user_id, target_note_id])
+  @@index([source_note_id])
 }

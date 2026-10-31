@@ -50,6 +50,8 @@ describe('Notes (e2e)', () => {
   let ownerToken: string;
   let otherToken: string;
   let noteId: string;
+  let indexNoteId: string;
+  let pendingNoteId: string;
 
   const ownerAuth = () => ({ Authorization: `Bearer ${ownerToken}` });
   const otherAuth = () => ({ Authorization: `Bearer ${otherToken}` });
@@ -209,6 +211,140 @@ describe('Notes (e2e)', () => {
       .expect(404);
   });
 
+  it('crea enlaces wiki, enlaces pendientes y backlinks', async () => {
+    const index = await request(app.getHttpServer())
+      .post('/notes')
+      .set(ownerAuth())
+      .send({
+        title: 'Índice de recetas',
+        content: 'Ver [[Receta actualizada]] y [[Pendiente|crear después]]',
+      })
+      .expect(201);
+    indexNoteId = index.body.id;
+
+    const indexDetail = await request(app.getHttpServer())
+      .get(`/notes/${indexNoteId}`)
+      .set(ownerAuth())
+      .expect(200);
+
+    expect(indexDetail.body.links).toHaveLength(2);
+    const resolved = indexDetail.body.links.find(
+      (link: any) => link.raw_title === 'Receta actualizada',
+    );
+    expect(resolved.target_note_id).toBe(noteId);
+
+    const pending = indexDetail.body.links.find(
+      (link: any) => link.raw_title === 'Pendiente',
+    );
+    expect(pending.target_note_id).toBeNull();
+    expect(pending.alias).toBe('crear después');
+
+    const targetDetail = await request(app.getHttpServer())
+      .get(`/notes/${noteId}`)
+      .set(ownerAuth())
+      .expect(200);
+
+    expect(
+      targetDetail.body.backlinks.some(
+        (backlink: any) => backlink.id === indexNoteId,
+      ),
+    ).toBe(true);
+    expect(targetDetail.body.backlinks[0]).not.toHaveProperty('content');
+  });
+
+  it('resuelve un enlace pendiente al crear la nota destino', async () => {
+    const created = await request(app.getHttpServer())
+      .post('/notes')
+      .set(ownerAuth())
+      .send({ title: 'Pendiente', content: 'Ya existe' })
+      .expect(201);
+    pendingNoteId = created.body.id;
+
+    const indexDetail = await request(app.getHttpServer())
+      .get(`/notes/${indexNoteId}`)
+      .set(ownerAuth())
+      .expect(200);
+
+    const link = indexDetail.body.links.find(
+      (value: any) => value.raw_title === 'Pendiente',
+    );
+    expect(link.target_note_id).toBe(pendingNoteId);
+  });
+
+  it('busca destinos de enlace sin contenido y respeta exclude_id', async () => {
+    const all = await request(app.getHttpServer())
+      .get('/notes/link-targets?search=Receta&take=5')
+      .set(ownerAuth())
+      .expect(200);
+
+    expect(all.body.data.some((note: any) => note.id === noteId)).toBe(true);
+    expect(all.body.data[0]).not.toHaveProperty('content');
+
+    const excluded = await request(app.getHttpServer())
+      .get(`/notes/link-targets?search=Receta&exclude_id=${noteId}`)
+      .set(ownerAuth())
+      .expect(200);
+
+    expect(excluded.body.data.some((note: any) => note.id === noteId)).toBe(
+      false,
+    );
+  });
+
+  it('reescribe los enlaces al renombrar la nota destino', async () => {
+    await request(app.getHttpServer())
+      .put(`/notes/${noteId}`)
+      .set(ownerAuth())
+      .send({ title: 'Receta definitiva' })
+      .expect(200);
+
+    const indexDetail = await request(app.getHttpServer())
+      .get(`/notes/${indexNoteId}`)
+      .set(ownerAuth())
+      .expect(200);
+
+    expect(indexDetail.body.content).toContain('[[Receta definitiva]]');
+    expect(
+      indexDetail.body.links.some(
+        (value: any) => value.raw_title === 'Receta definitiva',
+      ),
+    ).toBe(true);
+    expect(
+      indexDetail.body.links.some(
+        (value: any) => value.raw_title === 'Receta actualizada',
+      ),
+    ).toBe(false);
+
+    const renamed = await request(app.getHttpServer())
+      .get(`/notes/${noteId}`)
+      .set(ownerAuth())
+      .expect(200);
+    expect(
+      renamed.body.backlinks.some(
+        (backlink: any) => backlink.id === indexNoteId,
+      ),
+    ).toBe(true);
+  });
+
+  it('permite el mismo título a otro usuario, pero no al mismo', async () => {
+    await request(app.getHttpServer())
+      .post('/notes')
+      .set(ownerAuth())
+      .send({ title: 'Receta definitiva' })
+      .expect(409);
+
+    await request(app.getHttpServer())
+      .post('/notes')
+      .set(ownerAuth())
+      .send({ title: 'RECETA DEFINITIVA' })
+      .expect(409);
+
+    await request(app.getHttpServer())
+      .post('/notes')
+      .set(otherAuth())
+      .send({ title: 'Receta definitiva' })
+      .expect(201);
+  });
+
   it('rechaza campos desconocidos y títulos demasiado largos', async () => {
     await request(app.getHttpServer())
       .post('/notes')
@@ -233,7 +369,9 @@ describe('Notes (e2e)', () => {
       .get('/notes')
       .set(ownerAuth())
       .expect(200);
-    expect(afterDelete.body.data).toHaveLength(0);
+    expect(afterDelete.body.data.some((note: any) => note.id === noteId)).toBe(
+      false,
+    );
 
     await request(app.getHttpServer())
       .put(`/notes/${noteId}/restore`)
@@ -244,7 +382,9 @@ describe('Notes (e2e)', () => {
       .get('/notes')
       .set(ownerAuth())
       .expect(200);
-    expect(afterRestore.body.data).toHaveLength(1);
+    expect(afterRestore.body.data.some((note: any) => note.id === noteId)).toBe(
+      true,
+    );
 
     await request(app.getHttpServer())
       .delete(`/notes/${noteId}/hard`)
