@@ -284,7 +284,7 @@ export class NoteRepositoryAdapter implements NoteRepository {
     return rows.map((row) => this.toEntity(row));
   }
 
-  async getGraph(user_id: string, limit = 300): Promise<NoteGraph> {
+  async getGraph(user_id: string, limit = 500): Promise<NoteGraph> {
     const notes = await this.prisma.notes.findMany({
       where: { user_id, deleted_at: null },
       select: { id: true, title: true, pinned: true },

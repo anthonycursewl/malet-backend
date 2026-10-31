@@ -76,7 +76,7 @@ export class NotesService implements NotesUseCase {
     });
   }
 
-  async graph(user_id: string, limit = 300): Promise<NoteGraph> {
+  async graph(user_id: string, limit = 500): Promise<NoteGraph> {
     return this.noteRepository.getGraph(user_id, limit);
   }
 
