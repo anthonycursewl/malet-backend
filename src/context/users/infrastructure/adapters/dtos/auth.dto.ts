@@ -5,8 +5,6 @@ import {
   IsEmail,
   MinLength,
   Matches,
-  IsOptional,
-  IsBoolean,
 } from 'class-validator';
 
 export class RegisterUserDto {
@@ -35,10 +33,6 @@ export class RegisterUserDto {
     message: 'Username must contain only letters, numbers, and underscores',
   })
   username: string;
-
-  @IsOptional()
-  @IsBoolean()
-  verified?: boolean;
 }
 
 export class LoginUserDto {

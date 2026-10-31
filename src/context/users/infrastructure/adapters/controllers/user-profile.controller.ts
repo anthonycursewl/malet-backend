@@ -48,9 +48,7 @@ export class UserProfileController {
 
     const updatedUser = await this.updateUserProfileService.execute(dto);
 
-    const { password: _password, ...userWithoutPassword } =
-      updatedUser.toPrimitives();
-    return userWithoutPassword;
+    return updatedUser.toSafePrimitives();
   }
 
   @Post('upload')
@@ -110,9 +108,7 @@ export class UserProfileController {
 
     const updatedUser = await this.updateUserProfileService.execute(dto);
 
-    const { password: _password, ...userWithoutPassword } =
-      updatedUser.toPrimitives();
-    return userWithoutPassword;
+    return updatedUser.toSafePrimitives();
   }
 
   @Get('verified/username/:username')

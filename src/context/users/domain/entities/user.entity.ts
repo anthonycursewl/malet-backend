@@ -122,7 +122,10 @@ export class User {
       created_at: new Date(),
       google_id: data.googleId,
       avatar_url: data.avatarUrl,
-      verified: true, // Google emails are verified
+      // Google valida el email, NO otorga la insignia de cuenta verificada.
+      verified: false,
+      verification_type_id: null,
+      verification_type: null,
       email_verified: true,
       email_verified_at: new Date(),
     });
@@ -150,6 +153,24 @@ export class User {
 
   static fromPrimitives(primitives: UserPrimitives): User {
     return new User(primitives);
+  }
+
+  /**
+   * Payload seguro para respuestas HTTP: sin password y con la verificación
+   * normalizada. Una cuenta solo está verificada si tiene un tipo asociado.
+   */
+  toSafePrimitives(): Omit<UserPrimitives, 'password'> {
+    const { password: _password, ...primitives } = this.toPrimitives();
+    const verified = this.verified && this.verification_type != null;
+
+    return {
+      ...primitives,
+      verified,
+      verification_type: verified ? (this.verification_type ?? null) : null,
+      verification_type_id: verified
+        ? (this.verification_type_id ?? null)
+        : null,
+    };
   }
 
   getId(): string {

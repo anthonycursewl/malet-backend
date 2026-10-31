@@ -1,5 +1,8 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { CreateUserUseCase } from '../domain/ports/in/create-user.usecase';
+import {
+  CreateUserInput,
+  CreateUserUseCase,
+} from '../domain/ports/in/create-user.usecase';
 import { User } from '../domain/entities/user.entity';
 import {
   USER_REPOSITORY_PORT,
@@ -13,7 +16,6 @@ import {
   EMAIL_SERVICE_PORT,
   EmailServicePort,
 } from 'src/shared/infrastructure/email/email-service.port';
-import { UserPrimitives } from '../domain/entities/user.entity';
 import { EmailVerificationToken } from '../domain/entities/email-verification-token.entity';
 
 /**
@@ -34,9 +36,7 @@ export class CreateUserService implements CreateUserUseCase {
     private readonly emailService: EmailServicePort,
   ) {}
 
-  async execute(
-    user: Omit<UserPrimitives, 'id' | 'created_at'> & { password: string },
-  ): Promise<User> {
+  async execute(user: CreateUserInput): Promise<User> {
     // Crear el usuario
     const created = await User.create(user);
     const savedUser = await this.userRepository.save(created);

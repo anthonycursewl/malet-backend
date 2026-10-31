@@ -31,6 +31,11 @@ export class UserRepositoryAdapter implements UserRepository {
       },
 
       create: createData,
+      include: {
+        verification_type: {
+          select: { id: true, type: true, icon_url: true },
+        },
+      },
     });
     return User.fromPrimitives(userPrimitives);
   }
@@ -45,6 +50,24 @@ export class UserRepositoryAdapter implements UserRepository {
     const user = await this.prisma.user.findFirst({
       where: {
         email,
+      },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        email: true,
+        created_at: true,
+        password: true,
+        google_id: true,
+        avatar_url: true,
+        banner_url: true,
+        verified: true,
+        verification_type_id: true,
+        email_verified: true,
+        email_verified_at: true,
+        verification_type: {
+          select: { id: true, type: true, icon_url: true },
+        },
       },
     });
 
@@ -109,6 +132,24 @@ export class UserRepositoryAdapter implements UserRepository {
     const user = await this.prisma.user.findUnique({
       where: {
         id,
+      },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        email: true,
+        created_at: true,
+        password: true,
+        google_id: true,
+        avatar_url: true,
+        banner_url: true,
+        verified: true,
+        verification_type_id: true,
+        email_verified: true,
+        email_verified_at: true,
+        verification_type: {
+          select: { id: true, type: true, icon_url: true },
+        },
       },
     });
 
@@ -188,6 +229,9 @@ export class UserRepositoryAdapter implements UserRepository {
           email_verified_at: true,
 
           verification_type_id: true,
+          verification_type: {
+            select: { id: true, type: true, icon_url: true },
+          },
           google_id: true,
         };
 

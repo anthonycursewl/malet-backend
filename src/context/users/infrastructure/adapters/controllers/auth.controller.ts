@@ -32,13 +32,18 @@ export class AuthController {
     if (!token) {
       throw new UnauthorizedException('Missing token');
     }
-    return await this.authUseCase.validate(token);
+    const user = await this.authUseCase.validate(token);
+    return user.toSafePrimitives();
   }
 
   @Post('google/mobile')
   async loginGoogle(@Body() body: LoginGoogleDto) {
     this.logger.log(`📱 Received Google login request from mobile.`);
     this.logger.debug(`Token length: ${body.idToken?.length}`);
-    return await this.loginWithGoogleUseCase.execute(body.idToken);
+    const result = await this.loginWithGoogleUseCase.execute(body.idToken);
+    return {
+      access_token: result.access_token,
+      user: result.user.toSafePrimitives(),
+    };
   }
 }
