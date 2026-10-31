@@ -1,4 +1,5 @@
 import { Note, NoteLinkPrimitives } from '../../entities/note.entity';
+import { NoteGraph } from '../../graph';
 
 export const NOTE_REPOSITORY_PORT = Symbol('NOTE_REPOSITORY_PORT');
 
@@ -85,4 +86,7 @@ export interface NoteRepository {
     target_note_id: string,
     raw_title?: string,
   ): Promise<Note[]>;
+
+  /** Nodos y aristas del mapa de conocimiento. */
+  getGraph(user_id: string, limit?: number): Promise<NoteGraph>;
 }

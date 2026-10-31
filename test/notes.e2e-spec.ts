@@ -346,6 +346,33 @@ describe('Notes (e2e)', () => {
       .expect(201);
   });
 
+  it('devuelve el mapa de conocimiento con nodos y aristas', async () => {
+    const graph = await request(app.getHttpServer())
+      .get('/notes/graph')
+      .set(ownerAuth())
+      .expect(200);
+
+    const ids = graph.body.nodes.map((node: any) => node.id);
+    expect(ids).toContain(noteId);
+    expect(ids).toContain(indexNoteId);
+    expect(ids).toContain(pendingNoteId);
+    expect(graph.body.edges).toEqual(
+      expect.arrayContaining([
+        { source: indexNoteId, target: noteId },
+        { source: indexNoteId, target: pendingNoteId },
+      ]),
+    );
+    expect(graph.body.truncated).toBe(false);
+
+    const other = await request(app.getHttpServer())
+      .get('/notes/graph')
+      .set(otherAuth())
+      .expect(200);
+    expect(other.body.nodes.some((node: any) => node.id === noteId)).toBe(
+      false,
+    );
+  });
+
   it('rechaza campos desconocidos y títulos demasiado largos', async () => {
     await request(app.getHttpServer())
       .post('/notes')

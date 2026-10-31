@@ -15,6 +15,7 @@ import {
   NoteRepository,
 } from '../domain/ports/out/note.repository';
 import { Note } from '../domain/entities/note.entity';
+import { NoteGraph } from '../domain/graph';
 import { extractWikiLinks, rewriteWikiLinkTitle } from '../domain/wiki-links';
 import { CreateNoteDto } from './dtos/create-note.dto';
 import { UpdateNoteDto } from './dtos/update-note.dto';
@@ -73,6 +74,10 @@ export class NotesService implements NotesUseCase {
       take,
       exclude_id,
     });
+  }
+
+  async graph(user_id: string, limit = 300): Promise<NoteGraph> {
+    return this.noteRepository.getGraph(user_id, limit);
   }
 
   async create(user_id: string, dto: CreateNoteDto): Promise<Note> {

@@ -63,6 +63,12 @@ export class NotesController {
     return note.toPrimitives();
   }
 
+  /** Mapa completo de conocimiento (nodos y aristas). */
+  @Get('graph')
+  async graph(@CurrentUser() user: { userId: string }) {
+    return this.notesUseCase.graph(user.userId);
+  }
+
   /** Picker liviano para enlazar notas con `[[`. */
   @Get('link-targets')
   async linkTargets(

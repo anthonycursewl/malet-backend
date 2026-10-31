@@ -9,6 +9,7 @@ import {
   NoteRepository,
 } from '../../domain/ports/out/note.repository';
 import { Note, NoteLinkPrimitives } from '../../domain/entities/note.entity';
+import { NoteGraph } from '../../domain/graph';
 
 @Injectable()
 export class NoteRepositoryAdapter implements NoteRepository {
@@ -281,5 +282,50 @@ export class NoteRepositoryAdapter implements NoteRepository {
     });
 
     return rows.map((row) => this.toEntity(row));
+  }
+
+  async getGraph(user_id: string, limit = 300): Promise<NoteGraph> {
+    const notes = await this.prisma.notes.findMany({
+      where: { user_id, deleted_at: null },
+      select: { id: true, title: true, pinned: true },
+      take: limit,
+      orderBy: [{ pinned: 'desc' }, { updated_at: 'desc' }, { id: 'desc' }],
+    });
+
+    const ids = notes.map((note) => note.id);
+    if (ids.length === 0) {
+      return { nodes: [], edges: [], truncated: false };
+    }
+
+    const rows = await this.prisma.note_links.findMany({
+      where: {
+        user_id,
+        source_note_id: { in: ids },
+        target_note_id: { in: ids },
+      },
+      select: { source_note_id: true, target_note_id: true },
+    });
+
+    const edges = new Map<string, { source: string; target: string }>();
+    for (const row of rows) {
+      if (!row.target_note_id) continue;
+      const key = `${row.source_note_id}:${row.target_note_id}`;
+      if (!edges.has(key)) {
+        edges.set(key, {
+          source: row.source_note_id,
+          target: row.target_note_id,
+        });
+      }
+    }
+
+    return {
+      nodes: notes.map((note) => ({
+        id: note.id,
+        title: note.title,
+        pinned: note.pinned,
+      })),
+      edges: [...edges.values()],
+      truncated: notes.length === limit,
+    };
   }
 }

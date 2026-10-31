@@ -39,6 +39,9 @@ describe('NotesService', () => {
       findBacklinks: jest.fn().mockResolvedValue([]),
       resolvePendingLinks: jest.fn().mockResolvedValue(0),
       findSourceNotesByTarget: jest.fn().mockResolvedValue([]),
+      getGraph: jest
+        .fn()
+        .mockResolvedValue({ nodes: [], edges: [], truncated: false }),
     } as any;
 
     const module: TestingModule = await Test.createTestingModule({
@@ -195,6 +198,18 @@ describe('NotesService', () => {
       take: 10,
       exclude_id: 'n2',
     });
+  });
+
+  it('delegates the knowledge graph', async () => {
+    const graph = {
+      nodes: [{ id: 'n1', title: 'Receta', pinned: false }],
+      edges: [],
+      truncated: false,
+    };
+    repository.getGraph.mockResolvedValue(graph);
+
+    await expect(service.graph('user-1', 100)).resolves.toEqual(graph);
+    expect(repository.getGraph).toHaveBeenCalledWith('user-1', 100);
   });
 
   it('rewrites backlinks when a note is renamed (without touching code)', async () => {
