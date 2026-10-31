@@ -5,7 +5,11 @@ import {
   NOTE_REPOSITORY_PORT,
   NoteRepository,
 } from '../domain/ports/out/note.repository';
-import { Note, noteExcerpt } from '../domain/entities/note.entity';
+import {
+  Note,
+  noteExcerpt,
+  noteWordCount,
+} from '../domain/entities/note.entity';
 
 describe('NotesService', () => {
   let service: NotesService;
@@ -239,6 +243,12 @@ describe('NotesService', () => {
     expect(summary.excerpt).toContain('Receta');
     expect(summary.excerpt).toContain('harina');
     expect(summary.excerpt).not.toContain('**');
+    expect(summary.word_count).toBeGreaterThan(0);
+  });
+
+  it('counts words ignoring markdown and code', () => {
+    expect(noteWordCount('## Hola **mundo** `code`')).toBe(3);
+    expect(noteWordCount('```ts\nconst x = 1;\n```')).toBe(0);
   });
 
   it('removes code blocks and headings from the excerpt', () => {

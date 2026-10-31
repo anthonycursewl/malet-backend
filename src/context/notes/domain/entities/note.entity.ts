@@ -17,6 +17,7 @@ export interface NoteSummaryPrimitives {
   id: string;
   title: string;
   excerpt: string;
+  word_count: number;
   pinned: boolean;
   created_at: Date;
   updated_at: Date;
@@ -43,12 +44,9 @@ export interface NoteLinkPrimitives {
   alias: string | null;
 }
 
-/** Quita la sintaxis Markdown para el extracto de la lista. */
-export function noteExcerpt(
-  markdown: string,
-  maxLength = NOTE_EXCERPT_LENGTH,
-): string {
-  const plain = markdown
+/** Quita la sintaxis Markdown para extractos y conteos. */
+export function stripMarkdown(markdown: string): string {
+  return markdown
     .replace(/```[\s\S]*?```/g, ' ')
     .replace(/~~~[\s\S]*?~~~/g, ' ')
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
@@ -64,9 +62,23 @@ export function noteExcerpt(
     .replace(/[`*_~]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+}
 
+/** Extracto plano para la lista. */
+export function noteExcerpt(
+  markdown: string,
+  maxLength = NOTE_EXCERPT_LENGTH,
+): string {
+  const plain = stripMarkdown(markdown);
   if (plain.length <= maxLength) return plain;
   return `${plain.slice(0, maxLength).trimEnd()}…`;
+}
+
+/** Conteo aproximado de palabras (sin código ni marcas). */
+export function noteWordCount(markdown: string): number {
+  const plain = stripMarkdown(markdown);
+  if (!plain) return 0;
+  return plain.split(/\s+/).filter(Boolean).length;
 }
 
 const normalizeTitle = (title?: string): string =>
@@ -152,6 +164,7 @@ export class Note {
       id: this.id,
       title: this.title,
       excerpt: noteExcerpt(this.content),
+      word_count: noteWordCount(this.content),
       pinned: this.pinned,
       created_at: this.created_at,
       updated_at: this.updated_at,

@@ -158,6 +158,7 @@ describe('Notes (e2e)', () => {
     expect(res.body.data[0].id).toBe(noteId);
     expect(res.body.data[0]).not.toHaveProperty('content');
     expect(res.body.data[0].excerpt).toContain('Comprar harina');
+    expect(res.body.data[0].word_count).toBeGreaterThan(0);
     expect(res.body.nextCursor).toBeNull();
   });
 
