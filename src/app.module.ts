@@ -21,6 +21,7 @@ import { SalesModule } from './context/sales/sales.module';
 import { CreditModule } from './context/credit/credit.module';
 import { ModulesModule } from './context/modules/modules.module';
 import { GymModule } from './context/gym/gym.module';
+import { NotesModule } from './context/notes/notes.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { GymModule } from './context/gym/gym.module';
     CreditModule,
     ModulesModule,
     GymModule,
+    NotesModule,
   ],
   providers: [
     {

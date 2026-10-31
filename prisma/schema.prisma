@@ -38,6 +38,7 @@ model user {
   gym_routines              gym_routines[]
   gym_sessions              gym_sessions[]
   gym_body_metrics          gym_body_metrics[]
+  notes                     notes[]
 }
 
 model verification_type {
@@ -776,5 +777,22 @@ model gym_body_metrics {
   user user @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, date])
+  @@index([deleted_at])
+}
+
+/// Notas personales en Markdown (estilo Notion). Cada usuario solo ve las suyas.
+model notes {
+  id         String    @id @db.VarChar(255)
+  user_id    String    @db.VarChar(255)
+  title      String    @db.VarChar(255)
+  content    String    @db.Text
+  pinned     Boolean   @default(false)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at DateTime? @db.Timestamptz(6)
+
+  user user @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, pinned, updated_at])
   @@index([deleted_at])
 }
