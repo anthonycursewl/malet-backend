@@ -3,6 +3,7 @@ export interface NoteGraphNode {
   id: string;
   title: string;
   pinned: boolean;
+  is_public: boolean;
 }
 
 export interface NoteGraphEdge {

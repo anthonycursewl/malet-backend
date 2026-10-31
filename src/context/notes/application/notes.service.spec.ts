@@ -27,6 +27,7 @@ describe('NotesService', () => {
       save: jest.fn().mockImplementation(async (note: Note) => note),
       findById: jest.fn(),
       findMany: jest.fn(),
+      findPublicById: jest.fn(),
       update: jest.fn().mockImplementation(async (note: Note) => note),
       delete: jest.fn(),
       restore: jest.fn(),
@@ -61,6 +62,7 @@ describe('NotesService', () => {
     expect(note.getTitle()).toBe('Hola');
     expect(note.getContent()).toBe('');
     expect(note.isPinned()).toBe(false);
+    expect(note.isPublic()).toBe(false);
     expect(repository.save).toHaveBeenCalled();
   });
 
@@ -202,7 +204,7 @@ describe('NotesService', () => {
 
   it('delegates the knowledge graph', async () => {
     const graph = {
-      nodes: [{ id: 'n1', title: 'Receta', pinned: false }],
+      nodes: [{ id: 'n1', title: 'Receta', pinned: false, is_public: true }],
       edges: [],
       truncated: false,
     };
@@ -210,6 +212,37 @@ describe('NotesService', () => {
 
     await expect(service.graph('user-1', 100)).resolves.toEqual(graph);
     expect(repository.getGraph).toHaveBeenCalledWith('user-1', 100);
+  });
+
+  it('updates visibility and reads public notes only', async () => {
+    const note = makeNote();
+    repository.findById.mockResolvedValue(note);
+
+    const updated = await service.update('user-1', note.getId(), {
+      is_public: true,
+    });
+    expect(updated.isPublic()).toBe(true);
+
+    const author = {
+      id: 'user-1',
+      name: 'Owner',
+      username: 'owner',
+      avatar_url: null,
+      verified: false,
+    };
+    repository.findPublicById.mockResolvedValue({
+      note: updated,
+      author,
+    });
+
+    const publicResult = await service.getPublicById(note.getId());
+    expect(publicResult.note.isPublic()).toBe(true);
+    expect(publicResult.author).toEqual(author);
+
+    repository.findPublicById.mockResolvedValue(null);
+    await expect(service.getPublicById('private')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 
   it('rewrites backlinks when a note is renamed (without touching code)', async () => {

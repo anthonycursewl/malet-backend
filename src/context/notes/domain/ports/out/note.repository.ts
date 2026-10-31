@@ -21,6 +21,20 @@ export interface NoteLinkTarget {
   title: string;
 }
 
+/** Autor visible en la página pública de una nota. */
+export interface PublicNoteAuthor {
+  id: string;
+  name: string;
+  username: string;
+  avatar_url: string | null;
+  verified: boolean;
+}
+
+export interface PublicNoteResult {
+  note: Note;
+  author: PublicNoteAuthor;
+}
+
 export interface ListLinkTargetsOptions {
   user_id: string;
   search?: string;
@@ -36,6 +50,8 @@ export interface NoteRepository {
     include_deleted?: boolean,
   ): Promise<Note | null>;
   findMany(options: ListNotesOptions): Promise<Note[]>;
+  /** Nota pública (no borrada) + autor; `null` si no es visible. */
+  findPublicById(id: string): Promise<PublicNoteResult | null>;
   update(note: Note): Promise<Note>;
   delete(id: string): Promise<Note>;
   restore(id: string): Promise<Note>;

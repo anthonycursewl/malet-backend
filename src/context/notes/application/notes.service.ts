@@ -13,6 +13,7 @@ import {
   NOTE_REPOSITORY_PORT,
   NoteLinkTarget,
   NoteRepository,
+  PublicNoteResult,
 } from '../domain/ports/out/note.repository';
 import { Note } from '../domain/entities/note.entity';
 import { NoteGraph } from '../domain/graph';
@@ -80,6 +81,14 @@ export class NotesService implements NotesUseCase {
     return this.noteRepository.getGraph(user_id, limit);
   }
 
+  async getPublicById(id: string): Promise<PublicNoteResult> {
+    const result = await this.noteRepository.findPublicById(id);
+    if (!result) {
+      throw new NotFoundException('Note not found');
+    }
+    return result;
+  }
+
   async create(user_id: string, dto: CreateNoteDto): Promise<Note> {
     await this.assertTitleAvailable(user_id, dto.title);
 
@@ -89,6 +98,7 @@ export class NotesService implements NotesUseCase {
         title: dto.title,
         content: dto.content,
         pinned: dto.pinned,
+        is_public: dto.is_public,
       }),
     );
 

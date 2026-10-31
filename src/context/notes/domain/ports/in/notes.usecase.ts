@@ -1,6 +1,6 @@
 import { Note, NoteLinkPrimitives } from '../../entities/note.entity';
 import { NoteGraph } from '../../graph';
-import { NoteLinkTarget } from '../out/note.repository';
+import { NoteLinkTarget, PublicNoteResult } from '../out/note.repository';
 import { CreateNoteDto } from '../../../application/dtos/create-note.dto';
 import { UpdateNoteDto } from '../../../application/dtos/update-note.dto';
 
@@ -34,6 +34,8 @@ export interface NotesUseCase {
     exclude_id?: string,
   ): Promise<NoteLinkTarget[]>;
   graph(user_id: string, limit?: number): Promise<NoteGraph>;
+  /** Lectura sin JWT: solo si la nota está marcada como pública. */
+  getPublicById(id: string): Promise<PublicNoteResult>;
   create(user_id: string, dto: CreateNoteDto): Promise<Note>;
   update(user_id: string, id: string, dto: UpdateNoteDto): Promise<Note>;
   softDelete(user_id: string, id: string): Promise<Note>;

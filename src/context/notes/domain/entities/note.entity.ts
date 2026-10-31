@@ -7,6 +7,7 @@ export interface NotePrimitives {
   title: string;
   content: string;
   pinned: boolean;
+  is_public: boolean;
   created_at: Date;
   updated_at: Date;
   deleted_at?: Date | null;
@@ -19,6 +20,7 @@ export interface NoteSummaryPrimitives {
   excerpt: string;
   word_count: number;
   pinned: boolean;
+  is_public: boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -28,12 +30,14 @@ export interface NoteCreateInput {
   title?: string;
   content?: string;
   pinned?: boolean;
+  is_public?: boolean;
 }
 
 export interface NoteUpdateInput {
   title?: string;
   content?: string;
   pinned?: boolean;
+  is_public?: boolean;
 }
 
 /** Enlace saliente de una nota, tal como quedó guardado. */
@@ -94,6 +98,7 @@ export class Note {
   private readonly title: string;
   private readonly content: string;
   private readonly pinned: boolean;
+  private readonly is_public: boolean;
   private readonly created_at: Date;
   private readonly updated_at: Date;
   private readonly deleted_at: Date | null;
@@ -104,6 +109,7 @@ export class Note {
     title: string,
     content: string,
     pinned: boolean,
+    is_public: boolean,
     created_at: Date,
     updated_at: Date,
     deleted_at: Date | null,
@@ -113,6 +119,7 @@ export class Note {
     this.title = title;
     this.content = content;
     this.pinned = pinned;
+    this.is_public = is_public;
     this.created_at = created_at;
     this.updated_at = updated_at;
     this.deleted_at = deleted_at;
@@ -126,6 +133,7 @@ export class Note {
       normalizeTitle(data.title),
       data.content ?? '',
       data.pinned === true,
+      data.is_public === true,
       now,
       now,
       null,
@@ -139,6 +147,7 @@ export class Note {
       primitives.title,
       primitives.content,
       primitives.pinned === true,
+      primitives.is_public === true,
       primitives.created_at,
       primitives.updated_at,
       primitives.deleted_at ?? null,
@@ -152,6 +161,7 @@ export class Note {
       title: this.title,
       content: this.content,
       pinned: this.pinned,
+      is_public: this.is_public,
       created_at: this.created_at,
       updated_at: this.updated_at,
       deleted_at: this.deleted_at,
@@ -166,6 +176,7 @@ export class Note {
       excerpt: noteExcerpt(this.content),
       word_count: noteWordCount(this.content),
       pinned: this.pinned,
+      is_public: this.is_public,
       created_at: this.created_at,
       updated_at: this.updated_at,
     };
@@ -189,6 +200,10 @@ export class Note {
 
   isPinned(): boolean {
     return this.pinned;
+  }
+
+  isPublic(): boolean {
+    return this.is_public;
   }
 
   getCreatedAt(): Date {
@@ -215,6 +230,7 @@ export class Note {
       data.title !== undefined ? normalizeTitle(data.title) : this.title,
       data.content !== undefined ? data.content : this.content,
       data.pinned !== undefined ? data.pinned : this.pinned,
+      data.is_public !== undefined ? data.is_public : this.is_public,
       this.created_at,
       new Date(),
       this.deleted_at,
@@ -229,6 +245,7 @@ export class Note {
       this.title,
       this.content,
       this.pinned,
+      this.is_public,
       this.created_at,
       now,
       now,
@@ -242,6 +259,7 @@ export class Note {
       this.title,
       this.content,
       this.pinned,
+      this.is_public,
       this.created_at,
       new Date(),
       null,

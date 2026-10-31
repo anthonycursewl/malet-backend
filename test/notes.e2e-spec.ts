@@ -144,6 +144,7 @@ describe('Notes (e2e)', () => {
     noteId = res.body.id;
     expect(res.body.title).toBe('Receta de pan');
     expect(res.body.pinned).toBe(false);
+    expect(res.body.is_public).toBe(false);
     expect(res.body.content).toContain('**harina**');
     expect(res.body.user_id).toBe(ownerId);
   });
@@ -159,6 +160,7 @@ describe('Notes (e2e)', () => {
     expect(res.body.data[0]).not.toHaveProperty('content');
     expect(res.body.data[0].excerpt).toContain('Comprar harina');
     expect(res.body.data[0].word_count).toBeGreaterThan(0);
+    expect(res.body.data[0].is_public).toBe(false);
     expect(res.body.nextCursor).toBeNull();
   });
 
@@ -197,6 +199,49 @@ describe('Notes (e2e)', () => {
       .set(ownerAuth())
       .expect(200);
     expect(list.body.data[0].pinned).toBe(true);
+  });
+
+  it('expone una nota pública sin JWT y la oculta al volverla privada', async () => {
+    await request(app.getHttpServer())
+      .get(`/public/notes/${noteId}`)
+      .expect(404);
+
+    const updated = await request(app.getHttpServer())
+      .put(`/notes/${noteId}`)
+      .set(ownerAuth())
+      .send({ is_public: true })
+      .expect(200);
+    expect(updated.body.is_public).toBe(true);
+
+    const publicNote = await request(app.getHttpServer())
+      .get(`/public/notes/${noteId}`)
+      .expect(200);
+
+    expect(publicNote.body.title).toBe('Receta actualizada');
+    expect(publicNote.body.content).toContain('**harina**');
+    expect(publicNote.body.is_public).toBe(true);
+    expect(publicNote.body.author.username).toBe(`e2e_notes_${suffix}`);
+    expect(publicNote.body.author).not.toHaveProperty('email');
+    expect(publicNote.body).not.toHaveProperty('user_id');
+    expect(publicNote.body).not.toHaveProperty('deleted_at');
+
+    const list = await request(app.getHttpServer())
+      .get('/notes')
+      .set(ownerAuth())
+      .expect(200);
+    expect(
+      list.body.data.find((note: any) => note.id === noteId)?.is_public,
+    ).toBe(true);
+
+    await request(app.getHttpServer())
+      .put(`/notes/${noteId}`)
+      .set(ownerAuth())
+      .send({ is_public: false })
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .get(`/public/notes/${noteId}`)
+      .expect(404);
   });
 
   it('devuelve el detalle completo y aísla por usuario', async () => {

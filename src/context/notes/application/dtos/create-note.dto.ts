@@ -24,4 +24,9 @@ export class CreateNoteDto {
   @IsOptional()
   @IsBoolean()
   pinned?: boolean;
+
+  /** `true` expone la nota en la vista pública de solo lectura. */
+  @IsOptional()
+  @IsBoolean()
+  is_public?: boolean;
 }

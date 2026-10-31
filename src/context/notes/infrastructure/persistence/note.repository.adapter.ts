@@ -7,6 +7,7 @@ import {
   NoteLinkInput,
   NoteLinkTarget,
   NoteRepository,
+  PublicNoteResult,
 } from '../../domain/ports/out/note.repository';
 import { Note, NoteLinkPrimitives } from '../../domain/entities/note.entity';
 import { NoteGraph } from '../../domain/graph';
@@ -22,6 +23,7 @@ export class NoteRepositoryAdapter implements NoteRepository {
       title: row.title,
       content: row.content,
       pinned: row.pinned === true,
+      is_public: row.is_public === true,
       created_at: row.created_at,
       updated_at: row.updated_at,
       deleted_at: row.deleted_at ?? null,
@@ -38,6 +40,7 @@ export class NoteRepositoryAdapter implements NoteRepository {
         title: data.title,
         content: data.content,
         pinned: data.pinned,
+        is_public: data.is_public,
         created_at: data.created_at,
         updated_at: data.updated_at,
         deleted_at: null,
@@ -61,6 +64,36 @@ export class NoteRepositoryAdapter implements NoteRepository {
     }
 
     return this.toEntity(result);
+  }
+
+  async findPublicById(id: string): Promise<PublicNoteResult | null> {
+    const row = await this.prisma.notes.findFirst({
+      where: { id, is_public: true, deleted_at: null },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            avatar_url: true,
+            verified: true,
+          },
+        },
+      },
+    });
+
+    if (!row) return null;
+
+    return {
+      note: this.toEntity(row),
+      author: {
+        id: row.user.id,
+        name: row.user.name,
+        username: row.user.username,
+        avatar_url: row.user.avatar_url ?? null,
+        verified: row.user.verified === true,
+      },
+    };
   }
 
   async findMany(options: ListNotesOptions): Promise<Note[]> {
@@ -98,6 +131,7 @@ export class NoteRepositoryAdapter implements NoteRepository {
         title: data.title,
         content: data.content,
         pinned: data.pinned,
+        is_public: data.is_public,
         updated_at: data.updated_at,
         deleted_at: data.deleted_at ?? null,
       },
@@ -287,7 +321,7 @@ export class NoteRepositoryAdapter implements NoteRepository {
   async getGraph(user_id: string, limit = 500): Promise<NoteGraph> {
     const notes = await this.prisma.notes.findMany({
       where: { user_id, deleted_at: null },
-      select: { id: true, title: true, pinned: true },
+      select: { id: true, title: true, pinned: true, is_public: true },
       take: limit,
       orderBy: [{ pinned: 'desc' }, { updated_at: 'desc' }, { id: 'desc' }],
     });
@@ -323,6 +357,7 @@ export class NoteRepositoryAdapter implements NoteRepository {
         id: note.id,
         title: note.title,
         pinned: note.pinned,
+        is_public: note.is_public,
       })),
       edges: [...edges.values()],
       truncated: notes.length === limit,
